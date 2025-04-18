@@ -1,0 +1,99 @@
+/* 代码示例容器 */
+.codeExample {
+  margin: 2rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: var(--ifm-card-background-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+/* 代码示例标题 */
+.codeHeader {
+  background-color: var(--ifm-color-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 代码选项卡容器 */
+.codeTabs {
+  display: flex;
+  background-color: var(--ifm-color-emphasis-100);
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  overflow-x: auto;
+}
+
+/* 代码选项卡按钮 */
+.codeTab {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.875rem;
+  color: var(--ifm-color-gray-700);
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+/* 代码选项卡激活状态 */
+.codeTabActive {
+  color: var(--ifm-color-primary);
+  border-bottom-color: var(--ifm-color-primary);
+  background-color: var(--ifm-color-emphasis-200);
+}
+
+/* 代码内容容器 */
+.codeContent {
+  position: relative;
+}
+
+/* 代码复制按钮 */
+.copyButton {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--ifm-color-emphasis-200);
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* 显示复制按钮 */
+.codeContent:hover .copyButton {
+  opacity: 1;
+}
+
+/* 适配深色模式 */
+[data-theme='dark'] .codeHeader {
+  background-color: var(--ifm-color-primary-darker);
+}
+
+[data-theme='dark'] .codeTab {
+  color: var(--ifm-color-gray-300);
+}
+
+[data-theme='dark'] .codeTabActive {
+  color: var(--ifm-color-primary-lightest);
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .codeHeader {
+    padding: 0.5rem 1rem;
+  }
+  
+  .codeTab {
+    padding: 0.5rem 1rem;
+  }
+} 

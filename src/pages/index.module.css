@@ -1,0 +1,169 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+/* 首页头部样式 */
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(to right, var(--ifm-color-primary-darkest), var(--ifm-color-primary-light));
+  color: white;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem;
+  }
+}
+
+/* 按钮容器样式 */
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+/* 特色内容区域样式 */
+.features {
+  padding: 4rem 0;
+  width: 100%;
+  background-color: var(--ifm-background-color);
+}
+
+.featureSectionTitle {
+  text-align: center;
+  margin-bottom: 3rem;
+  font-size: 2.5rem;
+}
+
+/* 特色内容网格布局 */
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+/* 特色内容卡片样式 */
+.featureCard {
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  background-color: var(--ifm-card-background-color);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.featureCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.featureCardIcon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.featureCard h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.featureCard p {
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+  color: var(--ifm-color-gray-700);
+}
+
+/* 技术栈区域样式 */
+.techStack {
+  padding: 4rem 0;
+  background-color: var(--ifm-color-primary-lightest);
+  text-align: center;
+}
+
+.techStack h2 {
+  margin-bottom: 2rem;
+}
+
+.techList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.techList span {
+  background-color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 30px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.techList span:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 页脚CTA区域样式 */
+.footerCTA {
+  padding: 5rem 0;
+  background-color: var(--ifm-color-emphasis-100);
+  text-align: center;
+}
+
+.footerCTA h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.footerCTA p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: var(--ifm-color-gray-700);
+}
+
+.ctaButtons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* 深色模式适配 */
+[data-theme='dark'] .techList span {
+  background-color: var(--ifm-color-emphasis-200);
+  color: var(--ifm-font-color-base);
+}
+
+[data-theme='dark'] .featureCard {
+  background-color: var(--ifm-card-background-color);
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ctaButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .featureSectionTitle {
+    font-size: 2rem;
+  }
+  
+  .footerCTA h2 {
+    font-size: 2rem;
+  }
+}

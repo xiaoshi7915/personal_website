@@ -1,0 +1,159 @@
+/* 信息卡片基本样式 */
+.infoCard {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+  position: relative;
+  background-color: var(--ifm-card-background-color);
+}
+
+/* 信息卡片标题栏 */
+.infoCardHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+/* 信息卡片图标 */
+.infoCardIcon {
+  margin-right: 0.75rem;
+  display: flex;
+}
+
+/* 信息卡片标题 */
+.infoCardTitle {
+  font-weight: 700;
+  font-size: 1rem;
+  flex-grow: 1;
+}
+
+/* 折叠按钮 */
+.collapseButton {
+  border: none;
+  background-color: transparent;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  color: var(--ifm-color-gray-600);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.collapseButton:hover {
+  background-color: var(--ifm-color-emphasis-200);
+}
+
+/* 信息卡片内容区域 */
+.infoCardContent {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* 不同类型的信息卡片样式 */
+
+/* 信息类型 */
+.info {
+  background-color: rgba(62, 142, 208, 0.1);
+  border-left-color: var(--ifm-color-primary);
+}
+
+.info .infoCardTitle {
+  color: var(--ifm-color-primary-dark);
+}
+
+.info .infoCardIcon svg {
+  fill: var(--ifm-color-primary);
+}
+
+/* 提示类型 */
+.tip {
+  background-color: rgba(46, 204, 113, 0.1);
+  border-left-color: #2ecc71;
+}
+
+.tip .infoCardTitle {
+  color: #27ae60;
+}
+
+.tip .infoCardIcon svg {
+  fill: #2ecc71;
+}
+
+/* 警告类型 */
+.warning {
+  background-color: rgba(241, 196, 15, 0.1);
+  border-left-color: #f39c12;
+}
+
+.warning .infoCardTitle {
+  color: #d35400;
+}
+
+.warning .infoCardIcon svg {
+  fill: #f39c12;
+}
+
+/* 危险类型 */
+.danger {
+  background-color: rgba(231, 76, 60, 0.1);
+  border-left-color: #e74c3c;
+}
+
+.danger .infoCardTitle {
+  color: #c0392b;
+}
+
+.danger .infoCardIcon svg {
+  fill: #e74c3c;
+}
+
+/* 成功类型 */
+.success {
+  background-color: rgba(46, 204, 113, 0.1);
+  border-left-color: #27ae60;
+}
+
+.success .infoCardTitle {
+  color: #16a085;
+}
+
+.success .infoCardIcon svg {
+  fill: #27ae60;
+}
+
+/* 深色模式适配 */
+[data-theme='dark'] .info {
+  background-color: rgba(65, 131, 196, 0.15);
+}
+
+[data-theme='dark'] .tip {
+  background-color: rgba(46, 204, 113, 0.15);
+}
+
+[data-theme='dark'] .warning {
+  background-color: rgba(241, 196, 15, 0.15);
+}
+
+[data-theme='dark'] .danger {
+  background-color: rgba(231, 76, 60, 0.15);
+}
+
+[data-theme='dark'] .success {
+  background-color: rgba(46, 204, 113, 0.15);
+}
+
+[data-theme='dark'] .collapseButton {
+  color: var(--ifm-color-gray-400);
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .infoCard {
+    padding: 0.75rem;
+  }
+  
+  .infoCardTitle {
+    font-size: 0.9375rem;
+  }
+} 

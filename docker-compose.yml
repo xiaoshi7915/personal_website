@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mr-stone-website
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./static:/app/static 

@@ -1,0 +1,245 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #3861fb; /* 主色 - 蓝色 */
+  --ifm-color-primary-dark: #2a4ddc;
+  --ifm-color-primary-darker: #2345cc;
+  --ifm-color-primary-darkest: #1b38a7;
+  --ifm-color-primary-light: #5277ff;
+  --ifm-color-primary-lighter: #6889ff;
+  --ifm-color-primary-lightest: #89a3ff;
+  
+  --ifm-color-secondary: #f5f7fa; /* 次要颜色 - 浅灰 */
+  
+  /* 代码块颜色 */
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(56, 97, 251, 0.1);
+  
+  /* 其他自定义变量 */
+  --ifm-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --ifm-heading-font-family: var(--ifm-font-family-base);
+  --ifm-navbar-height: 64px;
+  --ifm-footer-padding-vertical: 3rem;
+  --ifm-transition-fast: 150ms;
+  --ifm-transition-slow: 350ms;
+  
+  /* 阴影 */
+  --ifm-global-shadow-lw: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+  --ifm-global-shadow-md: 0 5px 15px 0 rgba(0, 0, 0, 0.15);
+  --ifm-global-shadow-tl: 0 10px 30px 0 rgba(0, 0, 0, 0.2);
+  
+  /* 卡片 */
+  --ifm-card-background-color: #ffffff;
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #5277ff;
+  --ifm-color-primary-dark: #3b61ff;
+  --ifm-color-primary-darker: #3056ff;
+  --ifm-color-primary-darkest: #0e3be0;
+  --ifm-color-primary-light: #698dff;
+  --ifm-color-primary-lighter: #7498ff;
+  --ifm-color-primary-lightest: #9cb6ff;
+  
+  --ifm-background-color: #1a1b23;
+  --ifm-background-surface-color: #242732;
+  
+  --docusaurus-highlighted-code-line-bg: rgba(56, 97, 251, 0.2);
+  
+  /* 卡片 */
+  --ifm-card-background-color: #242732;
+}
+
+/* 全局样式 */
+
+/* 页面过渡动画 */
+.page-transition {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 段落间距优化 */
+p {
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+}
+
+/* 标题字体加粗 */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
+h1 {
+  font-size: 2.5rem;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: 2rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  padding-bottom: 0.5rem;
+  margin-top: 3rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+/* 导航栏优化 */
+.navbar {
+  box-shadow: var(--ifm-global-shadow-lw);
+}
+
+.navbar__brand {
+  font-weight: 700;
+}
+
+.navbar__link {
+  font-weight: 600;
+}
+
+.navbar__link--active {
+  position: relative;
+}
+
+.navbar__link--active:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--ifm-color-primary);
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+}
+
+/* 侧边栏优化 */
+.menu {
+  padding: 1rem;
+}
+
+.menu__link {
+  border-radius: 6px;
+}
+
+.menu__link--active {
+  font-weight: 600;
+}
+
+.menu__list-item-collapsible {
+  border-radius: 6px;
+}
+
+.menu__list-item-collapsible:hover {
+  background-color: var(--ifm-menu-color-background-hover);
+}
+
+/* 代码块优化 */
+pre {
+  border-radius: 8px;
+  box-shadow: var(--ifm-global-shadow-lw);
+}
+
+code {
+  border-radius: 4px;
+}
+
+/* 表格样式优化 */
+table {
+  width: 100%;
+  display: table;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--ifm-global-shadow-lw);
+  margin-bottom: 2rem;
+}
+
+thead {
+  background-color: var(--ifm-color-emphasis-100);
+}
+
+th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+}
+
+td {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+/* 卡片样式 */
+.card {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--ifm-global-shadow-lw);
+  transition: all var(--ifm-transition-fast) ease;
+  height: 100%;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ifm-global-shadow-md);
+}
+
+/* 按钮样式优化 */
+.button {
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all var(--ifm-transition-fast) ease;
+}
+
+.button--lg {
+  padding: 0.75rem 1.5rem;
+}
+
+/* 页脚样式优化 */
+.footer {
+  padding: var(--ifm-footer-padding-vertical) 0;
+}
+
+.footer__title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.footer__link-item {
+  padding: 0.2rem 0;
+  display: block;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 996px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.6rem;
+  }
+  
+  h3 {
+    font-size: 1.3rem;
+  }
+  
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+}
