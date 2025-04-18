@@ -2,15 +2,23 @@
 sidebar_position: 2
 ---
 
-# 使用Python实现MCP服务器
+# Python实现入门
 
-本教程将指导您如何使用Python构建MCP服务器，实现自定义函数并与AI模型集成。
+本教程将指导您如何使用Python构建MCP服务器，实现自定义工具、资源和提示模板，以扩展AI模型的能力。
+
+## MCP简介
+
+MCP (Model Context Protocol) 是连接AI模型与应用程序的标准化协议。它允许AI模型通过调用外部函数、访问资源和使用提示模板来扩展其能力。MCP服务器提供了三种主要功能：
+
+1. **资源(Resources)**: 文件式数据，可以被客户端读取（如API响应或文件内容）
+2. **工具(Tools)**: 可以被AI模型调用的函数（需要用户批准）
+3. **提示(Prompts)**: 预先编写的模板，帮助用户完成特定任务
 
 ## 环境准备
 
 在开始之前，请确保您的系统满足以下要求：
 
-- Python 3.8+
+- Python 3.10+
 - pip包管理器
 - 基本的Python编程知识
 
@@ -19,8 +27,27 @@ sidebar_position: 2
 首先，创建一个新的项目目录并初始化虚拟环境：
 
 ```bash
+# 创建项目目录
 mkdir mcp-python-server
 cd mcp-python-server
+
+# 使用uv创建和管理环境（推荐）
+curl -LsSf https://astral.sh/uv/install.sh | sh  # MacOS/Linux
+# 或在Windows上安装uv
+
+# 初始化虚拟环境
+uv venv
+source .venv/bin/activate  # MacOS/Linux
+# .venv\Scripts\activate  # Windows
+
+# 安装MCP SDK
+uv add "mcp[cli]" httpx
+```
+
+如果您更习惯使用标准Python工具，也可以这样设置：
+
+```bash
+# 使用标准Python工具设置环境
 python -m venv venv
 
 # 在Windows上激活虚拟环境
@@ -28,624 +55,413 @@ venv\Scripts\activate
 
 # 在Linux/macOS上激活虚拟环境
 source venv/bin/activate
+
+# 安装MCP SDK
+pip install "mcp[cli]" httpx
 ```
 
-安装必要的依赖：
+## 创建简单的天气服务器
 
-```bash
-pip install fastapi uvicorn pydantic python-dotenv
-```
+让我们构建一个简单的天气查询MCP服务器，它将提供两个工具：`get-forecast`和`get-alerts`。
 
-创建以下项目结构：
+### 基本服务器实现
 
-```
-mcp-python-server/
-├── app/
-│   ├── __init__.py
-│   ├── main.py          # FastAPI入口点
-│   ├── mcp/
-│   │   ├── __init__.py
-│   │   ├── server.py    # MCP服务器实现
-│   │   └── schemas.py   # 数据模型定义
-│   ├── functions/
-│   │   ├── __init__.py
-│   │   └── basic.py     # 基本函数实现
-│   └── config.py        # 配置文件
-├── .env                 # 环境变量
-└── requirements.txt     # 依赖列表
-```
-
-## 定义数据模型
-
-创建`app/mcp/schemas.py`文件：
+创建`weather.py`文件：
 
 ```python
-from typing import Dict, Any, List, Optional, Union
-from pydantic import BaseModel, Field
+import json
+import httpx
+from mcp import Server, Tool
 
+# 创建MCP服务器实例
+server = Server(
+    name="weather",
+    description="用于获取天气预报和警报信息的服务",
+    version="1.0.0",
+    vendor="MyCompany"
+)
 
-class FunctionParameter(BaseModel):
-    """函数参数的模式定义"""
-    type: str
-    description: Optional[str] = None
-    properties: Optional[Dict[str, Any]] = None
-    required: Optional[List[str]] = None
-    additionalProperties: Optional[bool] = None
+# 存储客户端API密钥的变量
+API_KEY = "your_weather_api_key"  # 替换为您的API密钥
 
-
-class FunctionDefinition(BaseModel):
-    """MCP函数定义"""
-    name: str
-    description: str
-    parameters: FunctionParameter
-
-
-class FunctionCall(BaseModel):
-    """函数调用请求"""
-    name: str
-    parameters: Dict[str, Any]
-
-
-class MCPRequest(BaseModel):
-    """MCP请求模型"""
-    function_call: FunctionCall
-
-
-class ProgressUpdate(BaseModel):
-    """长时间运行操作的进度更新"""
-    percent: int = Field(..., ge=0, le=100)
-    message: Optional[str] = None
-
-
-class MCPResponse(BaseModel):
-    """MCP响应模型"""
-    content: Optional[Any] = None
-    error: Optional[Dict[str, Any]] = None
-    progress: Optional[ProgressUpdate] = None
-```
-
-## 实现MCP服务器核心
-
-创建`app/mcp/server.py`文件：
-
-```python
-import inspect
-from typing import Dict, Any, Callable, List, Optional, AsyncGenerator
-import asyncio
-from .schemas import FunctionDefinition, FunctionParameter, MCPRequest, MCPResponse
-
-
-class MCPServer:
-    """Python实现的MCP服务器"""
+@server.tool
+async def get_forecast(location: str, days: int = 3) -> dict:
+    """
+    获取指定位置的天气预报
     
-    def __init__(self, namespace: str):
-        """
-        初始化MCP服务器
+    Args:
+        location: 位置名称或经纬度（如"北京"或"39.9042,116.4074"）
+        days: 请求的预报天数（默认3天）
         
-        Args:
-            namespace: 函数命名空间，用于区分不同服务的函数
-        """
-        self.namespace = namespace
-        self.functions: Dict[str, Dict[str, Any]] = {}
-    
-    def register_function(self, name: str, description: str, parameters: Dict[str, Any], handler: Callable):
-        """
-        注册一个函数到MCP服务器
-        
-        Args:
-            name: 函数名称
-            description: 函数描述
-            parameters: 函数参数模式
-            handler: 处理函数
-        """
-        function_name = f"{self.namespace}_{name}"
-        
-        # 创建函数定义
-        function_def = {
-            "name": name,
-            "description": description,
-            "parameters": parameters,
-            "handler": handler
-        }
-        
-        self.functions[function_name] = function_def
-    
-    def get_tools_config(self) -> List[FunctionDefinition]:
-        """获取用于AI模型的工具配置"""
-        tools = []
-        
-        for func_name, func_info in self.functions.items():
-            tools.append({
-                "name": func_name,
-                "description": func_info["description"],
-                "parameters": func_info["parameters"]
-            })
-        
-        return tools
-    
-    async def handle_request(self, request: MCPRequest) -> MCPResponse:
-        """
-        处理MCP请求
-        
-        Args:
-            request: MCP请求对象
+    Returns:
+        包含天气预报信息的字典
+    """
+    try:
+        # 调用天气API获取数据
+        # 这里使用了httpx进行异步HTTP请求
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.weatherapi.com/v1/forecast.json",
+                params={
+                    "key": API_KEY,
+                    "q": location,
+                    "days": days,
+                    "aqi": "no",
+                    "alerts": "no"
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
             
-        Returns:
-            MCPResponse: MCP响应对象
-        """
-        function_call = request.function_call
-        function_name = function_call.name
-        parameters = function_call.parameters
-        
-        # 检查函数是否存在
-        if function_name not in self.functions:
-            return MCPResponse(error={
-                "message": f"函数 '{function_name}' 不存在",
-                "code": "FUNCTION_NOT_FOUND"
-            })
-        
-        function_info = self.functions[function_name]
-        handler = function_info["handler"]
-        
-        try:
-            # 调用处理函数
-            if inspect.iscoroutinefunction(handler):
-                # 异步函数
-                result = await handler(**parameters)
-            elif inspect.isasyncgenfunction(handler):
-                # 异步生成器函数 (用于流式处理)
-                async for update in handler(**parameters):
-                    if isinstance(update, dict) and "progress" in update:
-                        # 如果是进度更新，立即返回
-                        return MCPResponse(progress=update["progress"])
-                    else:
-                        # 最终结果
-                        result = update
-                        break
-            else:
-                # 同步函数
-                result = handler(**parameters)
+            # 格式化结果
+            result = {
+                "location": {
+                    "name": data["location"]["name"],
+                    "region": data["location"]["region"],
+                    "country": data["location"]["country"],
+                },
+                "current": {
+                    "temp_c": data["current"]["temp_c"],
+                    "condition": data["current"]["condition"]["text"],
+                    "wind_kph": data["current"]["wind_kph"],
+                    "humidity": data["current"]["humidity"]
+                },
+                "forecast": []
+            }
             
-            # 返回结果
-            return MCPResponse(content=result)
+            for day in data["forecast"]["forecastday"]:
+                result["forecast"].append({
+                    "date": day["date"],
+                    "max_temp_c": day["day"]["maxtemp_c"],
+                    "min_temp_c": day["day"]["mintemp_c"],
+                    "condition": day["day"]["condition"]["text"],
+                    "chance_of_rain": day["day"]["daily_chance_of_rain"]
+                })
+            
+            return result
             
         except Exception as e:
-            # 返回错误信息
-            return MCPResponse(error={
-                "message": str(e),
-                "code": "FUNCTION_EXECUTION_ERROR"
-            })
+        return {"error": str(e)}
+
+@server.tool
+async def get_alerts(location: str) -> dict:
+    """
+    获取指定位置的天气警报信息
+    
+    Args:
+        location: 位置名称或经纬度（如"北京"或"39.9042,116.4074"）
+        
+    Returns:
+        包含天气警报信息的字典
+    """
+    try:
+        # 调用天气API获取警报数据
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.weatherapi.com/v1/forecast.json",
+                params={
+                    "key": API_KEY,
+                    "q": location,
+                    "days": 1,
+                    "aqi": "no",
+                    "alerts": "yes"
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            # 格式化结果
+            alerts = []
+            if "alerts" in data and "alert" in data["alerts"]:
+                for alert in data["alerts"]["alert"]:
+                    alerts.append({
+                        "headline": alert.get("headline", "未知警报"),
+                        "severity": alert.get("severity", "未知"),
+                        "category": alert.get("category", "未知"),
+                        "event": alert.get("event", "未知事件"),
+                        "effective": alert.get("effective", ""),
+                        "expires": alert.get("expires", ""),
+                        "desc": alert.get("desc", "无描述")
+                    })
+            
+    return {
+                "location": {
+                    "name": data["location"]["name"],
+                    "region": data["location"]["region"],
+                    "country": data["location"]["country"],
+                },
+                "alerts": alerts,
+                "alert_count": len(alerts)
+            }
+            
+    except Exception as e:
+        return {"error": str(e)}
+
+# 启动服务器
+if __name__ == "__main__":
+    server.run()
 ```
 
-## 实现基本函数
+### 添加资源功能
 
-创建`app/functions/basic.py`文件：
+现在让我们扩展服务器，添加一个资源功能来提供天气位置历史数据：
 
 ```python
-import time
-import asyncio
-from typing import Dict, Any, Optional, AsyncGenerator
+import os
+from mcp import Resource
 
+# 添加到weather.py文件中
 
-async def echo(message: str) -> Dict[str, Any]:
+# 模拟位置历史数据存储
+LOCATIONS_HISTORY = [
+    {"name": "北京", "country": "中国", "coordinates": "39.9042,116.4074", "popularity": "高"},
+    {"name": "上海", "country": "中国", "coordinates": "31.2304,121.4737", "popularity": "高"},
+    {"name": "纽约", "country": "美国", "coordinates": "40.7128,-74.0060", "popularity": "高"},
+    {"name": "伦敦", "country": "英国", "coordinates": "51.5074,-0.1278", "popularity": "高"},
+    {"name": "悉尼", "country": "澳大利亚", "coordinates": "-33.8688,151.2093", "popularity": "中"}
+]
+
+# 将位置历史写入JSON文件
+os.makedirs("data", exist_ok=True)
+with open("data/locations.json", "w", encoding="utf-8") as f:
+    json.dump(LOCATIONS_HISTORY, f, ensure_ascii=False, indent=2)
+
+# 注册资源
+@server.resource(path="/locations")
+async def locations_resource():
+    """常用天气查询位置列表"""
+    # 读取JSON文件
+    with open("data/locations.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
+# 添加使用该资源的工具
+@server.tool
+async def search_locations(query: str) -> dict:
     """
-    简单的回显函数
+    搜索常用位置
     
     Args:
-        message: 要回显的消息
+        query: 搜索关键词
         
     Returns:
-        包含原始消息的响应
+        匹配位置的列表
     """
+    with open("data/locations.json", "r", encoding="utf-8") as f:
+        locations = json.load(f)
+    
+    # 简单搜索实现
+    results = []
+    for location in locations:
+        if (query.lower() in location["name"].lower() or 
+            query.lower() in location["country"].lower()):
+            results.append(location)
+    
     return {
-        "content": message
-    }
-
-
-async def add(a: float, b: float) -> Dict[str, Any]:
-    """
-    将两个数相加
-    
-    Args:
-        a: 第一个数
-        b: 第二个数
-        
-    Returns:
-        包含结果的响应
-    """
-    return {
-        "result": a + b
-    }
-
-
-async def long_running_operation(steps: int = 5, delay: float = 1.0) -> AsyncGenerator[Dict[str, Any], None]:
-    """
-    示例长时间运行操作，支持进度更新
-    
-    Args:
-        steps: 操作的步骤数
-        delay: 每步之间的延迟时间（秒）
-        
-    Yields:
-        进度更新和最终结果
-    """
-    for i in range(steps):
-        # 模拟处理时间
-        await asyncio.sleep(delay)
-        
-        # 发送进度更新
-        yield {
-            "progress": {
-                "percent": round((i + 1) / steps * 100),
-                "message": f"完成步骤 {i+1}/{steps}"
-            }
-        }
-    
-    # 返回最终结果
-    yield {
-        "result": "操作完成",
-        "steps_completed": steps
+        "query": query,
+        "results": results,
+        "count": len(results)
     }
 ```
 
-## 创建配置文件
+### 添加提示模板
 
-创建`app/config.py`文件：
+最后，我们来添加提示模板，帮助用户更有效地使用我们的天气服务器：
+
+```python
+# 添加到weather.py文件中
+
+# 注册提示模板
+@server.prompt
+def weather_check():
+    """提示用户查询天气情况"""
+    return """
+    我想查询以下位置的天气情况和可能的恶劣天气警报：
+    位置：[请提供城市名称或经纬度]
+    天数：[查询未来几天的天气，默认3天]
+    
+    请提供详细的天气情况，包括：
+    - 当前温度和天气状况
+    - 未来几天的天气预报
+    - 任何可能的天气警报或预警
+    """
+
+@server.prompt
+def travel_weather_plan():
+    """帮助用户规划旅行天气"""
+    return """
+    我正在计划前往以下地点旅行：
+    目的地：[请提供城市名称]
+    旅行日期：[您计划的旅行日期范围]
+    活动类型：[户外/室内/两者兼有]
+    
+    请帮我：
+    1. 分析目的地在我旅行期间的天气情况
+    2. 建议在什么日期适合进行户外活动
+    3. 提醒我是否需要为特定天气状况（如雨、极热或极冷）做准备
+    4. 检查是否有任何可能影响旅行的天气警报
+    """
+```
+
+## 测试服务器
+
+保存文件后，您可以在命令行中运行服务器：
+
+```bash
+python weather.py
+```
+
+服务器将在本地启动，可以通过MCP客户端或MCP Inspector进行测试。
+
+### 使用Claude Desktop
+
+要在Claude Desktop上使用您的天气服务器，您需要更新Claude Desktop的配置文件。在`claude_desktop_config.json`中添加：
+
+```json
+{
+  "mcpServers": {
+    "weather": {
+      "command": "python",
+      "args": ["<您的服务器路径>/weather.py"],
+      "env": {
+        "WEATHER_API_KEY": "<您的天气API密钥>"
+      }
+    }
+  }
+}
+```
+
+## 高级服务器特性
+
+### 实现错误处理
+
+良好的错误处理对于MCP服务器至关重要：
+
+```python
+from mcp import ToolError, BadRequestError
+
+@server.tool
+async def get_forecast(location: str, days: int = 3) -> dict:
+    # 验证输入
+    if not location:
+        raise BadRequestError("位置不能为空")
+    
+    if days < 1 or days > 10:
+        raise BadRequestError("预报天数必须在1到10之间")
+    
+    try:
+        # API调用代码...
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 401:
+            raise ToolError("API认证失败，请检查API密钥")
+        elif e.response.status_code == 404:
+            raise ToolError(f"找不到位置: {location}")
+        else:
+            raise ToolError(f"API错误: {str(e)}")
+    except httpx.RequestError:
+        raise ToolError("网络连接错误，无法访问天气API")
+    except Exception as e:
+        raise ToolError(f"处理请求时发生错误: {str(e)}")
+```
+
+### 添加环境变量支持
+
+使用环境变量来管理敏感信息：
 
 ```python
 import os
 from dotenv import load_dotenv
-from functools import lru_cache
 
-# 加载.env文件
+# 加载.env文件中的环境变量
 load_dotenv()
 
-class Settings:
-    # 应用名称
-    APP_NAME: str = "Python MCP Server"
-    
-    # 服务器配置
-    HOST: str = os.getenv("HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("PORT", "8000"))
-    
-    # MCP配置
-    MCP_NAMESPACE: str = os.getenv("MCP_NAMESPACE", "mcp_python")
-    
-
-@lru_cache()
-def get_settings():
-    """获取缓存的设置实例"""
-    return Settings()
+# 从环境变量获取API密钥
+API_KEY = os.environ.get("WEATHER_API_KEY")
+if not API_KEY:
+    print("警告: 未设置WEATHER_API_KEY环境变量")
+    API_KEY = "demo_key"  # 使用演示密钥或默认值
 ```
 
-## 创建FastAPI应用
+## 更多MCP服务器功能
 
-创建`app/main.py`文件：
+### 添加状态管理
+
+MCP服务器可以管理状态，记录用户查询历史：
 
 ```python
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-import logging
+# 简单的状态管理
+query_history = {}
 
-from .config import get_settings
-from .mcp.server import MCPServer
-from .mcp.schemas import MCPRequest, MCPResponse
-from .functions.basic import echo, add, long_running_operation
+@server.tool
+async def get_forecast(location: str, days: int = 3) -> dict:
+    # 记录查询
+    user_id = server.context.get("user_id", "anonymous")
+    if user_id not in query_history:
+        query_history[user_id] = []
+    
+    query_history[user_id].append({
+        "type": "forecast",
+        "location": location,
+        "days": days,
+        "timestamp": datetime.datetime.now().isoformat()
+    })
+    
+    # 原有代码...
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# 获取设置
-settings = get_settings()
-
-# 创建FastAPI应用
-app = FastAPI(
-    title=settings.APP_NAME,
-    description="Python实现的MCP服务器",
-)
-
-# 添加CORS中间件
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# 创建MCP服务器实例
-mcp_server = MCPServer(namespace=settings.MCP_NAMESPACE)
-
-# 注册函数
-mcp_server.register_function(
-    name="echo",
-    description="回显输入的消息",
-    parameters={
-        "type": "object",
-        "properties": {
-            "message": {
-                "type": "string",
-                "description": "要回显的消息"
-            }
-        },
-        "required": ["message"],
-        "additionalProperties": False
-    },
-    handler=echo
-)
-
-mcp_server.register_function(
-    name="add",
-    description="将两个数相加",
-    parameters={
-        "type": "object",
-        "properties": {
-            "a": {
-                "type": "number",
-                "description": "第一个数"
-            },
-            "b": {
-                "type": "number",
-                "description": "第二个数"
-            }
-        },
-        "required": ["a", "b"],
-        "additionalProperties": False
-    },
-    handler=add
-)
-
-mcp_server.register_function(
-    name="long_running_operation",
-    description="示例长时间运行操作，支持进度更新",
-    parameters={
-        "type": "object",
-        "properties": {
-            "steps": {
-                "type": "integer",
-                "description": "操作的步骤数",
-                "default": 5
-            },
-            "delay": {
-                "type": "number",
-                "description": "每步之间的延迟时间（秒）",
-                "default": 1.0
-            }
-        },
-        "additionalProperties": False
-    },
-    handler=long_running_operation
-)
-
-@app.get("/")
-async def root():
-    """根路径处理程序"""
-    return {"message": "欢迎使用Python MCP服务器"}
-
-@app.get("/health")
-async def health_check():
-    """健康检查端点"""
-    return {"status": "ok"}
-
-@app.post("/mcp", response_model=MCPResponse)
-async def mcp_endpoint(request: MCPRequest):
-    """MCP请求处理端点"""
-    try:
-        logger.info(f"收到MCP请求: {request}")
-        response = await mcp_server.handle_request(request)
-        logger.info(f"MCP响应: {response}")
-        return response
-    except Exception as e:
-        logger.error(f"处理MCP请求时出错: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/tools")
-async def get_tools():
-    """获取可用工具列表"""
-    return mcp_server.get_tools_config()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(
-        "app.main:app", 
-        host=settings.HOST, 
-        port=settings.PORT,
-        reload=True
-    )
-```
-
-## 创建环境变量文件
-
-创建`.env`文件：
-
-```
-HOST=0.0.0.0
-PORT=8000
-MCP_NAMESPACE=mcp_python
-```
-
-## 创建依赖文件
-
-创建`requirements.txt`文件：
-
-```
-fastapi>=0.100.0
-uvicorn>=0.23.0
-pydantic>=2.0.0
-python-dotenv>=1.0.0
-```
-
-## 启动服务器
-
-现在可以启动MCP服务器：
-
-```bash
-# 在项目根目录运行
-python -m app.main
-```
-
-或者使用uvicorn直接运行：
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-服务器将在http://localhost:8000/上运行，您可以访问以下端点：
-
-- `/`: 欢迎页面
-- `/health`: 健康检查
-- `/tools`: 获取可用工具列表
-- `/mcp`: MCP请求处理端点（POST）
-- `/docs`: API文档（由FastAPI自动生成）
-
-## 测试MCP服务器
-
-使用curl测试echo函数：
-
-```bash
-curl -X POST http://localhost:8000/mcp \
-  -H "Content-Type: application/json" \
-  -d '{
-    "function_call": {
-      "name": "mcp_python_echo",
-      "parameters": {
-        "message": "Hello, Python MCP!"
-      }
+@server.tool
+async def get_query_history() -> dict:
+    """获取用户的查询历史"""
+    user_id = server.context.get("user_id", "anonymous")
+    return {
+        "history": query_history.get(user_id, [])
     }
-  }'
 ```
 
-预期响应：
+### 实现缓存机制
 
-```json
-{
-  "content": {
-    "content": "Hello, Python MCP!"
-  },
-  "error": null,
-  "progress": null
-}
-```
-
-## 与Claude集成
-
-要将Python MCP服务器与Claude模型集成，您需要创建一个客户端应用：
+为了提高性能，可以实现简单的缓存机制：
 
 ```python
-import requests
-import os
+import time
 
-# Claude API密钥
-CLAUDE_API_KEY = os.environ.get("CLAUDE_API_KEY")
+# 简单缓存实现
+cache = {}
+CACHE_TTL = 1800  # 缓存有效期30分钟
 
-# MCP服务器URL
-MCP_SERVER_URL = "http://localhost:8000"
+def get_cache_key(location, days):
+    return f"{location}_{days}"
 
-def get_tools():
-    """获取MCP工具配置"""
-    response = requests.get(f"{MCP_SERVER_URL}/tools")
-    return response.json()
-
-def call_claude(prompt, tools):
-    """调用Claude模型API"""
-    headers = {
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
+async def get_with_cache(location, days):
+    key = get_cache_key(location, days)
+    
+    # 检查缓存
+    if key in cache:
+        entry = cache[key]
+        if time.time() - entry["timestamp"] < CACHE_TTL:
+            print(f"缓存命中: {key}")
+            return entry["data"]
+    
+    # 缓存未命中，获取新数据
+    # 调用API获取数据...
+    
+    # 存入缓存
+    cache[key] = {
+        "data": result,
+        "timestamp": time.time()
     }
     
-    body = {
-        "model": "claude-3-opus-20240229",
-        "max_tokens": 1000,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "tools": tools
-    }
-    
-    response = requests.post(
-        "https://api.anthropic.com/v1/messages",
-        json=body,
-        headers=headers
-    )
-    
-    return response.json()
-
-def handle_tool_use(tool_use, message_id):
-    """处理工具调用"""
-    # 准备函数调用请求
-    mcp_request = {
-        "function_call": {
-            "name": tool_use["name"],
-            "parameters": tool_use["parameters"]
-        }
-    }
-    
-    # 调用MCP服务器
-    response = requests.post(f"{MCP_SERVER_URL}/mcp", json=mcp_request)
-    tool_result = response.json()
-    
-    # 将结果发送回Claude
-    headers = {
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
-    
-    tool_response = {
-        "tool_responses": [
-            {
-                "tool_use_id": tool_use["id"],
-                "content": tool_result.get("content")
-            }
-        ]
-    }
-    
-    response = requests.post(
-        f"https://api.anthropic.com/v1/messages/{message_id}/tool_responses",
-        json=tool_response,
-        headers=headers
-    )
-    
-    return response.json()
-
-def main():
-    # 获取工具配置
-    tools = get_tools()
-    
-    # 调用Claude
-    prompt = "请计算1234和5678的和。"
-    claude_response = call_claude(prompt, tools)
-    
-    message = claude_response["content"][0]
-    
-    # 处理工具调用
-    if message["type"] == "tool_use":
-        tool_use = message["tool_use"]
-        message_id = claude_response["id"]
-        
-        # 处理工具调用
-        final_response = handle_tool_use(tool_use, message_id)
-        print("最终响应:", final_response["content"][0]["text"])
-    else:
-        print("Claude响应:", message["text"])
-
-if __name__ == "__main__":
-    main()
+    return result
 ```
 
 ## 总结
 
-本教程介绍了如何使用Python构建MCP服务器，实现自定义函数，并与Claude AI模型集成。您可以根据需要扩展这个框架，添加更多功能，如：
+本教程介绍了如何使用Python构建MCP服务器，实现工具、资源和提示模板功能。通过这些功能，您可以大大扩展AI模型的能力，使其能够执行特定领域的任务和访问实时信息。
+
+您可以进一步扩展这个框架，添加更多功能：
 
 1. 数据库集成
 2. 用户认证和授权
-3. 高级错误处理
-4. 指标和监控
-5. 负载均衡和水平扩展
+3. 高级状态管理
+4. 指标收集和监控
+5. 多种协议支持
 
 通过Python实现MCP服务器，您可以利用Python丰富的生态系统和简洁的语法，快速构建强大的AI功能扩展服务。 

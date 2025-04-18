@@ -6,11 +6,19 @@ import Layout from '@theme/Layout';
 import styles from './index.module.css';
 
 // 特色内容卡片组件
-function FeatureCard({title, description, to, icon}) {
+function FeatureCard({title, description, to, icon, imageSrc}) {
   return (
     <div className={styles.featureCard}>
-      <div className={styles.featureCardIcon}>{icon}</div>
-      <h3>{title}</h3>
+      <div className={styles.featureCardHeader}>
+        {imageSrc ? (
+          <div className={styles.featureCardIcon}>
+            <img src={imageSrc} alt={title} className={styles.featureCardImage} />
+          </div>
+        ) : (
+          <div className={styles.featureCardIcon}>{icon}</div>
+        )}
+        <h3>{title}</h3>
+      </div>
       <p>{description}</p>
       <Link className="button button--primary button--lg" to={to}>
         了解更多
@@ -47,28 +55,52 @@ function FeatureSection() {
         <h2 className={styles.featureSectionTitle}>探索内容</h2>
         <div className={styles.featureGrid}>
           <FeatureCard
-            title="MCP开发指南"
-            description="了解Model Completion Protocol的原理和实现，扩展AI模型的能力"
-            to="/docs/mcp/intro"
-            icon="🔌"
+            title="A2A协议"
+            description="探索Agent-to-Agent协议如何实现AI代理之间的高效协作"
+            to="/docs/a2a/intro"
+            imageSrc="/img/nezha1.jpg"
           />
           <FeatureCard
-            title="Dify开发指南"
+            title="MCP协议"
+            description="了解Model Completion Protocol的原理和实现，扩展AI模型的能力"
+            to="/docs/mcp/intro"
+            imageSrc="/img/nezha2.jpg"
+          />
+          <FeatureCard
+            title="Dify应用平台"
             description="学习如何使用Dify平台构建强大的AI应用"
             to="/docs/dify/intro"
-            icon="🛠️"
+            imageSrc="/img/nezha3.jpg"
           />
           <FeatureCard
             title="MaxKB知识库"
             description="探索MaxKB知识库系统的使用方法和最佳实践"
             to="/docs/maxkb/intro"
-            icon="📚"
+            imageSrc="/img/nezha4.jpg"
           />
           <FeatureCard
-            title="RAG技术指南"
+            title="RAG技术"
             description="深入了解检索增强生成技术的原理和应用"
             to="/docs/rag/intro"
-            icon="🔍"
+            imageSrc="/img/nezha5.jpg"
+          />
+          <FeatureCard
+            title="大模型评测"
+            description="深入了解大模型评测的原理和应用"
+            to="/docs/evaluation/intro"
+            imageSrc="/img/nezha6.jpg"
+          />
+          <FeatureCard
+            title="提示词工程"
+            description="深入了解提示词工程的原理和应用"
+            to="/docs/prompt/intro"
+            imageSrc="/img/nezha7.jpg"
+          />
+          <FeatureCard
+            title="微调技术"
+            description="掌握大型语言模型的微调方法，打造专属于你的AI模型"
+            to="/docs/finetune/intro"
+            imageSrc="/img/nezha8.jpg"
           />
         </div>
       </div>

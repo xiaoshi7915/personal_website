@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="800" height="600" fill="#f8f9fa" />
+  
+  <!-- 标题 -->
+  <text x="400" y="50" font-family="Arial" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">知识库问答系统架构</text>
+  
+  <!-- MCP服务器框 -->
+  <rect x="150" y="100" width="500" height="350" rx="10" ry="10" fill="#e1f5fe" stroke="#0288d1" stroke-width="2" />
+  <text x="400" y="130" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#01579b">MCP服务器</text>
+  
+  <!-- 知识库核心 -->
+  <rect x="170" y="150" width="460" height="100" rx="5" ry="5" fill="#ffffff" stroke="#4fc3f7" stroke-width="2" />
+  <text x="400" y="175" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">知识库管理系统</text>
+  
+  <rect x="190" y="190" width="130" height="40" rx="5" ry="5" fill="#b3e5fc" stroke="#29b6f6" stroke-width="1" />
+  <text x="255" y="215" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">文档加载器</text>
+  
+  <rect x="335" y="190" width="130" height="40" rx="5" ry="5" fill="#b3e5fc" stroke="#29b6f6" stroke-width="1" />
+  <text x="400" y="215" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">网页抓取器</text>
+  
+  <rect x="480" y="190" width="130" height="40" rx="5" ry="5" fill="#b3e5fc" stroke="#29b6f6" stroke-width="1" />
+  <text x="545" y="215" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">自定义知识</text>
+  
+  <!-- 向量检索系统 -->
+  <rect x="170" y="260" width="460" height="100" rx="5" ry="5" fill="#ffffff" stroke="#4fc3f7" stroke-width="2" />
+  <text x="400" y="285" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">向量检索系统</text>
+  
+  <rect x="190" y="300" width="200" height="40" rx="5" ry="5" fill="#b3e5fc" stroke="#29b6f6" stroke-width="1" />
+  <text x="290" y="325" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">TF-IDF向量化</text>
+  
+  <rect x="410" y="300" width="200" height="40" rx="5" ry="5" fill="#b3e5fc" stroke="#29b6f6" stroke-width="1" />
+  <text x="510" y="325" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">相似度搜索</text>
+
+  <!-- 问答系统 -->
+  <rect x="170" y="370" width="460" height="60" rx="5" ry="5" fill="#ffffff" stroke="#4fc3f7" stroke-width="2" />
+  <text x="400" y="405" font-family="Arial" font-size="16" text-anchor="middle" fill="#333">问答系统</text>
+  
+  <!-- 客户端 -->
+  <rect x="280" y="500" width="240" height="60" rx="10" ry="10" fill="#e8f5e9" stroke="#4caf50" stroke-width="2" />
+  <text x="400" y="535" font-family="Arial" font-size="16" text-anchor="middle" fill="#2e7d32">API客户端/问答界面</text>
+  
+  <!-- 连接线 -->
+  <line x1="400" y1="430" x2="400" y2="500" stroke="#757575" stroke-width="2" stroke-dasharray="5,5" />
+  
+  <!-- 知识源图标 -->
+  <rect x="50" y="180" width="60" height="60" rx="5" ry="5" fill="#9fa8da" stroke="#3949ab" stroke-width="2" />
+  <text x="80" y="210" font-family="Arial" font-size="12" text-anchor="middle" fill="white">Markdown</text>
+  <text x="80" y="230" font-family="Arial" font-size="12" text-anchor="middle" fill="white">文档</text>
+  
+  <rect x="50" y="260" width="60" height="60" rx="5" ry="5" fill="#9fa8da" stroke="#3949ab" stroke-width="2" />
+  <text x="80" y="290" font-family="Arial" font-size="12" text-anchor="middle" fill="white">Web</text>
+  <text x="80" y="310" font-family="Arial" font-size="12" text-anchor="middle" fill="white">页面</text>
+  
+  <rect x="50" y="340" width="60" height="60" rx="5" ry="5" fill="#9fa8da" stroke="#3949ab" stroke-width="2" />
+  <text x="80" y="370" font-family="Arial" font-size="12" text-anchor="middle" fill="white">自定义</text>
+  <text x="80" y="390" font-family="Arial" font-size="12" text-anchor="middle" fill="white">知识</text>
+  
+  <!-- 箭头 -->
+  <line x1="110" y1="210" x2="170" y2="210" stroke="#757575" stroke-width="2" />
+  <polygon points="170,210 160,205 160,215" fill="#757575" />
+  
+  <line x1="110" y1="290" x2="170" y2="290" stroke="#757575" stroke-width="2" />
+  <polygon points="170,290 160,285 160,295" fill="#757575" />
+  
+  <line x1="110" y1="370" x2="170" y2="370" stroke="#757575" stroke-width="2" />
+  <polygon points="170,370 160,365 160,375" fill="#757575" />
+  
+  <!-- 用户询问图标 -->
+  <rect x="680" y="240" width="60" height="80" rx="5" ry="5" fill="#ffab91" stroke="#e64a19" stroke-width="2" />
+  <text x="710" y="280" font-family="Arial" font-size="12" text-anchor="middle" fill="white">用户问题</text>
+  
+  <!-- 问题箭头 -->
+  <line x1="680" y1="280" x2="630" y2="280" stroke="#757575" stroke-width="2" />
+  <polygon points="630,280 640,275 640,285" fill="#757575" />
+  
+  <!-- 答案图标 -->
+  <rect x="680" y="340" width="60" height="80" rx="5" ry="5" fill="#a5d6a7" stroke="#388e3c" stroke-width="2" />
+  <text x="710" y="380" font-family="Arial" font-size="12" text-anchor="middle" fill="white">知识回答</text>
+  
+  <!-- 答案箭头 -->
+  <line x1="630" y1="380" x2="680" y2="380" stroke="#757575" stroke-width="2" />
+  <polygon points="680,380 670,375 670,385" fill="#757575" />
+</svg> 

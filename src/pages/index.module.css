@@ -65,14 +65,37 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.featureCardIcon {
-  font-size: 2.5rem;
+.featureCardHeader {
+  display: flex;
+  align-items: center;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
+.featureCardIcon {
+  font-size: 2.5rem;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.featureCardImage {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.featureCardImage:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+  
 .featureCard h3 {
   font-size: 1.5rem;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 
 .featureCard p {

@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# MCP入门介绍
+# 入门介绍
 
 ## 什么是MCP
 
@@ -52,7 +52,7 @@ MCP客户端是与AI模型集成的组件，负责：
 
 在接下来的章节中，我们将详细介绍如何设置和使用MCP系统，包括：
 
-- [服务器端开发指南](/docs/mcp/server/getting-started)
+- [服务器端开发指南](/docs/mcp/server/examples/index)
 - [客户端集成指南](/docs/mcp/client/getting-started)
 - [实际应用案例](/docs/mcp/examples)
 - [常见问题解答](/docs/mcp/faq)

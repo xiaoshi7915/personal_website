@@ -11,7 +11,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'mr stone的个人网站',
-  tagline: '技术·分享·成长',
+  tagline: '技术          分享          成长',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -70,7 +70,7 @@ const config = {
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'mcpSidebar',
+            sidebarId: 'docsSidebar',
             position: 'left',
             label: 'AI学习文档',
           },
@@ -83,11 +83,15 @@ const config = {
             title: '文档',
             items: [
               {
-                label: 'MCP开发指南',
+                label: 'A2A协议',
+                to: '/docs/a2a/intro',
+              },
+              {
+                label: 'MCP协议',
                 to: '/docs/mcp/intro',
               },
               {
-                label: 'Dify开发指南',
+                label: 'Dify应用',
                 to: '/docs/dify/intro',
               },
               {
@@ -95,8 +99,20 @@ const config = {
                 to: '/docs/maxkb/intro',
               },
               {
-                label: 'RAG技术指南',
+                label: 'RAG技术',
                 to: '/docs/rag/intro',
+              },
+              {
+                label: '大模型评测',
+                to: '/docs/evaluation/intro',
+              },
+              {
+                label: '提示词工程',
+                to: '/docs/prompt/intro',
+              },
+              {
+                label: '微调技术',
+                to: '/docs/fine-tuning/intro',
               },
             ],
           },
