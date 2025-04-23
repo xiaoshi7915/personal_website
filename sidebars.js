@@ -92,6 +92,15 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: '多模态技术',
+      items: [
+        'multimodal/intro',
+        'multimodal/getting-started',
+        'multimodal/development',
+      ],
+    },
+    {
+      type: 'category',
       label: 'RAG技术',
       items: [
         'rag/intro',
@@ -129,6 +138,16 @@ const sidebars = {
         'prompt/getting-started',
         'prompt/development',
         'prompt/github-projects',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'LangChain框架',
+      items: [
+        'langchain/intro',
+        'langchain/getting-started',
+        'langchain/development',
+        'langchain/github-projects',
       ],
     },
   ],

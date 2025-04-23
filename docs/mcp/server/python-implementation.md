@@ -452,6 +452,680 @@ async def get_with_cache(location, days):
     return result
 ```
 
+## MCP服务器资源
+
+在开始开发MCP服务器之前，您可以查看以下资源来获取参考和帮助：
+
+### 官方资源
+- **官方仓库**: [https://github.com/modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)
+
+### 第三方MCP服务器平台
+以下平台提供了MCP服务器的托管、共享和发现功能：
+
+- **Smithery**: [https://smithery.com/](https://smithery.com/) - MCP服务器开发与托管平台
+- **Pulse MCP**: [https://www.pulsemcp.com/](https://www.pulsemcp.com/) - MCP服务发现与集成
+- **Awesome MCP Servers**: [https://mcpservers.org/](https://mcpservers.org/) - 优质MCP服务器集合
+- **MCP.so**: [https://mcp.so/](https://mcp.so/) - MCP服务器目录与资源
+- **Glama.ai**: [https://glama.ai/mcp/servers](https://glama.ai/mcp/servers) - AI驱动的MCP服务器平台
+- **Cursor.directory**: [https://cursor.directory/](https://cursor.directory/) - 面向开发者的MCP资源
+- **MCP Market**: [https://mcpmarket.cn/](https://mcpmarket.cn/) - 中文MCP服务器市场
+
+## MCP服务器开发案例
+
+下面提供了几个常见的MCP服务器开发案例，您可以参考这些示例来开发自己的服务器。
+
+### 1. 获取当前时间服务器
+
+以下是一个简单的获取当前时间的MCP服务器示例：
+
+```python
+import datetime
+from zoneinfo import ZoneInfo, available_timezones
+from mcp import Server, Tool
+
+# 创建MCP服务器实例
+server = Server(
+    name="current-time",
+    description="提供当前时间信息的服务",
+    version="1.0.0",
+    vendor="MyCompany"
+)
+
+@server.tool
+async def get_current_time(timezone: str = "UTC") -> dict:
+    """
+    获取指定时区的当前时间
+    
+    Args:
+        timezone: 时区名称（如"Asia/Shanghai"、"America/New_York"）。默认为UTC
+        
+    Returns:
+        包含当前时间信息的字典
+    """
+    try:
+        # 验证时区是否有效
+        if timezone not in available_timezones():
+            return {
+                "error": f"无效的时区: {timezone}",
+                "valid_timezones_examples": list(available_timezones())[:5]
+            }
+        
+        # 获取指定时区的当前时间
+        now = datetime.datetime.now(ZoneInfo(timezone))
+        
+        return {
+            "timezone": timezone,
+            "datetime": now.isoformat(),
+            "date": now.strftime("%Y-%m-%d"),
+            "time": now.strftime("%H:%M:%S"),
+            "timestamp": now.timestamp(),
+            "day_of_week": now.strftime("%A"),
+            "unix_timestamp": int(now.timestamp())
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@server.resource(path="/timezones")
+async def timezone_list():
+    """可用时区列表"""
+    # 返回所有可用的时区
+    return list(available_timezones())
+
+# 启动服务器
+if __name__ == "__main__":
+    server.run()
+```
+
+### 2. 天气查询服务器
+
+以下是使用百度地图API的天气查询服务器示例：
+
+```python
+import httpx
+from mcp import Server, Tool
+
+# 创建MCP服务器实例
+server = Server(
+    name="weather",
+    description="用于获取天气预报和警报信息的服务",
+    version="1.0.0",
+    vendor="MyCompany"
+)
+
+# 百度地图API密钥
+API_KEY = "your_baidu_map_api_key"  # 替换为您的百度地图API密钥
+
+@server.tool
+async def geocode(address: str) -> dict:
+    """
+    将地址转换为经纬度坐标和行政区划ID
+    
+    Args:
+        address: 待解析的地址（最多支持84个字节）
+        
+    Returns:
+        包含地理编码信息的字典
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.map.baidu.com/geocoding/v3",
+                params={
+                    "address": address,
+                    "output": "json",
+                    "ak": API_KEY
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if data["status"] == 0:
+                result = data["result"]
+                location = result["location"]
+                return {
+                    "status": "success",
+                    "formatted_address": result.get("formatted_address", ""),
+                    "location": {
+                        "lat": location["lat"],
+                        "lng": location["lng"]
+                    },
+                    "precise": result.get("precise", 0),
+                    "confidence": result.get("confidence", 0),
+                    "district_id": result.get("adcode", "")
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": data.get("message", "地址解析失败")
+                }
+                
+    except Exception as e:
+        return {"error": str(e)}
+
+@server.tool
+async def get_forecast(district_id: str) -> dict:
+    """
+    获取指定行政区划ID的天气预报
+    
+    Args:
+        district_id: 百度地图行政区划ID（例如：北京市朝阳区为110105）
+        
+    Returns:
+        包含实时天气、未来天气预报的信息
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.map.baidu.com/weather/v1",
+                params={
+                    "district_id": district_id,
+                    "data_type": "all",
+                    "ak": API_KEY
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if data["status"] == 0:
+                result = data["result"]
+                return {
+                    "status": "success",
+                    "location": result.get("location", {}),
+                    "now": result.get("now", {}),
+                    "forecasts": result.get("forecasts", [])
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": data.get("message", "获取天气预报失败")
+                }
+                
+    except Exception as e:
+        return {"error": str(e)}
+
+@server.tool
+async def get_alerts(district_id: str) -> dict:
+    """
+    获取指定行政区划ID的天气预警信息
+    
+    Args:
+        district_id: 百度地图行政区划ID（例如：北京市朝阳区为110105）
+        
+    Returns:
+        包含预警类型、等级、详情的天气预警信息
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.map.baidu.com/weather/v1",
+                params={
+                    "district_id": district_id,
+                    "data_type": "all",
+                    "ak": API_KEY
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if data["status"] == 0:
+                result = data["result"]
+                alerts = result.get("alerts", [])
+                return {
+                    "status": "success",
+                    "location": result.get("location", {}),
+                    "alerts": alerts,
+                    "alert_count": len(alerts)
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": data.get("message", "获取天气预警失败")
+                }
+                
+    except Exception as e:
+        return {"error": str(e)}
+
+# 启动服务器
+if __name__ == "__main__":
+    server.run()
+```
+
+### 3. MySQL数据库查询服务器
+
+以下是一个MySQL数据库查询服务器示例，提供数据库元数据和数据查询功能：
+
+```python
+import mysql.connector
+from mcp import Server, Tool
+
+# 创建MCP服务器实例
+server = Server(
+    name="mysql-query",
+    description="用于查询MySQL数据库的服务",
+    version="1.0.0",
+    vendor="MyCompany"
+)
+
+@server.tool
+async def get_database_metadata(host: str, user: str, password: str, database: str, port: int) -> dict:
+    """
+    获取所有数据库的元数据信息，包括表名、字段名、字段注释、字段类型、字段长度、是否为空、是否主键、外键、索引
+    
+    Args:
+        host: 数据库主机地址
+        user: 数据库用户名
+        password: 数据库密码
+        database: 要连接的特定数据库名称
+        port: 数据库端口
+        
+    Returns:
+        包含所有数据库元数据信息的字典，格式化为便于阅读的结构
+    """
+    try:
+        # 连接到MySQL数据库
+        conn = mysql.connector.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database,
+            port=port
+        )
+        cursor = conn.cursor(dictionary=True)
+        
+        # 获取所有表信息
+        cursor.execute("""
+            SELECT 
+                TABLE_NAME, 
+                TABLE_COMMENT 
+            FROM 
+                information_schema.TABLES 
+            WHERE 
+                TABLE_SCHEMA = %s
+        """, (database,))
+        
+        tables = cursor.fetchall()
+        
+        result = {"database": database, "tables": []}
+        
+        # 遍历每个表，获取字段信息
+        for table in tables:
+            table_name = table["TABLE_NAME"]
+            table_comment = table["TABLE_COMMENT"]
+            
+            # 获取字段信息
+            cursor.execute("""
+                SELECT 
+                    COLUMN_NAME,
+                    COLUMN_COMMENT,
+                    DATA_TYPE,
+                    CHARACTER_MAXIMUM_LENGTH,
+                    IS_NULLABLE,
+                    COLUMN_KEY
+                FROM 
+                    information_schema.COLUMNS 
+                WHERE 
+                    TABLE_SCHEMA = %s AND 
+                    TABLE_NAME = %s
+            """, (database, table_name))
+            
+            columns = cursor.fetchall()
+            
+            # 获取索引信息
+            cursor.execute("""
+                SELECT 
+                    INDEX_NAME,
+                    COLUMN_NAME,
+                    NON_UNIQUE
+                FROM 
+                    information_schema.STATISTICS 
+                WHERE 
+                    TABLE_SCHEMA = %s AND 
+                    TABLE_NAME = %s
+            """, (database, table_name))
+            
+            indexes = cursor.fetchall()
+            
+            # 获取外键信息
+            cursor.execute("""
+                SELECT 
+                    CONSTRAINT_NAME,
+                    COLUMN_NAME,
+                    REFERENCED_TABLE_NAME,
+                    REFERENCED_COLUMN_NAME
+                FROM 
+                    information_schema.KEY_COLUMN_USAGE 
+                WHERE 
+                    TABLE_SCHEMA = %s AND 
+                    TABLE_NAME = %s AND
+                    REFERENCED_TABLE_NAME IS NOT NULL
+            """, (database, table_name))
+            
+            foreign_keys = cursor.fetchall()
+            
+            # 构建表信息
+            table_info = {
+                "name": table_name,
+                "comment": table_comment,
+                "columns": [],
+                "indexes": [],
+                "foreign_keys": []
+            }
+            
+            # 添加字段信息
+            for column in columns:
+                table_info["columns"].append({
+                    "name": column["COLUMN_NAME"],
+                    "comment": column["COLUMN_COMMENT"],
+                    "type": column["DATA_TYPE"],
+                    "length": column["CHARACTER_MAXIMUM_LENGTH"],
+                    "nullable": column["IS_NULLABLE"] == "YES",
+                    "is_primary": column["COLUMN_KEY"] == "PRI"
+                })
+            
+            # 添加索引信息
+            for index in indexes:
+                table_info["indexes"].append({
+                    "name": index["INDEX_NAME"],
+                    "column": index["COLUMN_NAME"],
+                    "is_unique": index["NON_UNIQUE"] == 0
+                })
+            
+            # 添加外键信息
+            for fk in foreign_keys:
+                table_info["foreign_keys"].append({
+                    "name": fk["CONSTRAINT_NAME"],
+                    "column": fk["COLUMN_NAME"],
+                    "referenced_table": fk["REFERENCED_TABLE_NAME"],
+                    "referenced_column": fk["REFERENCED_COLUMN_NAME"]
+                })
+            
+            result["tables"].append(table_info)
+        
+        cursor.close()
+        conn.close()
+        
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+@server.tool
+async def get_sample_data(host: str, user: str, password: str, database: str, port: int, limit: int = 3) -> dict:
+    """
+    获取所有数据库每个表的样例数据（默认最多3条）
+    
+    Args:
+        host: 数据库主机地址
+        user: 数据库用户名
+        password: 数据库密码
+        database: 要连接的特定数据库名称
+        port: 数据库端口
+        limit: 每个表获取的最大样例数据条数，默认为3
+        
+    Returns:
+        包含所有表样例数据的字典，格式化为便于阅读的结构
+    """
+    try:
+        # 连接到MySQL数据库
+        conn = mysql.connector.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database,
+            port=port
+        )
+        cursor = conn.cursor(dictionary=True)
+        
+        # 获取所有表名
+        cursor.execute("""
+            SELECT 
+                TABLE_NAME 
+            FROM 
+                information_schema.TABLES 
+            WHERE 
+                TABLE_SCHEMA = %s
+        """, (database,))
+        
+        tables = cursor.fetchall()
+        
+        result = {"database": database, "tables": []}
+        
+        # 遍历每个表，获取样例数据
+        for table in tables:
+            table_name = table["TABLE_NAME"]
+            
+            try:
+                # 获取表中的样例数据
+                cursor.execute(f"SELECT * FROM `{table_name}` LIMIT %s", (limit,))
+                sample_data = cursor.fetchall()
+                
+                # 构建表信息
+                table_info = {
+                    "name": table_name,
+                    "sample_data": sample_data
+                }
+                
+                result["tables"].append(table_info)
+            except Exception as table_error:
+                # 如果某个表查询失败，记录错误但继续处理其他表
+                result["tables"].append({
+                    "name": table_name,
+                    "error": str(table_error)
+                })
+        
+        cursor.close()
+        conn.close()
+        
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+@server.tool
+async def execute_readonly_query(host: str, user: str, password: str, database: str, port: int, query: str, max_rows: int = 100) -> dict:
+    """
+    在只读事务中执行自定义SQL查询，确保查询不会修改数据库
+    
+    Args:
+        host: 数据库主机地址
+        user: 数据库用户名
+        password: 数据库密码
+        database: 要连接的特定数据库名称
+        port: 数据库端口
+        query: 要执行的SQL查询语句
+        max_rows: 返回的最大行数，默认为100
+        
+    Returns:
+        查询结果的字符串表示，格式化为便于阅读的结构
+    """
+    try:
+        # 检查查询是否为只读查询
+        query_upper = query.upper().strip()
+        if not query_upper.startswith("SELECT") and not query_upper.startswith("SHOW") and not query_upper.startswith("DESCRIBE") and not query_upper.startswith("EXPLAIN"):
+            return {"error": "只允许执行SELECT、SHOW、DESCRIBE或EXPLAIN查询"}
+        
+        # 连接到MySQL数据库
+        conn = mysql.connector.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database,
+            port=port
+        )
+        cursor = conn.cursor(dictionary=True)
+        
+        # 开始只读事务
+        cursor.execute("SET TRANSACTION READ ONLY")
+        cursor.execute("START TRANSACTION")
+        
+        try:
+            # 执行查询
+            cursor.execute(query)
+            
+            # 获取结果
+            results = cursor.fetchmany(max_rows)
+            has_more = cursor.fetchone() is not None
+            
+            # 获取列名
+            columns = [column[0] for column in cursor.description] if cursor.description else []
+            
+            # 回滚事务（因为是只读的）
+            conn.rollback()
+            
+            # 构建响应
+            response = {
+                "query": query,
+                "columns": columns,
+                "rows": results,
+                "row_count": len(results),
+                "has_more": has_more,
+                "max_rows": max_rows
+            }
+            
+            cursor.close()
+            conn.close()
+            
+            return response
+        except Exception as query_error:
+            # 如果查询执行失败，回滚事务
+            conn.rollback()
+            cursor.close()
+            conn.close()
+            return {"error": str(query_error)}
+            
+    except Exception as e:
+        return {"error": str(e)}
+
+# 添加用户提示
+@server.prompt(name="mysql-query-examples")
+def mysql_query_examples():
+    return """
+    以下是一些常用的MySQL查询示例：
+    
+    1. 查看所有表：
+       ```sql
+       SHOW TABLES;
+       ```
+    
+    2. 查看表结构：
+       ```sql
+       DESCRIBE table_name;
+       ```
+    
+    3. 查询表数据：
+       ```sql
+       SELECT * FROM table_name LIMIT 10;
+       ```
+    
+    4. 按条件查询：
+       ```sql
+       SELECT column1, column2 FROM table_name WHERE condition LIMIT 10;
+       ```
+    
+    5. 连接查询：
+       ```sql
+       SELECT a.column1, b.column2 
+       FROM table1 a 
+       JOIN table2 b ON a.id = b.table1_id
+       LIMIT 10;
+       ```
+    
+    6. 分组统计：
+       ```sql
+       SELECT category, COUNT(*) as count 
+       FROM table_name 
+       GROUP BY category;
+       ```
+    """
+
+# 启动服务器
+if __name__ == "__main__":
+    server.run()
+```
+
+## 调试MCP服务器
+
+开发MCP服务器时，使用适当的调试工具可以帮助您识别和解决问题。以下是调试MCP服务器的一些方法：
+
+### 使用Inspector工具
+
+MCP提供了一个官方Inspector工具，可以模拟客户端与服务器之间的交互，检查服务器的响应是否符合预期。
+
+安装Inspector工具：
+
+```bash
+# 使用npm安装Inspector
+npm install -g @modelcontextprotocol/inspector
+```
+
+调试Python服务器：
+
+```bash
+# 通用格式
+npx @modelcontextprotocol/inspector <command> <arg1> <arg2>
+
+# 调试Python服务器
+npx @modelcontextprotocol/inspector python -m your_server_module
+# 或
+npx @modelcontextprotocol/inspector python your_server.py
+```
+
+调试Node.js服务器：
+
+```bash
+# 调试Node.js服务器
+npx @modelcontextprotocol/inspector node build/index.js
+```
+
+Inspector工具的官方文档：[https://github.com/modelcontextprotocol/inspector](https://github.com/modelcontextprotocol/inspector)
+
+### 配置MCP服务器
+
+要将MCP服务器集成到MCP客户端中，您需要创建适当的配置文件。以下是一个示例配置：
+
+```json
+{
+  "mcpServers": {
+    "weather": {
+      "command": "python",
+      "args": ["path/to/your/weather.py"]
+    },
+    "mysql-query": {
+      "command": "python",
+      "args": ["path/to/your/mysql_query.py"]
+    }
+  }
+}
+```
+
+对于第三方服务器，如Smithery的顺序思考服务器，配置示例：
+
+```json
+"@smithery-ai-server-sequential-thinking": {
+  "command": "cmd",
+  "args": [
+    "/c",
+    "npx",
+    "-y",
+    "@smithery/cli@latest",
+    "run",
+    "@smithery-ai/server-sequential-thinking",
+    "-config",
+    "{}"
+  ]
+}
+```
+
+## 最佳实践
+
+开发MCP服务器时，请遵循以下最佳实践：
+
+1. **异常处理**: 在工具函数中包装所有操作，捕获并适当处理异常
+2. **文档完善**: 提供详细的工具函数、资源和提示文档
+3. **输入验证**: 验证用户输入参数，防止错误或恶意数据
+4. **资源组织**: 合理组织资源路径，使其直观易用
+5. **提示模板**: 提供有用的提示模板，帮助用户正确使用您的服务器
+6. **性能优化**: 使用异步操作处理I/O密集型任务，避免阻塞
+7. **无状态设计**: 尽可能使服务器无状态，便于扩展和维护
+
 ## 总结
 
 本教程介绍了如何使用Python构建MCP服务器，实现工具、资源和提示模板功能。通过这些功能，您可以大大扩展AI模型的能力，使其能够执行特定领域的任务和访问实时信息。

@@ -11,7 +11,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'mr stone的个人网站',
-  tagline: '技术          分享          成长',
+  tagline: '技术 分享 成长',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -112,7 +112,7 @@ const config = {
               },
               {
                 label: '微调技术',
-                to: '/docs/fine-tuning/intro',
+                to: '/docs/finetune/intro',
               },
             ],
           },

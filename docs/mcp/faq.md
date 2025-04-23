@@ -4,13 +4,13 @@ sidebar_position: 6
 
 # 常见问题解答（FAQ）
 
-本页面回答了关于MCP（Model Completion Protocol）开发和使用过程中的常见问题。
+本页面回答了关于MCP（Model Context  Protocol）开发和使用过程中的常见问题。
 
 ## 基础问题
 
 ### 什么是MCP？
 
-MCP（Model Completion Protocol）是一种用于AI模型与应用程序之间通信的协议。它允许AI模型调用外部函数，从而扩展模型的能力，使其能够执行诸如查询数据库、调用API、执行计算等原本无法完成的任务。
+MCP（Model Context  Protocol）是一种用于AI模型与应用程序之间通信的协议。它允许AI模型调用外部函数，从而扩展模型的能力，使其能够执行诸如查询数据库、调用API、执行计算等原本无法完成的任务。
 
 ### MCP与传统的API调用有什么不同？
 

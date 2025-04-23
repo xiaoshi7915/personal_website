@@ -7,7 +7,7 @@
 本网站主要包括以下内容：
 
 - **AI学习文档**：
-  - MCP开发指南 - 详细介绍Model Completion Protocol的实现和应用
+  - MCP开发指南 - 详细介绍Model Context  Protocol的实现和应用
   - Dify开发指南 - 介绍Dify平台的使用和开发
   - MaxKB知识库 - 提供知识库相关资料
   - RAG技术指南 - 检索增强生成技术的详细介绍

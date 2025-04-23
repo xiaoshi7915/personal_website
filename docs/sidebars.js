@@ -84,6 +84,16 @@ module.exports = {
     },
     {
       type: 'category',
+      label: '多模态技术',
+      items: [
+        'multimodal/intro',
+        'multimodal/getting-started',
+        'multimodal/development',
+        'multimodal/github-projects',
+      ],
+    },
+    {
+      type: 'category',
       label: 'RAG技术指南',
       items: [
         'rag/intro',
@@ -121,6 +131,16 @@ module.exports = {
         'finetune/intro',
         'finetune/getting-started',
         'finetune/github-projects',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'LangChain框架',
+      items: [
+        'langchain/intro',
+        'langchain/getting-started',
+        'langchain/development',
+        'langchain/github-projects',
       ],
     },
   ],

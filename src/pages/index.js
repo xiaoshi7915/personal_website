@@ -62,12 +62,12 @@ function FeatureSection() {
           />
           <FeatureCard
             title="MCP协议"
-            description="了解Model Completion Protocol的原理和实现，扩展AI模型的能力"
+            description="了解Model Context  Protocol的原理和实现，扩展AI模型的能力"
             to="/docs/mcp/intro"
             imageSrc="/img/nezha2.jpg"
           />
           <FeatureCard
-            title="Dify应用平台"
+            title="Dify应用"
             description="学习如何使用Dify平台构建强大的AI应用"
             to="/docs/dify/intro"
             imageSrc="/img/nezha3.jpg"
@@ -77,6 +77,12 @@ function FeatureSection() {
             description="探索MaxKB知识库系统的使用方法和最佳实践"
             to="/docs/maxkb/intro"
             imageSrc="/img/nezha4.jpg"
+          />
+          <FeatureCard
+            title="多模态技术"
+            description="探索结合文本、图像、音频的多模态AI技术及其应用场景"
+            to="/docs/multimodal/intro"
+            imageSrc="/img/nezha10.jpg"
           />
           <FeatureCard
             title="RAG技术"
@@ -101,6 +107,12 @@ function FeatureSection() {
             description="掌握大型语言模型的微调方法，打造专属于你的AI模型"
             to="/docs/finetune/intro"
             imageSrc="/img/nezha8.jpg"
+          />
+          <FeatureCard
+            title="LangChain框架"
+            description="学习如何使用LangChain框架构建复杂的AI应用链和工作流"
+            to="/docs/langchain/intro"
+            imageSrc="/img/nezha9.jpg"
           />
         </div>
       </div>

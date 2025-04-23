@@ -7,7 +7,7 @@ tags: [mcp, ai, development]
 
 # MCP开发指南：构建高效AI工具连接模型
 
-MCP（Model Control Protocol）是连接大型语言模型与外部工具的桥梁，让AI能够与现实世界进行交互。本文将介绍MCP的核心概念和开发技巧。
+MCP（Model Context Protocol）是连接大型语言模型与外部工具的桥梁，让AI能够与现实世界进行交互。本文将介绍MCP的核心概念和开发技巧。
 
 <!-- truncate -->
 
