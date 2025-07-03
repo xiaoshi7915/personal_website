@@ -91,6 +91,14 @@ const config = {
                 to: '/docs/mcp/intro',
               },
               {
+                label: 'n8n工作流',
+                to: '/docs/n8n/intro',
+              },
+              {
+                label: 'BISHENG平台',
+                to: '/docs/bisheng/intro',
+              },
+              {
                 label: 'Dify应用',
                 to: '/docs/dify/intro',
               },

@@ -67,6 +67,18 @@ function FeatureSection() {
             imageSrc="/img/nezha2.jpg"
           />
           <FeatureCard
+            title="n8n工作流"
+            description="学习如何使用n8n构建强大的自动化工作流"
+            to="/docs/n8n/intro"
+            imageSrc="/img/哪吒11.jpg"
+          />
+          <FeatureCard
+            title="BISHENG平台"
+            description="企业级LLM应用开发平台，可视化构建智能应用"
+            to="/docs/bisheng/intro"
+            imageSrc="/img/nezha12.jpg"
+          />
+          <FeatureCard
             title="Dify应用"
             description="学习如何使用Dify平台构建强大的AI应用"
             to="/docs/dify/intro"

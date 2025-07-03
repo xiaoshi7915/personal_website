@@ -72,6 +72,28 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'n8n工作流',
+      items: [
+        'n8n/intro',
+        'n8n/getting-started',
+        'n8n/advanced-development',
+        'n8n/github-projects',
+        'n8n/workflow-cases',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'BISHENG平台',
+      items: [
+        'bisheng/intro',
+        'bisheng/getting-started',
+        'bisheng/advanced-development',
+        'bisheng/github-projects',
+        'bisheng/classic-cases',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Dify平台',
       items: [
         'dify/intro',
