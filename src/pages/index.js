@@ -121,10 +121,22 @@ function FeatureSection() {
             imageSrc="/img/nezha8.jpg"
           />
           <FeatureCard
+            title="向量数据库"
+            description="探索向量数据库的原理和应用"
+            to="/docs/vector-database/intro"
+            imageSrc="/img/nezha14.jpg"
+          />
+          <FeatureCard
             title="LangChain框架"
             description="学习如何使用LangChain框架构建复杂的AI应用链和工作流"
             to="/docs/langchain/intro"
             imageSrc="/img/nezha9.jpg"
+          />
+          <FeatureCard
+            title="Transformer架构"
+            description="探索Transformer架构的原理和应用"
+            to="/docs/transformer/intro"
+            imageSrc="/img/nezha13.jpg"
           />
         </div>
       </div>

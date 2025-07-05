@@ -54,9 +54,19 @@ const FeatureList = [
     description: '掌握大型语言模型的微调方法，打造专属于你的AI模型',
   },
   {
+    title: '向量数据库',
+    icon: 'img/vector-logo.svg',
+    description: '探索向量数据库的原理和应用',
+  },
+  {
     title: 'LangChain框架',
     icon: 'img/langchain-logo.svg',
     description: '探索LangChain框架的使用方法和最佳实践',
+  },
+  {
+    title: 'Transformer架构',
+    icon: 'img/transformer-logo.svg',
+    description: '探索Transformer架构的原理和应用',
   },
 ];
 

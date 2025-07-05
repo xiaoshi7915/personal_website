@@ -164,12 +164,34 @@ const sidebars = {
     },
     {
       type: 'category',
+      label:"向量数据库",
+      items:[
+        'vector-database/intro',
+        'vector-database/principles',
+        'vector-database/architecture',
+        'vector-database/applications',
+        'vector-database/mainstream',
+      ],
+    },
+    {
+      type: 'category',
       label: 'LangChain框架',
       items: [
         'langchain/intro',
         'langchain/getting-started',
         'langchain/development',
         'langchain/github-projects',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Transformer架构',
+      items: [
+        'transformer/intro',
+        'transformer/architecture',
+        'transformer/implementation',
+        'transformer/variants',
+        'transformer/applications',
       ],
     },
   ],
