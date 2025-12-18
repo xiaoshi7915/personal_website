@@ -60,6 +60,19 @@ const config = {
     ],
   ],
 
+  // 插件配置 - 本地搜索
+  plugins: [
+    [
+      require.resolve("@easyops-cn/docusaurus-search-local"),
+      {
+        hashed: true,
+        language: ["zh", "en"],
+        highlightSearchTermsOnTargetPage: true,
+        explicitSearchResultPath: true,
+      },
+    ],
+  ],
+
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -157,6 +170,23 @@ const config = {
         darkTheme: prismThemes.dracula,
         additionalLanguages: ['bash', 'json', 'typescript', 'jsx', 'tsx', 'python'],
       },
+      // 评论系统配置 (Giscus)
+      // 注意：需要先在GitHub仓库中启用Discussions功能
+      // 然后访问 https://giscus.app 获取repoId和categoryId
+        giscus: {
+          repo: 'xiaoshi7915/personal_website', // 注意：使用下划线，不是横线
+          repoId: 'R_kgDOObiqiQ',
+          category: 'Announcements',
+          categoryId: 'DIC_kwDOObiqic4Cz-tZ',
+          mapping: 'pathname',
+          reactionsEnabled: true,
+          emitMetadata: false, // 改为false，与用户提供的配置一致
+          inputPosition: 'top', // 改为top，与用户提供的配置一致
+          lang: 'zh-CN',
+          theme: 'light',
+          darkTheme: 'dark_dimmed',
+          strict: false, // 添加strict配置
+        },
     }),
 };
 
