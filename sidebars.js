@@ -18,6 +18,8 @@ const sidebars = {
 
   // 文档侧边栏
   docsSidebar: [
+    'learning-paths',
+    'changelog',
     {
       type: 'category',
       label: 'A2A协议',
@@ -26,6 +28,8 @@ const sidebars = {
         'a2a/getting-started',
         'a2a/development',
         'a2a/github-projects',
+        'a2a/best-practices',
+        'a2a/faq',
       ],
     },
     {
@@ -67,6 +71,7 @@ const sidebars = {
           ],
         },
         'mcp/github-projects',
+        'mcp/best-practices',
         'mcp/faq',
       ],
     },
@@ -79,6 +84,8 @@ const sidebars = {
         'n8n/advanced-development',
         'n8n/github-projects',
         'n8n/workflow-cases',
+        'n8n/best-practices',
+        'n8n/faq',
       ],
     },
     {
@@ -90,6 +97,8 @@ const sidebars = {
         'bisheng/advanced-development',
         'bisheng/github-projects',
         'bisheng/classic-cases',
+        'bisheng/best-practices',
+        'bisheng/faq',
       ],
     },
     {
@@ -100,6 +109,9 @@ const sidebars = {
         'dify/getting-started',
         'dify/development',
         'dify/github-projects',
+        'dify/best-practices',
+        'dify/faq',
+        'dify/practical-cases',
       ],
     },
     {
@@ -110,6 +122,8 @@ const sidebars = {
         'maxkb/getting-started',
         'maxkb/development',
         'maxkb/github-projects',
+        'maxkb/best-practices',
+        'maxkb/faq',
       ],
     },
     {
@@ -119,6 +133,8 @@ const sidebars = {
         'multimodal/intro',
         'multimodal/getting-started',
         'multimodal/development',
+        'multimodal/best-practices',
+        'multimodal/faq',
       ],
     },
     {
@@ -129,6 +145,9 @@ const sidebars = {
         'rag/getting-started',
         'rag/development',
         'rag/github-projects',
+        'rag/best-practices',
+        'rag/faq',
+        'rag/practical-cases',
       ],
     },
     {
@@ -139,6 +158,8 @@ const sidebars = {
         'finetune/getting-started',
         'finetune/development',
         'finetune/github-projects',
+        'finetune/best-practices',
+        'finetune/faq',
       ],
     },
     {
@@ -150,6 +171,8 @@ const sidebars = {
         'evaluation/methods',
         'evaluation/metrics',
         'evaluation/development',
+        'evaluation/best-practices',
+        'evaluation/faq',
       ],
     },
     {
@@ -160,6 +183,9 @@ const sidebars = {
         'prompt/getting-started',
         'prompt/development',
         'prompt/github-projects',
+        'prompt/best-practices',
+        'prompt/faq',
+        'prompt/practical-cases',
       ],
     },
     {
@@ -171,6 +197,8 @@ const sidebars = {
         'vector-database/architecture',
         'vector-database/applications',
         'vector-database/mainstream',
+        'vector-database/best-practices',
+        'vector-database/faq',
       ],
     },
     {
@@ -181,6 +209,8 @@ const sidebars = {
         'langchain/getting-started',
         'langchain/development',
         'langchain/github-projects',
+        'langchain/best-practices',
+        'langchain/faq',
       ],
     },
     {
@@ -192,6 +222,8 @@ const sidebars = {
         'transformer/implementation',
         'transformer/variants',
         'transformer/applications',
+        'transformer/best-practices',
+        'transformer/faq',
       ],
     },
   ],

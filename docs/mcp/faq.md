@@ -1,252 +1,417 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 ---
 
-# 常见问题解答（FAQ）
+# MCP常见问题
 
-本页面回答了关于MCP（Model Context  Protocol）开发和使用过程中的常见问题。
+本文档收集了MCP开发和使用过程中常见的问题和解决方案。
 
 ## 基础问题
 
-### 什么是MCP？
+### Q1: MCP和Function Calling有什么区别？
 
-MCP（Model Context  Protocol）是一种用于AI模型与应用程序之间通信的协议。它允许AI模型调用外部函数，从而扩展模型的能力，使其能够执行诸如查询数据库、调用API、执行计算等原本无法完成的任务。
+**A:** MCP（Model Context Protocol）是一个更高级的协议，相比传统的Function Calling有以下优势：
 
-### MCP与传统的API调用有什么不同？
+- **标准化通信**：提供统一的协议规范
+- **更好的扩展性**：支持更复杂的工具和资源管理
+- **类型安全**：更强的类型定义和验证
+- **异步支持**：原生支持异步操作
+- **资源管理**：内置资源生命周期管理
 
-传统的API调用是由应用程序主动发起的，而MCP是由AI模型决定何时调用哪个函数。这种差异使得交互更加自然和智能，因为模型可以根据上下文和用户需求自主决定何时使用外部功能。
+### Q2: 如何选择MCP服务器和客户端？
 
-### 使用MCP需要什么技术基础？
+**A:** 选择建议：
 
-使用MCP需要基本的编程知识，特别是JavaScript/TypeScript。如果您要构建MCP服务器，您需要了解Node.js和RESTful API的概念。如果您要集成MCP客户端，您需要了解如何与AI模型API交互。
+- **服务器端**：
+  - Python：适合快速开发和原型验证
+  - JavaScript/TypeScript：适合Web应用和Node.js生态
+  - 根据团队技术栈选择
+
+- **客户端端**：
+  - 如果使用Claude Desktop，使用官方SDK
+  - 如果集成到自己的应用，使用对应语言的客户端库
+
+### Q3: MCP支持哪些编程语言？
+
+**A:** 目前官方支持：
+- Python（最完善）
+- JavaScript/TypeScript
+- 其他语言可以通过HTTP协议实现
 
 ## 开发问题
 
-### 我可以使用任何编程语言开发MCP服务器吗？
+### Q4: 如何调试MCP服务器？
 
-虽然官方MCP库是为JavaScript/TypeScript设计的，但MCP本质上是一种通信协议，理论上可以使用任何能够处理HTTP请求和JSON数据的编程语言实现。不过，使用官方库可以简化开发过程并确保兼容性。
+**A:** 调试方法：
 
-### 如何处理MCP函数中的错误？
+```python
+# 1. 启用详细日志
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
-在MCP函数中，您应该使用try-catch块捕获可能的错误，并返回有意义的错误信息。例如：
+# 2. 使用调试模式启动
+python -m mcp.server --debug
 
-```typescript
-async function myFunction(params) {
-  try {
-    // 函数逻辑
-    return result;
-  } catch (error) {
-    // 返回格式化的错误信息
-    return {
-      error: {
-        message: error.message,
-        code: 'FUNCTION_ERROR'
-      }
-    };
-  }
-}
+# 3. 添加断点
+import pdb; pdb.set_trace()
+
+# 4. 使用日志记录
+logger.debug(f"收到请求: {request}")
 ```
 
-### MCP服务器能处理并发请求吗？
+### Q5: 如何处理异步操作？
 
-是的，MCP服务器可以处理并发请求。作为基于Express的应用程序，它继承了Node.js的异步非阻塞特性。对于高负载场景，您可以考虑使用负载均衡和水平扩展策略。
+**A:** 异步处理示例：
 
-### 如何保护我的MCP服务器？
+```python
+import asyncio
 
-保护MCP服务器的关键措施包括：
+async def handle_async_tool(arguments):
+    # 异步操作
+    result = await some_async_function(arguments)
+    return result
 
-1. **身份验证**：实现API密钥或JWT等身份验证机制
-2. **授权**：限制谁可以调用哪些函数
-3. **输入验证**：验证所有传入参数以防止注入攻击
-4. **速率限制**：防止过度使用和DoS攻击
-5. **HTTPS**：使用加密连接保护数据传输
-
-示例身份验证中间件：
-
-```typescript
-app.use('/mcp', (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey || !isValidApiKey(apiKey)) {
-    return res.status(401).json({ error: '未授权访问' });
-  }
-  next();
-});
+# 在服务器中
+@server.tool("async_tool")
+async def async_tool_handler(arguments):
+    return await handle_async_tool(arguments)
 ```
 
-## 集成问题
+### Q6: 如何实现工具链（Tool Chaining）？
 
-### 如何将MCP集成到现有的Web应用程序中？
+**A:** 工具链实现：
 
-将MCP集成到现有Web应用的步骤：
-
-1. 安装MCP客户端库：`npm install @anthropic/mcp-client`
-2. 创建MCP客户端实例并配置函数处理器
-3. 创建一个API端点来处理用户请求
-4. 使用MCP客户端与AI模型交互
-5. 处理模型生成的工具调用并返回结果
-
-### MCP是否支持流式处理（streaming）？
-
-是的，MCP支持流式处理。对于长时间运行的操作，您可以发送进度更新，使用户获得实时反馈。实现方式如下：
-
-```typescript
-async function longRunningOperation(params) {
-  // 开始操作
-  for (let i = 0; i < steps; i++) {
-    // 执行步骤
+```python
+async def tool_chain(tool1_args, tool2_args):
+    # 执行第一个工具
+    result1 = await execute_tool("tool1", tool1_args)
     
-    // 发送进度更新
-    yield {
-      progress: {
-        percent: Math.round((i+1) / steps * 100),
-        message: `完成步骤 ${i+1}/${steps}`
-      }
-    };
+    # 使用第一个工具的结果作为第二个工具的输入
+    tool2_args["input"] = result1["output"]
+    result2 = await execute_tool("tool2", tool2_args)
     
-    // 模拟处理时间
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  
-  // 返回最终结果
-  return { result: '操作完成', success: true };
-}
-```
-
-### 我的MCP函数可以调用外部API吗？
-
-是的，MCP函数可以调用任何外部API。这是MCP的主要优势之一，它允许模型访问最新数据和外部服务。例如：
-
-```typescript
-async function getWeatherData(params) {
-  const { city } = params;
-  const response = await fetch(`https://api.weather.com/forecast?city=${encodeURIComponent(city)}`);
-  const data = await response.json();
-  return data;
-}
+    return result2
 ```
 
 ## 性能问题
 
-### MCP服务器的响应时间会影响用户体验吗？
+### Q7: 如何优化MCP服务器的性能？
 
-是的，MCP服务器的响应时间直接影响用户体验。慢速的MCP函数会导致整体交互延迟。为了优化性能，您应该：
+**A:** 优化建议：
 
-1. 优化函数实现
-2. 使用缓存减少重复计算
-3. 考虑使用异步操作和进度更新
-4. 监控性能并设置超时机制
+1. **使用异步处理**
+```python
+# 使用asyncio并发处理
+results = await asyncio.gather(*tasks)
+```
 
-### 如何监控MCP服务器的性能？
+2. **实现缓存**
+```python
+from functools import lru_cache
 
-您可以监控以下指标：
+@lru_cache(maxsize=128)
+def expensive_operation(key):
+    # 缓存结果
+    pass
+```
 
-1. **响应时间**：每个函数的平均和最大响应时间
-2. **错误率**：失败请求的百分比
-3. **吞吐量**：每秒处理的请求数
-4. **资源使用**：CPU、内存使用情况
+3. **批量处理**
+```python
+async def process_batch(items):
+    # 批量处理而不是逐个处理
+    pass
+```
 
-可以使用像Prometheus、Grafana或CloudWatch等工具实现监控。
+### Q8: 如何处理大量并发请求？
 
-### 有推荐的MCP服务器部署架构吗？
+**A:** 并发处理策略：
 
-对于生产环境，推荐的架构包括：
+```python
+import asyncio
+from asyncio import Semaphore
 
-1. **负载均衡器**：分发传入请求
-2. **多实例**：水平扩展以处理高流量
-3. **缓存层**：减少重复计算
-4. **监控系统**：实时跟踪性能和错误
-5. **自动扩缩**：根据负载自动调整资源
+# 限制并发数
+semaphore = Semaphore(10)
 
-## 高级问题
+async def handle_request(request):
+    async with semaphore:
+        # 处理请求
+        return await process(request)
+```
 
-### MCP是否支持复杂的数据类型？
+## 错误处理
 
-是的，MCP支持各种复杂的数据类型，包括数组、嵌套对象和二进制数据。这些数据类型在JSON中表示，并通过MCP协议传输。例如，您可以返回包含图像URL、数据表或复杂结构的对象。
+### Q9: 如何处理工具执行失败？
 
-### 如何用MCP实现上下文感知的功能？
+**A:** 错误处理模式：
 
-您可以在MCP服务器中维护会话状态，或者通过参数传递上下文信息。例如：
+```python
+from mcp.types import ErrorCode
 
-```typescript
-const sessions = new Map();
+async def safe_tool_execution(tool_name, arguments):
+    try:
+        result = await execute_tool(tool_name, arguments)
+        return {"content": result}
+    except ValueError as e:
+        return {
+            "error": {
+                "code": ErrorCode.INVALID_PARAMS,
+                "message": str(e)
+            }
+        }
+    except Exception as e:
+        logger.error(f"工具执行失败: {e}")
+        return {
+            "error": {
+                "code": ErrorCode.INTERNAL_ERROR,
+                "message": "执行失败，请稍后重试"
+            }
+        }
+```
 
-async function getContextualInfo(params) {
-  const { sessionId, query } = params;
-  
-  // 获取或创建会话
-  let session = sessions.get(sessionId);
-  if (!session) {
-    session = { history: [], preferences: {} };
-    sessions.set(sessionId, session);
-  }
-  
-  // 基于会话历史和偏好提供个性化响应
-  const result = generateResponseBasedOnContext(query, session);
-  
-  // 更新会话
-  session.history.push({ query, timestamp: Date.now() });
-  
-  return result;
+### Q10: 如何验证工具参数？
+
+**A:** 参数验证：
+
+```python
+from typing import Dict, Any
+import jsonschema
+
+def validate_arguments(arguments: Dict[str, Any], schema: Dict) -> bool:
+    try:
+        jsonschema.validate(instance=arguments, schema=schema)
+        return True
+    except jsonschema.ValidationError as e:
+        logger.error(f"参数验证失败: {e}")
+        return False
+
+# 使用示例
+schema = {
+    "type": "object",
+    "properties": {
+        "query": {"type": "string", "minLength": 1},
+        "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+    },
+    "required": ["query"]
 }
 ```
 
-### MCP可以与哪些AI模型一起使用？
+## 集成问题
 
-MCP最初是为Anthropic的Claude模型设计的，但该协议可以适配任何支持函数调用的AI模型。不同模型可能需要稍微不同的集成方式，但基本概念是相同的。
+### Q11: 如何将MCP集成到现有应用？
 
-## 故障排除
+**A:** 集成步骤：
 
-### 我的MCP函数没有被调用，可能是什么原因？
-
-常见原因包括：
-
-1. 函数名称不匹配（检查命名空间和函数名）
-2. 参数模式定义不正确
-3. 模型没有识别出需要调用函数的情况
-4. 客户端和服务器之间的通信问题
-
-### 如何调试MCP函数？
-
-调试MCP函数的方法：
-
-1. 添加详细的日志记录
-2. 使用Postman或类似工具直接测试MCP端点
-3. 实现详细的错误报告
-4. 使用Node.js调试器进行步进调试
-
-```typescript
-app.post('/mcp', async (req, res) => {
-  console.log('收到MCP请求:', JSON.stringify(req.body, null, 2));
-  try {
-    const response = await mcpServer.handleRequest(req.body);
-    console.log('MCP响应:', JSON.stringify(response, null, 2));
-    res.json(response);
-  } catch (error) {
-    console.error('MCP错误:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
+1. **安装MCP库**
+```bash
+pip install mcp
 ```
 
-### 出现"函数不存在"错误如何解决？
+2. **创建MCP服务器**
+```python
+from mcp.server import Server
 
-此错误通常表示模型尝试调用未在MCP服务器上注册的函数。解决方法：
+server = Server("my-app")
+# 注册工具
+server.tool("my_tool")(my_tool_handler)
+```
 
-1. 确保函数名称（包括命名空间）完全匹配
-2. 检查函数是否已正确注册到MCP服务器
-3. 确保模型了解可用的函数及其参数
+3. **启动服务器**
+```python
+if __name__ == "__main__":
+    server.run()
+```
 
-## 其他资源
+### Q12: 如何与Claude Desktop集成？
 
-### 有没有MCP的官方文档？
+**A:** Claude Desktop集成：
 
-是的，您可以访问[Anthropic API文档](https://docs.anthropic.com/claude/docs/tool-use)了解更多关于Claude的工具使用和MCP的信息。
+1. **创建配置文件** `~/.config/claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "python",
+      "args": ["/path/to/server.py"]
+    }
+  }
+}
+```
 
-### 哪里可以获取MCP相关的支持？
+2. **重启Claude Desktop**
 
-您可以通过以下渠道获取支持：
+### Q13: 如何实现认证和授权？
 
-1. Anthropic开发者论坛
-2. GitHub上的MCP相关库的问题跟踪器
-3. Stack Overflow上的相关标签
-4. Anthropic的开发者支持邮件 
+**A:** 认证实现：
+
+```python
+from functools import wraps
+
+def require_auth(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        # 检查认证
+        if not is_authenticated(kwargs.get('token')):
+            raise PermissionError("未授权")
+        return await func(*args, **kwargs)
+    return wrapper
+
+@server.tool("protected_tool")
+@require_auth
+async def protected_tool_handler(arguments, token):
+    # 受保护的工具
+    pass
+```
+
+## 部署问题
+
+### Q14: 如何部署MCP服务器？
+
+**A:** 部署方式：
+
+1. **Docker部署**
+```dockerfile
+FROM python:3.11
+COPY . /app
+WORKDIR /app
+RUN pip install -r requirements.txt
+CMD ["python", "server.py"]
+```
+
+2. **systemd服务**
+```ini
+[Service]
+ExecStart=/usr/bin/python3 /path/to/server.py
+```
+
+3. **云服务部署**
+- 使用云函数（AWS Lambda, Azure Functions）
+- 使用容器服务（Kubernetes, Docker Swarm）
+
+### Q15: 如何监控MCP服务器？
+
+**A:** 监控方案：
+
+```python
+import time
+from prometheus_client import Counter, Histogram
+
+# 定义指标
+request_count = Counter('mcp_requests_total', 'Total requests')
+request_duration = Histogram('mcp_request_duration_seconds', 'Request duration')
+
+@server.middleware
+async def monitor_middleware(request, handler):
+    start_time = time.time()
+    request_count.inc()
+    
+    try:
+        response = await handler(request)
+        return response
+    finally:
+        duration = time.time() - start_time
+        request_duration.observe(duration)
+```
+
+## 常见错误
+
+### Q16: "ModuleNotFoundError: No module named 'mcp'"
+
+**A:** 解决方案：
+```bash
+# 安装MCP库
+pip install mcp
+
+# 或使用虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate  # Windows
+pip install mcp
+```
+
+### Q17: "Connection refused" 错误
+
+**A:** 可能原因和解决方案：
+
+1. **服务器未启动**
+```bash
+# 检查服务器是否运行
+ps aux | grep mcp
+```
+
+2. **端口被占用**
+```bash
+# 检查端口
+netstat -tuln | grep 8000
+# 或使用其他端口
+```
+
+3. **防火墙阻止**
+```bash
+# 检查防火墙规则
+sudo ufw status
+```
+
+### Q18: "Invalid tool name" 错误
+
+**A:** 检查事项：
+
+1. **工具名称是否正确注册**
+```python
+# 确保工具已注册
+@server.tool("tool_name")  # 名称必须匹配
+async def tool_handler(arguments):
+    pass
+```
+
+2. **工具名称格式**
+- 使用小写字母和下划线
+- 避免特殊字符
+
+## 最佳实践问题
+
+### Q19: 如何组织大型MCP项目？
+
+**A:** 项目结构建议：
+
+```
+project/
+├── mcp/
+│   ├── __init__.py
+│   ├── server.py
+│   ├── tools/
+│   │   ├── __init__.py
+│   │   ├── tool1.py
+│   │   └── tool2.py
+│   ├── resources/
+│   │   └── resource1.py
+│   └── utils/
+│       └── helpers.py
+├── tests/
+│   └── test_tools.py
+├── requirements.txt
+└── README.md
+```
+
+### Q20: 如何编写可维护的MCP代码？
+
+**A:** 代码组织建议：
+
+1. **模块化设计**：将工具、资源分离到不同模块
+2. **类型注解**：使用类型提示提高代码可读性
+3. **文档字符串**：为每个函数添加文档
+4. **单元测试**：编写测试确保代码质量
+5. **错误处理**：完善的错误处理机制
+
+## 获取帮助
+
+如果以上问题无法解决您的问题，可以：
+
+1. **查看官方文档**：https://modelcontextprotocol.io
+2. **GitHub Issues**：提交问题到项目仓库
+3. **社区论坛**：参与社区讨论
+4. **Stack Overflow**：搜索相关问题
+
+---
+
+**最后更新**: 2025年12月

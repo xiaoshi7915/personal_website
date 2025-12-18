@@ -6,9 +6,11 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/opt/docusaurus/chenxiaoshivivid
-ExecStartPre=/usr/bin/npm install
-ExecStartPre=/usr/bin/npm run build
-ExecStart=/usr/bin/npm run serve
+# 使用nvm的Node.js和yarn
+Environment="PATH=/root/.nvm/versions/node/v23.5.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStartPre=/root/.nvm/versions/node/v23.5.0/bin/yarn install
+ExecStartPre=/root/.nvm/versions/node/v23.5.0/bin/yarn build
+ExecStart=/root/.nvm/versions/node/v23.5.0/bin/yarn serve
 Restart=always
 RestartSec=10
 StandardOutput=syslog

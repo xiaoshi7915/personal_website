@@ -79,7 +79,7 @@ export const config = {
   mcpServerUrl: process.env.MCP_SERVER_URL || 'http://localhost:3000/mcp',
   
   // 模型名称
-  modelName: process.env.MODEL_NAME || 'claude-3-opus-20240229'
+  modelName: process.env.MODEL_NAME || 'claude-3-opus-20250229'
 };
 ```
 
