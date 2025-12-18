@@ -180,7 +180,7 @@ function FooterCTA() {
           </Link>
           <Link
             className="button button--secondary button--lg"
-            to="http://chenxiaoshivivid.com.cn:3005"
+            to="http://121.36.205.70:3005"
             target="_blank"
             rel="noopener noreferrer">
             访问管理平台

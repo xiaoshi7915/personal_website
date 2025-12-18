@@ -183,7 +183,7 @@ npm update
 如有问题或建议，请通过以下方式联系：
 
 - 网站：[chenxiaoshivivid.com.cn](http://chenxiaoshivivid.com.cn)
-- 管理平台：[chenxiaoshivivid.com.cn:3005](http://chenxiaoshivivid.com.cn:3005)
+- 管理平台：[121.36.205.70:3005](http://121.36.205.70:3005)
 
 ---
 

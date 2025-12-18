@@ -129,7 +129,15 @@ const config = {
             items: [
               {
                 label: 'mcp 管理平台',
-                href: 'http://chenxiaoshivivid.com.cn:3005',
+                href: 'http://121.36.205.70:3005',
+              },
+              {
+                label: '大模型构建管理平台',
+                href: 'http://121.36.205.70:5588/',
+              },
+              {
+                label: '公文写作AI助手',
+                href: 'http://115.190.152.96:8081/',
               },
             ],
           }
