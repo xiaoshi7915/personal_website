@@ -1,0 +1,2666 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>深入解析RAG（检索增强生成）技术：架构、模型与应用</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --secondary: #64748b;
+            --accent: #0ea5e9;
+            --surface: #f8fafc;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            color: var(--text);
+        }
+        
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 50%, #1e1b4b 100%);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #1e40af, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .toc-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 2rem 1.5rem;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .toc-link {
+            transition: all 0.2s ease;
+        }
+        
+        .toc-link:hover {
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+        
+        .section-anchor {
+            scroll-margin-top: 2rem;
+        }
+        
+        .citation-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .citation-link:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        
+        .bento-item {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Mermaid diagram styling */
+        .mermaid-container {
+            display: flex;
+            justify-content: center;
+            min-height: 300px;
+            max-height: 800px;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mermaid-container .mermaid {
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            cursor: grab;
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .mermaid-container .mermaid svg {
+            max-width: 100%;
+            height: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .mermaid-container .mermaid:active {
+            cursor: grabbing;
+        }
+
+        .mermaid-container.zoomed .mermaid {
+            height: 100%;
+            width: 100%;
+            cursor: grab;
+        }
+
+        .mermaid-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mermaid-control-btn {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #374151;
+            font-size: 14px;
+            min-width: 36px;
+            height: 36px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mermaid-control-btn:hover {
+            background: #f8fafc;
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .mermaid-control-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 代码块样式 */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .code-block .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .code-block .code-lang {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .code-block .copy-btn {
+            background: #334155;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+
+        .code-block .copy-btn:hover {
+            background: #475569;
+        }
+
+        /* FAQ样式 */
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 0;
+        }
+
+        .faq-question {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text);
+            transition: color 0.2s;
+        }
+
+        .faq-question:hover {
+            color: var(--primary);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            color: var(--text-muted);
+            margin-top: 1rem;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 1000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        .faq-icon {
+            transition: transform 0.3s;
+            color: var(--accent);
+        }
+
+        /* 性能对比图表容器 */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+        }
+
+        /* 返回顶部按钮动画 */
+        #back-to-top {
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+        }
+
+        #back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #back-to-top:hover {
+            transform: translateY(-4px);
+        }
+
+        /* 搜索模态框动画 */
+        #search-modal {
+            transition: opacity 0.3s;
+        }
+
+        #search-modal.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 暗色模式样式 */
+        [data-theme="dark"] {
+            --primary: #3b82f6;
+            --secondary: #94a3b8;
+            --accent: #0ea5e9;
+            --surface: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        [data-theme="dark"] body {
+            background-color: #0f172a !important;
+            color: var(--text) !important;
+        }
+
+        [data-theme="dark"] .bg-gray-50,
+        [data-theme="dark"] .bg-white {
+            background-color: #0f172a !important;
+        }
+
+        [data-theme="dark"] .text-gray-900,
+        [data-theme="dark"] .text-gray-700 {
+            color: var(--text) !important;
+        }
+
+        [data-theme="dark"] .text-gray-600 {
+            color: var(--text-muted) !important;
+        }
+
+        [data-theme="dark"] .toc-fixed {
+            background: var(--surface) !important;
+            border-right-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .bento-item,
+        [data-theme="dark"] .chart-container,
+        [data-theme="dark"] .bg-white {
+            background: #1e293b !important;
+            color: var(--text) !important;
+        }
+
+        [data-theme="dark"] .highlight-box {
+            background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%) !important;
+        }
+
+        [data-theme="dark"] .code-block {
+            background: #0f172a !important;
+            border: 1px solid #334155 !important;
+            color: #e2e8f0 !important;
+        }
+
+        [data-theme="dark"] .code-block .code-header {
+            border-bottom-color: #334155 !important;
+        }
+
+        [data-theme="dark"] .border-gray-200 {
+            border-color: var(--border) !important;
+        }
+
+        [data-theme="dark"] .bg-gray-50 {
+            background-color: #1e293b !important;
+        }
+
+        [data-theme="dark"] #search-modal .bg-white,
+        [data-theme="dark"] #share-modal .bg-white {
+            background-color: #1e293b !important;
+        }
+
+        [data-theme="dark"] #search-modal .text-gray-900,
+        [data-theme="dark"] #share-modal .text-gray-900 {
+            color: var(--text) !important;
+        }
+
+        [data-theme="dark"] .bg-blue-50,
+        [data-theme="dark"] .bg-green-50,
+        [data-theme="dark"] .bg-purple-50,
+        [data-theme="dark"] .bg-red-50,
+        [data-theme="dark"] .bg-orange-50,
+        [data-theme="dark"] .bg-cyan-50,
+        [data-theme="dark"] .bg-indigo-50,
+        [data-theme="dark"] .bg-teal-50,
+        [data-theme="dark"] .bg-pink-50 {
+            background-color: rgba(30, 41, 59, 0.5) !important;
+        }
+
+        /* 打印样式 */
+        @media print {
+            .toc-fixed,
+            #toc-toggle,
+            #search-toggle,
+            #theme-toggle,
+            #share-toggle,
+            #back-to-top,
+            #pdf-export,
+            .reading-progress,
+            .mermaid-controls,
+            .mermaid-container {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            .hero-gradient {
+                background: #1e40af !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .bento-item,
+            .code-block,
+            .chart-container {
+                background: white !important;
+                border: 1px solid #ccc !important;
+                page-break-inside: avoid;
+            }
+
+            .code-block {
+                background: #f5f5f5 !important;
+            }
+
+            .section-anchor {
+                page-break-after: avoid;
+            }
+
+            h2, h3 {
+                page-break-after: avoid;
+            }
+
+            a {
+                color: #0066cc !important;
+                text-decoration: underline !important;
+            }
+
+            .citation-link::after {
+                content: " (" attr(href) ")";
+                font-size: 0.8em;
+                color: #666;
+            }
+
+            @page {
+                margin: 2cm;
+            }
+        }
+
+        .search-result-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: var(--surface);
+        }
+
+        .search-result-item .result-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .search-result-item .result-snippet {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .highlight {
+            background: yellow;
+            padding: 0 2px;
+        }
+
+        /* 阅读进度条 */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #0ea5e9);
+            z-index: 9999;
+            transition: width 0.1s ease;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+
+        /* PDF导出按钮 */
+        .pdf-export-btn {
+            position: fixed;
+            bottom: 8rem;
+            right: 2rem;
+            z-index: 40;
+            background: #dc2626;
+            color: white;
+            padding: 1rem;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .pdf-export-btn:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 二维码容器 */
+        .qrcode-container {
+            text-align: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .qrcode-container canvas {
+            margin: 0 auto;
+        }
+
+        [data-theme="dark"] .qrcode-container {
+            background: #1e293b;
+        }
+
+        [data-theme="dark"] .pdf-export-btn {
+            background: #dc2626;
+        }
+
+        [data-theme="dark"] .pdf-export-btn:hover {
+            background: #b91c1c;
+        }
+        
+        @media (max-width: 1280px) {
+            .toc-fixed {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .toc-fixed.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* Responsive mermaid controls */
+            .mermaid-control-btn:not(.reset-zoom) {
+                display: none;
+            }
+            .mermaid-controls {
+                top: auto;
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .mermaid-container {
+                overflow-x: auto;
+            }
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .mermaid-container {
+                padding: 15px;
+            }
+
+            .hero-gradient .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .hero-gradient h1 {
+                font-size: 2.25rem;
+                line-height: 2.5rem;
+            }
+
+            .hero-gradient p {
+                font-size: 1rem;
+            }
+
+            .hero-gradient .grid.grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+  <base target="_blank">
+</head>
+
+  <body class="bg-gray-50">
+    <!-- Reading Progress Bar -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Mobile TOC Toggle -->
+    <button id="toc-toggle" class="lg:hidden fixed top-4 left-4 z-50 bg-white p-2 rounded-lg shadow-lg">
+      <i class="fas fa-bars text-xl text-gray-700"></i>
+    </button>
+
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="fixed top-4 right-20 z-50 bg-gray-200 text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-300 transition-colors" title="切换主题" style="background-color: var(--surface); color: var(--text);">
+      <i id="theme-icon-moon" class="fas fa-moon"></i>
+      <i id="theme-icon-sun" class="fas fa-sun" style="display: none;"></i>
+    </button>
+
+    <!-- Share Button -->
+    <button id="share-toggle" class="fixed top-4 right-36 z-50 bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-colors" title="分享">
+      <i class="fas fa-share-alt text-lg"></i>
+    </button>
+
+    <!-- Share Modal -->
+    <div id="share-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">分享页面</h3>
+          <button id="share-close" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">页面链接</label>
+            <div class="flex">
+              <input type="text" id="share-url" readonly value="" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+              <button onclick="copyShareUrl()" class="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 transition-colors">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">分享到</label>
+            <div class="grid grid-cols-4 gap-3">
+              <a href="#" onclick="shareToWeibo(event)" class="flex flex-col items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                <i class="fab fa-weibo text-red-600 dark:text-red-400 text-2xl mb-1"></i>
+                <span class="text-xs text-gray-700 dark:text-gray-300">微博</span>
+              </a>
+              <a href="#" onclick="shareToWeChat(event)" class="flex flex-col items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
+                <i class="fab fa-weixin text-green-600 dark:text-green-400 text-2xl mb-1"></i>
+                <span class="text-xs text-gray-700 dark:text-gray-300">微信</span>
+              </a>
+            </div>
+            <div id="wechat-qrcode" class="qrcode-container" style="display: none;">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">扫描二维码分享到微信</p>
+              <canvas id="qrcode-canvas"></canvas>
+            </div>
+              <a href="#" onclick="shareToTwitter(event)" class="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                <i class="fab fa-twitter text-blue-600 dark:text-blue-400 text-2xl mb-1"></i>
+                <span class="text-xs text-gray-700 dark:text-gray-300">Twitter</span>
+              </a>
+              <a href="#" onclick="shareToLinkedIn(event)" class="flex flex-col items-center p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors">
+                <i class="fab fa-linkedin text-indigo-600 dark:text-indigo-400 text-2xl mb-1"></i>
+                <span class="text-xs text-gray-700 dark:text-gray-300">LinkedIn</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Button -->
+    <button id="search-toggle" class="fixed top-4 right-4 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors" title="搜索 (Ctrl+K)">
+      <i class="fas fa-search text-lg"></i>
+    </button>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+      <div class="absolute top-20 left-1/2 transform -translate-x-1/2 w-full max-w-2xl mx-4">
+        <div class="bg-white rounded-lg shadow-xl">
+          <div class="p-4 border-b">
+            <div class="flex items-center">
+              <i class="fas fa-search text-gray-400 mr-3"></i>
+              <input type="text" id="search-input" placeholder="搜索RAG相关内容..." class="flex-1 outline-none text-lg">
+              <button id="search-close" class="ml-3 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          <div id="search-results" class="max-h-96 overflow-y-auto p-4">
+            <p class="text-gray-500 text-center">输入关键词开始搜索...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Export Button -->
+    <button id="pdf-export" class="pdf-export-btn" title="导出为PDF">
+      <i class="fas fa-file-pdf text-xl"></i>
+    </button>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-8 right-8 z-40 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all opacity-0 invisible">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- Overlay for mobile TOC -->
+    <div id="toc-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Table of Contents -->
+    <nav id="toc" class="toc-fixed">
+      <div class="mb-8">
+        <h2 class="font-serif text-xl font-bold text-gray-900 mb-4">目录</h2>
+        <div class="space-y-2">
+          <a href="#section-1" class="toc-link block text-sm text-gray-600 hover:text-blue-600 py-1">1. RAG技术核心原理与架构</a>
+          <div class="ml-4 space-y-1">
+            <a href="#section-1-1" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">1.1 诞生背景与核心思想</a>
+            <a href="#section-1-2" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">1.2 基础架构与工作流程</a>
+            <a href="#section-1-3" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">1.3 架构的演进与分类</a>
+          </div>
+
+          <a href="#section-2" class="toc-link block text-sm text-gray-600 hover:text-blue-600 py-1">2. 九种主流RAG模型</a>
+          <div class="ml-4 space-y-1">
+            <a href="#section-2-1" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.1 标准RAG</a>
+            <a href="#section-2-2" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.2 纠错RAG</a>
+            <a href="#section-2-3" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.3 推测RAG</a>
+            <a href="#section-2-4" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.4 融合RAG</a>
+            <a href="#section-2-5" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.5 自主RAG</a>
+            <a href="#section-2-6" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.6 自反RAG</a>
+            <a href="#section-2-7" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.7 图谱RAG</a>
+            <a href="#section-2-8" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.8 模块化RAG</a>
+            <a href="#section-2-9" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">2.9 RadioRAG</a>
+          </div>
+
+          <a href="#section-3" class="toc-link block text-sm text-gray-600 hover:text-blue-600 py-1">3. 实际应用案例</a>
+          <div class="ml-4 space-y-1">
+            <a href="#section-3-1" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">3.1 智能客服</a>
+            <a href="#section-3-2" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">3.2 知识库问答</a>
+            <a href="#section-3-3" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">3.3 内容创作</a>
+            <a href="#section-3-4" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">3.4 其他应用领域</a>
+          </div>
+
+          <a href="#section-4" class="toc-link block text-sm text-gray-600 hover:text-blue-600 py-1">4. 挑战与未来展望</a>
+          <div class="ml-4 space-y-1">
+            <a href="#section-4-1" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">4.1 技术挑战</a>
+            <a href="#section-4-2" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">4.2 未来发展方向</a>
+          </div>
+
+          <a href="#section-5" class="toc-link block text-sm text-gray-600 hover:text-blue-600 py-1">5. RAG技术实现示例</a>
+          <div class="ml-4 space-y-1">
+            <a href="#section-5-1" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">5.1 基础RAG实现</a>
+            <a href="#section-5-2" class="toc-link block text-xs text-gray-500 hover:text-blue-600 py-1">5.2 查询重写示例</a>
+          </div>
+
+          <a href="#section-6" class="toc-link block text-sm text-gray-600 hover:text-blue-600 py-1">6. 常见问题（FAQ）</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero Section -->
+      <section class="hero-gradient text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="relative z-10 container mx-auto px-4 sm:px-6 md:px-8 py-16">
+          <div class="bento-grid">
+            <!-- Main Title Area -->
+            <div class="bento-item text-white bg-white/10 backdrop-blur-lg glass-effect">
+              <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                <span class="italic">深入解析</span>
+                <br/>
+                <span class="text-gradient bg-gradient-to-r from-blue-200 to-cyan-200 bg-clip-text text-transparent">RAG技术</span>
+              </h1>
+              <p class="text-xl text-blue-100 mb-8 leading-relaxed">
+                检索增强生成（Retrieval-Augmented Generation）技术的架构演进与实战应用
+              </p>
+              <div class="flex flex-wrap gap-3 mb-8">
+                <span class="bg-white/20 px-4 py-2 rounded-full text-sm">AI架构</span>
+                <span class="bg-white/20 px-4 py-2 rounded-full text-sm">知识检索</span>
+                <span class="bg-white/20 px-4 py-2 rounded-full text-sm">企业应用</span>
+              </div>
+            </div>
+
+            <!-- Key Highlights -->
+            <div class="space-y-4">
+              <div class="bento-item bg-white/10 backdrop-blur-lg glass-effect">
+                <h3 class="font-serif text-xl font-bold mb-3">核心洞察</h3>
+                <ul class="space-y-2 text-sm text-blue-100">
+                  <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-2"></i>克服LLM知识陈旧与幻觉问题</li>
+                  <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-2"></i>九种主流RAG模型对比分析</li>
+                  <li class="flex items-start"><i class="fas fa-check-circle mt-1 mr-2"></i>智能客服准确率提升43.5%</li>
+                </ul>
+              </div>
+
+              <div class="bento-item bg-white/10 backdrop-blur-lg glass-effect">
+                <h3 class="font-serif text-xl font-bold mb-3">技术架构</h3>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                  <div class="text-center">
+                    <i class="fas fa-search text-2xl mb-2"></i>
+                    <p class="text-blue-100">检索器</p>
+                  </div>
+                  <div class="text-center">
+                    <i class="fas fa-magic text-2xl mb-2"></i>
+                    <p class="text-blue-100">生成器</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Article Content -->
+      <article class="bg-white">
+        <div class="container mx-auto px-8 py-16 max-w-4xl">
+
+          <!-- Section 1 -->
+          <section id="section-1" class="section-anchor mb-16">
+            <h2 class="font-serif text-4xl font-bold text-gray-900 mb-8">1. RAG技术核心原理与架构剖析</h2>
+
+            <div class="prose prose-lg max-w-none">
+              <p class="text-xl text-gray-600 leading-relaxed mb-8">
+                检索增强生成（Retrieval-Augmented Generation, RAG）技术，作为当前人工智能领域，特别是自然语言处理（NLP）领域的前沿范式，旨在通过融合信息检索与文本生成两大核心技术，显著提升大型语言模型（LLM）在知识密集型任务中的表现。
+              </p>
+
+              <div id="section-1-1" class="section-anchor mb-12">
+                <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">1.1 RAG的诞生背景与核心思想</h3>
+
+                <div class="highlight-box p-6 rounded-lg mb-8">
+                  <h4 class="font-semibold text-lg mb-3">解决大语言模型的局限性</h4>
+                  <p class="text-gray-700 mb-4">
+                    大型语言模型（LLM）的训练过程依赖于海量的文本数据，这使其掌握了丰富的通用语言知识和推理模式。然而，这种知识是静态的，固化在模型的参数中，无法轻易更新。这导致了几个关键的局限性：
+                  </p>
+                  <ul class="list-disc list-inside space-y-2 text-gray-700">
+                    <li><strong>知识截止日期</strong>：模型的知识仅限于其训练数据所覆盖的时间范围</li>
+                    <li><strong>无法访问私有数据</strong>：企业内部文档、数据库等关键信息无法被通用LLM利用</li>
+                    <li><strong>&#34;幻觉&#34;问题</strong>：LLM倾向于生成看似合理但实际上是虚假的信息 <a href="https://www.51cto.com/article/831953.html" class="citation-link">[1]</a>
+                      <a href="https://www.cloudflare.com/zh-cn/learning/ai/retrieval-augmented-generation-rag/" class="citation-link">[7]</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <p class="text-gray-700 leading-relaxed">
+                  RAG技术的核心思想可以类比为一个专业的研究过程。当面临一个复杂问题时，一个优秀的研究者不会仅仅依赖自己已有的知识，而是会去查阅相关的文献、报告和数据，以获取最新的、权威的信息来支持其结论。同样，RAG系统也遵循这一逻辑 <a href="https://www.promptingguide.ai/zh/techniques/rag" class="citation-link">[23]</a>
+                  <a href="https://www.dtstack.com/bbs/article/106768" class="citation-link">[26]</a>。
+                </p>
+              </div>
+
+              <div id="section-1-2" class="section-anchor mb-12">
+                <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">1.2 RAG的基础架构与工作流程</h3>
+
+                <div class="bg-gray-50 p-6 rounded-lg mb-8">
+                  <h4 class="font-semibold text-lg mb-4">核心组件：检索器与生成器</h4>
+                  <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-4 rounded-lg">
+                      <h5 class="font-semibold text-blue-600 mb-2">检索器（Retriever）</h5>
+                      <p class="text-sm text-gray-600">
+                        RAG系统的&#34;信息搜寻专家&#34;，负责理解用户查询意图，并从知识库中快速找到最相关的信息片段。现代RAG系统普遍采用<strong>稠密检索</strong>技术，利用嵌入模型将查询和文档映射到高维向量空间 <a href="https://developer.volcengine.com/articles/7483714529205944371" class="citation-link">[29]</a>。
+                      </p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg">
+                      <h5 class="font-semibold text-blue-600 mb-2">生成器（Generator）</h5>
+                      <p class="text-sm text-gray-600">
+                        RAG系统的&#34;语言大师&#34;，通常由大型语言模型担任。它接收检索到的相关信息作为上下文，并基于这些输入生成最终的、信息丰富的答案 <a href="https://developer.volcengine.com/articles/7483714529205944371" class="citation-link">[29]</a>。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mermaid-container">
+                  <div class="mermaid-controls">
+                    <button class="mermaid-control-btn zoom-in" title="放大">
+                      <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button class="mermaid-control-btn zoom-out" title="缩小">
+                      <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button class="mermaid-control-btn reset-zoom" title="重置">
+                      <i class="fas fa-expand-arrows-alt"></i>
+                    </button>
+                    <button class="mermaid-control-btn fullscreen" title="全屏查看">
+                      <i class="fas fa-expand"></i>
+                    </button>
+                  </div>
+                  <div class="mermaid">
+                    graph TB
+                    A[&#34;用户查询&#34;] --&gt; B[&#34;查询向量化&#34;]
+                    B --&gt; C[&#34;语义检索&#34;]
+                    C --&gt; D[&#34;召回相关文档&#34;]
+                    D --&gt; E[&#34;构建增强提示&#34;]
+                    E --&gt; F[&#34;LLM生成答案&#34;]
+                    F --&gt; G[&#34;返回结果&#34;]
+
+                    H[&#34;文档库&#34;] --&gt; I[&#34;文本分块&#34;]
+                    I --&gt; J[&#34;向量化&#34;]
+                    J --&gt; K[&#34;向量数据库&#34;]
+                    K --&gt; C
+
+                    style A fill:#e1f5fe
+                    style F fill:#f3e5f5
+                    style G fill:#e8f5e8
+                    style K fill:#fff3e0
+                  </div>
+                </div>
+
+                <div class="prose prose-lg max-w-none">
+                  <h4 class="font-semibold text-lg mb-4">工作流程：从查询到生成的完整链路</h4>
+
+                  <div class="grid md:grid-cols-2 gap-8 mb-6">
+                    <div>
+                      <h5 class="font-semibold text-green-600 mb-3">离线阶段：知识库的构建与索引</h5>
+                      <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                        <li>数据接入与清洗：将PDF、Word等格式转换为纯文本</li>
+                        <li>文本分块（Chunking）：将长文档分割成语义完整的片段 <a href="https://blog.51cto.com/deephub/14116548" class="citation-link">[31]</a>
+                        </li>
+                        <li>向量化与索引：通过嵌入模型转换为向量并存储 <a href="https://www.iloveaws.cn/8002.html" class="citation-link">[8]</a>
+                          <a href="https://cloud.tencent.com/developer/article/2543929" class="citation-link">[14]</a>
+                        </li>
+                      </ol>
+                    </div>
+                    <div>
+                      <h5 class="font-semibold text-blue-600 mb-3">在线阶段：实时问答与生成</h5>
+                      <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                        <li>用户查询处理：查询重写、拼写校正 <a href="https://developer.volcengine.com/articles/7571400757674115078" class="citation-link">[30]</a>
+                        </li>
+                        <li>查询向量化：将查询文本转换为向量</li>
+                        <li>语义检索：计算相似度并召回Top-K文档 <a href="https://blog.csdn.net/hy098543/article/details/147012259" class="citation-link">[11]</a>
+                        </li>
+                        <li>构建增强提示：组合查询与检索文档</li>
+                        <li>LLM生成答案：分析上下文并生成最终答案 <a href="https://www.iloveaws.cn/8002.html" class="citation-link">[8]</a>
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="section-1-3" class="section-anchor mb-12">
+                <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">1.3 RAG架构的演进与分类</h3>
+
+                <p class="text-gray-700 leading-relaxed mb-6">
+                  随着RAG技术的不断发展和应用深化，其架构也经历了从简单到复杂、从固定到灵活的演进过程。根据其实现方式和功能复杂度的不同，RAG架构通常可以分为三个主要阶段：基础RAG（Naive RAG）、高级RAG（Advanced RAG）和模块化RAG（Modular RAG）<a href="https://blog.csdn.net/weixin_63866037/article/details/144316445" class="citation-link">[33]</a>
+                  <a href="https://docs.feishu.cn/article/wiki/Ny51wDitLi0gGFkSjOeczs5snre" class="citation-link">[34]</a>。
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                  <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
+                    <h4 class="font-semibold text-blue-800 mb-3">基础RAG</h4>
+                    <p class="text-sm text-blue-700">
+                      遵循简单的&#34;检索-生成&#34;流程，架构直观但存在检索质量不高、上下文融合不佳等局限性 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>
+                      <a href="https://www.promptingguide.ai/zh/research/rag" class="citation-link">[27]</a>。
+                    </p>
+                  </div>
+                  <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
+                    <h4 class="font-semibold text-green-800 mb-3">高级RAG</h4>
+                    <p class="text-sm text-green-700">
+                      在检索前后引入优化环节，包括查询重写、重排序、上下文压缩等，提升检索准确性和上下文质量 <a href="https://blog.csdn.net/weixin_63866037/article/details/144316445" class="citation-link">[33]</a>。
+                    </p>
+                  </div>
+                  <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
+                    <h4 class="font-semibold text-purple-800 mb-3">模块化RAG</h4>
+                    <p class="text-sm text-purple-700">
+                      将各组件设计为独立可插拔模块，支持灵活组合和替换，实现高度定制化和可扩展性 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>
+                      <a href="https://docs.feishu.cn/article/wiki/Ny51wDitLi0gGFkSjOeczs5snre" class="citation-link">[34]</a>。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 2 -->
+          <section id="section-2" class="section-anchor mb-16">
+            <h2 class="font-serif text-4xl font-bold text-gray-900 mb-8">2. 深入剖析九种主流RAG模型</h2>
+
+            <p class="text-xl text-gray-600 leading-relaxed mb-8">
+              随着RAG技术的不断成熟和应用场景的日益丰富，研究者和工程师们开发出了多种不同特性和工作原理的RAG变体。根据CSDN博客等来源的总结，目前主流的RAG模型可以归纳为九种主要类型 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>
+              <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[32]</a>。
+            </p>
+
+            <div class="overflow-x-auto mb-12">
+              <table class="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-900">RAG模型类型</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-900">核心机制</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-900">主要优势</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-900">主要挑战</th>
+                    <th class="px-6 py-4 text-left font-semibold text-gray-900">典型应用场景</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-blue-600">标准RAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">基础检索与生成</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">架构简单、高精度、低成本知识更新</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">依赖检索质量、缺乏鲁棒性、上下文融合不佳</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">通用问答系统、文档摘要</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-green-600">纠错RAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">引入纠错/验证机制</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">极高的准确性和可靠性</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">增加系统复杂性和延迟、验证机制设计难</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">医疗诊断、法律咨询、金融分析</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-purple-600">推测RAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">基于可能性进行推断</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">在信息不足时提供启发性见解</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">存在误导用户的风险、对模型推理能力要求高</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">探索性研究、市场趋势预测</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-orange-600">融合RAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">整合多源异构信息</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">提供全面、多视角的综合答案</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">系统复杂度高、信息融合与冲突解决难</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">政策制定、商业战略分析</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-red-600">自主RAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">智能体自主决策与规划</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">能处理复杂、多步任务，高度灵活</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">可控性和安全性风险、实现复杂、成本高</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">智能研究助手、自动化数据分析</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-cyan-600">自反RAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">自我反思与迭代优化</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">持续提升答案质量、具备学习能力</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">增加延迟和成本、评估标准设计难</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">个性化教育、高质量内容创作</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-indigo-600">图谱RAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">结合知识图谱进行推理</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">强大的多跳关系推理能力、高可解释性</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">图谱构建和维护成本高、查询转换复杂</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">生物医学研究、法律案例研究、金融风控</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-teal-600">模块化RAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">灵活的模块化设计</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">极高的灵活性和可定制性、易于维护升级</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">系统设计和实现复杂、模块间协调挑战</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">企业级多业务线应用、跨领域研究</td>
+                  </tr>
+                  <tr>
+                    <td class="px-6 py-4 font-medium text-pink-600">RadioRAG</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">特定领域（放射学）深度优化</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">极高的专业性和准确性、实时更新</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">领域局限性、数据质量和监管要求极高</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">医学影像辅助诊断</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div id="section-2-1" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.1 标准RAG（Standard RAG）</h3>
+
+              <div class="bg-blue-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-blue-800 mb-3">工作原理：基础检索与生成</h4>
+                <p class="text-blue-700 text-sm leading-relaxed">
+                  标准RAG的工作流程严格遵循两个主要步骤：第一步是<strong>信息检索</strong>，利用检索器在预先构建好的知识库中搜索最相关的文档块；第二步是<strong>内容生成</strong>，将检索到的文档块作为上下文，与用户查询一起构建增强版提示，由LLM生成最终答案 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>。
+                </p>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-green-50 p-4 rounded-lg">
+                  <h5 class="font-semibold text-green-800 mb-2">优点</h5>
+                  <ul class="text-sm text-green-700 space-y-1">
+                    <li>• 高精度：知识库覆盖范围内提供更准确答案</li>
+                    <li>• 通用性强：架构简单，易于理解和实现</li>
+                    <li>• 成本效益：以更低成本实现知识更新 <a href="https://www.cloudflare.com/zh-cn/learning/ai/retrieval-augmented-generation-rag/" class="citation-link">[7]</a>
+                    </li>
+                  </ul>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg">
+                  <h5 class="font-semibold text-red-800 mb-2">缺点</h5>
+                  <ul class="text-sm text-red-700 space-y-1">
+                    <li>• 依赖检索质量：&#34;垃圾进，垃圾出&#34;</li>
+                    <li>• 缺乏鲁棒性：检索失败时无有效应对机制</li>
+                    <li>• 上下文融合能力有限</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div id="section-2-2" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.2 纠错RAG（Corrective RAG）</h3>
+
+              <div class="bg-green-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-green-800 mb-3">工作原理：引入纠错机制提升答案质量</h4>
+                <p class="text-green-700 text-sm leading-relaxed">
+                  纠错RAG的核心在于其<strong>纠错机制</strong>。在标准RAG完成&#34;检索-生成&#34;流程后，系统会启动验证步骤，将生成的答案与检索到的文档块进行再次比对，检查关键事实是否有来源支持。如果置信度低于预设阈值，系统可以触发回退机制 <a href="https://www.51cto.com/article/831953.html" class="citation-link">[1]</a>
+                  <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>。
+                </p>
+              </div>
+
+              <p class="text-gray-700 leading-relaxed">
+                纠错RAG特别适用于那些<strong>对信息准确性有严苛要求，且错误信息可能带来严重后果</strong>的场景，如医疗诊断、法律咨询和金融分析 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>。
+              </p>
+            </div>
+
+            <div id="section-2-3" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.3 推测RAG（Speculative RAG）</h3>
+
+              <div class="bg-purple-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-purple-800 mb-3">工作原理：基于可能性进行推断</h4>
+                <p class="text-purple-700 text-sm leading-relaxed">
+                  当检索到的信息是模糊、不完整或相互矛盾时，推测RAG不会止步或简单回答&#34;不知道&#34;。相反，它会启动推断过程，分析已有信息，识别关键实体和不确定性，利用LLM的推理能力生成基于可能性的、具有启发性的回答 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>
+                  <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[32]</a>。
+                </p>
+              </div>
+            </div>
+
+            <div id="section-2-4" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.4 融合RAG（Fusion RAG）</h3>
+
+              <div class="bg-orange-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-orange-800 mb-3">工作原理：整合多源信息</h4>
+                <p class="text-orange-700 text-sm leading-relaxed">
+                  融合RAG同时启动多个检索器，在不同数据源中进行并行检索。获取原始信息后，系统进入信息融合阶段：去重与去噪、冲突解决、信息整合，最后将融合后的上下文送入生成器 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>
+                  <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[32]</a>。
+                </p>
+              </div>
+            </div>
+
+            <div id="section-2-5" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.5 自主RAG（Autonomous RAG）</h3>
+
+              <div class="bg-red-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-red-800 mb-3">工作原理：智能体的自主决策</h4>
+                <p class="text-red-700 text-sm leading-relaxed">
+                  自主RAG基于智能体框架构建，能够进行任务分解和规划。当接收到复杂查询时，系统会将其分解为多个子任务，自主执行这些子任务，并在执行过程中主动调用外部工具，根据环境反馈不断调整行动计划 <a href="https://www.51cto.com/article/831953.html" class="citation-link">[1]</a>
+                  <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>。
+                </p>
+              </div>
+            </div>
+
+            <div id="section-2-6" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.6 自反RAG（Self-Reflective RAG）</h3>
+
+              <div class="bg-cyan-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-cyan-800 mb-3">工作原理：自我反思与迭代优化</h4>
+                <p class="text-cyan-700 text-sm leading-relaxed">
+                  自反RAG引入<strong>自我反思</strong>步骤，在生成初步答案后，系统会从忠实度、相关性、完整性等维度评估答案质量。如果评估结果不理想，会触发迭代优化过程，发起新的检索以获取补充信息，然后重新生成更完善的答案 <a href="https://www.shaqiu.cn/article/445" class="citation-link">[5]</a>
+                  <a href="https://www.51cto.com/article/831953.html" class="citation-link">[1]</a>
+                  <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>。
+                </p>
+              </div>
+            </div>
+
+            <div id="section-2-7" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.7 图谱RAG（Graph RAG）</h3>
+
+              <div class="bg-indigo-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-indigo-800 mb-3">工作原理：结合知识图谱进行推理</h4>
+                <p class="text-indigo-700 text-sm leading-relaxed">
+                  图谱RAG将非结构化文本中的信息抽取并构建成知识图谱，以&#34;实体-关系-实体&#34;的三元组形式存储知识。检索时不再仅仅搜索相似文本块，而是在知识图谱上进行图遍历或子图匹配，高效处理涉及多步推理的复杂问题 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>
+                  <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[32]</a>。
+                </p>
+              </div>
+            </div>
+
+            <div id="section-2-8" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.8 模块化RAG（Modular RAG）</h3>
+
+              <div class="bg-teal-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-teal-800 mb-3">工作原理：灵活的模块化设计</h4>
+                <p class="text-teal-700 text-sm leading-relaxed">
+                  模块化RAG将整个RAG流程中的各个组件都设计为独立的、可插拔的模块。这种设计理念赋予系统极大灵活性，允许开发者像搭积木一样，根据不同任务需求自由组合和替换不同模块 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>
+                  <a href="https://docs.feishu.cn/article/wiki/Ny51wDitLi0gGFkSjOeczs5snre" class="citation-link">[34]</a>。
+                </p>
+              </div>
+            </div>
+
+            <div id="section-2-9" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">2.9 RadioRAG</h3>
+
+              <div class="bg-pink-50 p-6 rounded-lg mb-6">
+                <h4 class="font-semibold text-pink-800 mb-3">工作原理：特定领域的优化</h4>
+                <p class="text-pink-700 text-sm leading-relaxed">
+                  RadioRAG专为放射学领域设计，其知识库包含海量的结构化放射学知识，如医学影像特征描述、疾病影像学表现、诊断标准等。检索机制经过专门优化，能够理解医学术语和影像特征，并强调实时访问在线放射学数据库 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>
+                  <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[32]</a>。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 3 -->
+          <section id="section-3" class="section-anchor mb-16">
+            <h2 class="font-serif text-4xl font-bold text-gray-900 mb-8">3. RAG技术的实际应用案例与场景</h2>
+
+            <p class="text-xl text-gray-600 leading-relaxed mb-8">
+              检索增强生成（RAG）技术凭借其能够将大型语言模型的强大生成能力与动态、可验证的外部知识相结合的独特优势，已经迅速渗透到多个行业和领域，成为推动AI应用落地的重要力量 <a href="https://www.bright.cn/blog/web-data/rag-explained" class="citation-link">[18]</a>
+              <a href="https://help.aliyun.com/zh/analyticdb/analyticdb-for-postgresql/user-guide/what-is-rag-service" class="citation-link">[21]</a>。
+            </p>
+
+            <div id="section-3-1" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">3.1 智能客服：提升服务效率与质量</h3>
+
+              <div class="highlight-box p-6 rounded-lg mb-8">
+                <h4 class="font-semibold text-lg mb-3">应用场景：电商、金融、出行等领域</h4>
+                <div class="grid md:grid-cols-3 gap-4">
+                  <div class="bg-white p-4 rounded-lg">
+                    <h5 class="font-semibold text-blue-600 mb-2">电商平台</h5>
+                    <p class="text-sm text-gray-600">
+                      处理商品详情、尺码选择、物流查询、退换货政策等问题。例如，客户询问&#34;我身高175cm，体重70kg，该选多大码的衬衫？&#34;时，RAG客服可从尺码表中检索信息并生成精准回答 <a href="https://blog.csdn.net/hy098543/article/details/147012259" class="citation-link">[11]</a>。
+                    </p>
+                  </div>
+                  <div class="bg-white p-4 rounded-lg">
+                    <h5 class="font-semibold text-green-600 mb-2">金融服务</h5>
+                    <p class="text-sm text-gray-600">
+                      处理账户查询、贷款政策、保险条款、理财产品等问题。某银行通过部署RAG智能客服，将问题解决率从68%提升至89%，人工转接率降低了42% <a href="https://www.betteryeah.com/blog/comprehensive-analysis-of-intelligent-customer-service-system-architecture-design" class="citation-link">[12]</a>。
+                    </p>
+                  </div>
+                  <div class="bg-white p-4 rounded-lg">
+                    <h5 class="font-semibold text-purple-600 mb-2">出行与旅游</h5>
+                    <p class="text-sm text-gray-600">
+                      处理路线规划、票价查询、退改签规则、目的地攻略等问题。哈啰出行等企业利用RAG技术优化智能客服系统，应对海量复杂用户咨询。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gray-50 p-6 rounded-lg mb-8">
+                <h4 class="font-semibold text-lg mb-4">案例分析：哔哩哔哩、哈啰出行等企业的RAG实践</h4>
+                <div class="space-y-4">
+                  <div class="bg-white p-4 rounded-lg">
+                    <h5 class="font-semibold text-blue-600 mb-2">哔哩哔哩</h5>
+                    <p class="text-sm text-gray-600 mb-2">
+                      通过大模型升级智能客服系统，优化RAG链路和检索机制，构建全面的领域知识库，实现高效知识检索和准确安全的回答。
+                    </p>
+                    <p class="text-sm font-medium text-green-600">实践结果：智能客服拦截率提升近30% <a href="https://www.shaqiu.cn/article/yRoBL7jZ9ObE" class="citation-link">[45]</a>
+                    </p>
+                  </div>
+                  <div class="bg-white p-4 rounded-lg">
+                    <h5 class="font-semibold text-green-600 mb-2">哈啰出行</h5>
+                    <p class="text-sm text-gray-600 mb-2">
+                      引入大模型和RAG技术，实现智能客服功能全面升级，进行精准的RAG知识检索，理解用户复杂意图，进行自动判责和话术回复。
+                    </p>
+                    <p class="text-sm font-medium text-green-600">实践结果：提升客服拟人化程度和用户满意度，简化后台知识运营 <a href="https://www.shaqiu.cn/article/yRoBL7jZ9ObE" class="citation-link">[45]</a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <h4 class="font-semibold text-lg mb-4">应用效果：提高解答准确率，降低幻觉率</h4>
+                <table class="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-900">指标</th>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-900">基线模型（无RAG）</th>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-900">RAG增强版</th>
+                      <th class="px-6 py-3 text-left font-semibold text-gray-900">提升幅度</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    <tr>
+                      <td class="px-6 py-3 font-medium text-gray-900">准确率</td>
+                      <td class="px-6 py-3 text-gray-600">62%</td>
+                      <td class="px-6 py-3 text-gray-600">89%</td>
+                      <td class="px-6 py-3 font-semibold text-green-600">+43.5%</td>
+                    </tr>
+                    <tr>
+                      <td class="px-6 py-3 font-medium text-gray-900">幻觉率</td>
+                      <td class="px-6 py-3 text-gray-600">23%</td>
+                      <td class="px-6 py-3 text-gray-600">5%</td>
+                      <td class="px-6 py-3 font-semibold text-green-600">-78.3%</td>
+                    </tr>
+                    <tr>
+                      <td class="px-6 py-3 font-medium text-gray-900">用户满意度</td>
+                      <td class="px-6 py-3 text-gray-600">3.2 / 5</td>
+                      <td class="px-6 py-3 text-gray-600">4.5 / 5</td>
+                      <td class="px-6 py-3 font-semibold text-green-600">+40.6%</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="text-sm text-gray-500 mt-2">数据来源：<a href="https://blog.csdn.net/hxudhhgwhua/article/details/147400504" class="citation-link">[42]</a>
+                </p>
+              </div>
+            </div>
+
+            <div id="section-3-2" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">3.2 知识库问答：构建企业级智能问答系统</h3>
+
+              <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div>
+                  <h4 class="font-semibold text-lg mb-4">应用场景</h4>
+                  <ul class="space-y-3 text-gray-700">
+                    <li class="flex items-start">
+                      <i class="fas fa-building text-blue-500 mt-1 mr-3"></i>
+                      <div>
+                        <strong>内部知识管理与传承</strong>
+                        <p class="text-sm text-gray-600">新员工快速了解公司规章制度、业务流程，老员工随时查询各种规范和细节 <a href="https://cloud.tencent.com/developer/article/2543929" class="citation-link">[14]</a>。</p>
+                      </div>
+                    </li>
+                    <li class="flex items-start">
+                      <i class="fas fa-code text-green-500 mt-1 mr-3"></i>
+                      <div>
+                        <strong>技术支持与研发</strong>
+                        <p class="text-sm text-gray-600">开发人员快速定位API文档、技术规范、历史代码库，解决技术难题。</p>
+                      </div>
+                    </li>
+                    <li class="flex items-start">
+                      <i class="fas fa-handshake text-purple-500 mt-1 mr-3"></i>
+                      <div>
+                        <strong>客户服务与销售支持</strong>
+                        <p class="text-sm text-gray-600">客服和销售团队准确掌握产品信息、价格政策、解决方案。</p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-lg mb-4">技术实现</h4>
+                  <div class="space-y-3">
+                    <div class="bg-white p-3 rounded-lg border border-gray-200">
+                      <h5 class="font-semibold text-blue-600 text-sm">多格式文档加载</h5>
+                      <p class="text-xs text-gray-600">使用PyMuPDF、unstructured、python-docx等库处理PDF、Word等格式 <a href="https://cloud.tencent.com/developer/article/2543929" class="citation-link">[14]</a>。</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-gray-200">
+                      <h5 class="font-semibold text-green-600 text-sm">智能文本分块</h5>
+                      <p class="text-xs text-gray-600">固定大小分块、语义分块、层次化分块等策略 <a href="https://blog.51cto.com/deephub/14116548" class="citation-link">[31]</a>。</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-gray-200">
+                      <h5 class="font-semibold text-purple-600 text-sm">高效向量检索</h5>
+                      <p class="text-xs text-gray-600">选择高性能向量数据库和合适的嵌入模型 <a href="https://developer.volcengine.com/articles/7571400757674115078" class="citation-link">[30]</a>。</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-blue-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-blue-800 mb-3">案例分析：基于LangChain-Chatchat的本地知识库问答</h4>
+                <p class="text-blue-700 text-sm leading-relaxed mb-4">
+                  LangChain-Chatchat是基于LangChain框架构建的开源项目，专门用于快速搭建基于本地知识库的问答系统，对中文场景和开源模型支持友好 <a href="https://docs.feishu.cn/article/wiki/Ny51wDitLi0gGFkSjOeczs5snre" class="citation-link">[34]</a>。
+                </p>
+                <div class="grid md:grid-cols-5 gap-2 text-xs">
+                  <div class="bg-white p-2 rounded text-center">
+                    <div class="font-semibold mb-1">1. 数据接入</div>
+                    <div class="text-blue-600">多种格式上传</div>
+                  </div>
+                  <div class="bg-white p-2 rounded text-center">
+                    <div class="font-semibold mb-1">2. 格式转换</div>
+                    <div class="text-blue-600">转为Markdown</div>
+                  </div>
+                  <div class="bg-white p-2 rounded text-center">
+                    <div class="font-semibold mb-1">3. 向量化</div>
+                    <div class="text-blue-600">Embedding模型</div>
+                  </div>
+                  <div class="bg-white p-2 rounded text-center">
+                    <div class="font-semibold mb-1">4. 问答引擎</div>
+                    <div class="text-blue-600">LangChain链</div>
+                  </div>
+                  <div class="bg-white p-2 rounded text-center">
+                    <div class="font-semibold mb-1">5. 前端界面</div>
+                    <div class="text-blue-600">Streamlit</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="section-3-3" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">3.3 内容创作：赋能高效与高质量的内容生产</h3>
+
+              <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <i class="fas fa-newspaper text-2xl text-blue-500 mb-3"></i>
+                  <h4 class="font-semibold mb-2">新闻撰写</h4>
+                  <p class="text-sm text-gray-600">
+                    记者利用RAG系统快速检索新闻背景、历史事件、人物资料，确保报道的全面性和准确性。
+                  </p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <i class="fas fa-bullhorn text-2xl text-green-500 mb-3"></i>
+                  <h4 class="font-semibold mb-2">营销文案</h4>
+                  <p class="text-sm text-gray-600">
+                    营销人员输入产品信息和目标用户画像，RAG系统检索素材生成更具吸引力和说服力的营销文案。
+                  </p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <i class="fas fa-chart-line text-2xl text-purple-500 mb-3"></i>
+                  <h4 class="font-semibold mb-2">研究报告</h4>
+                  <p class="text-sm text-gray-600">
+                    研究人员利用RAG系统快速定位相关学术论文、实验数据、行业报告，缩短文献调研时间。
+                  </p>
+                </div>
+              </div>
+
+              <div class="highlight-box p-6 rounded-lg">
+                <h4 class="font-semibold text-lg mb-3">技术实现：结合Ollama、LangChain与ChromaDB</h4>
+                <div class="grid md:grid-cols-3 gap-4">
+                  <div class="bg-white p-4 rounded-lg">
+                    <h5 class="font-semibold text-blue-600 mb-2">Ollama</h5>
+                    <p class="text-sm text-gray-600">在本地运行和管理开源大语言模型，保障数据隐私和离线可用性。</p>
+                  </div>
+                  <div class="bg-white p-4 rounded-lg">
+                    <h5 class="font-semibold text-green-600 mb-2">LangChain</h5>
+                    <p class="text-sm text-gray-600">作为应用开发框架，协调整个RAG流程，包括文档加载、文本分割等。</p>
+                  </div>
+                  <div class="bg-white p-4 rounded-lg">
+                    <h5 class="font-semibold text-purple-600 mb-2">ChromaDB</h5>
+                    <p class="text-sm text-gray-600">轻量级向量数据库，用于存储和检索文本的向量表示。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="section-3-4" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">3.4 其他应用领域</h3>
+
+              <div class="grid md:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h4 class="font-semibold text-blue-600 mb-3 flex items-center">
+                      <i class="fas fa-gavel mr-2"></i>
+                      法律与金融服务
+                    </h4>
+                    <p class="text-sm text-gray-600">
+                      在法律领域，帮助律师快速检索法律条文、判例和合同；在金融领域，分析市场报告、监管文件，为投资决策提供数据支持 <a href="https://open.oceanbase.com/blog/24180834896" class="citation-link">[39]</a>
+                      <a href="https://www.betteryeah.com/blog/enterprise-llm-rag-application-development-guide-2025" class="citation-link">[40]</a>。
+                    </p>
+                  </div>
+                  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h4 class="font-semibold text-green-600 mb-3 flex items-center">
+                      <i class="fas fa-graduation-cap mr-2"></i>
+                      教育与电子学习
+                    </h4>
+                    <p class="text-sm text-gray-600">
+                      构建个性化学习辅导系统，根据学生学习进度和提问，从教育资源中检索相关内容，提供定制化解答和学习材料 <a href="https://developer.jdcloud.com/article/3767" class="citation-link">[43]</a>。
+                    </p>
+                  </div>
+                </div>
+                <div class="space-y-6">
+                  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h4 class="font-semibold text-purple-600 mb-3 flex items-center">
+                      <i class="fas fa-heartbeat mr-2"></i>
+                      医疗信息系统
+                    </h4>
+                    <p class="text-sm text-gray-600">
+                      整合医学文献、临床指南、药物说明书和电子病历，为医生提供基于证据的诊疗建议，提高诊断准确性和效率 <a href="https://blog.csdn.net/z987421/article/details/145203035" class="citation-link">[4]</a>。
+                    </p>
+                  </div>
+                  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h4 class="font-semibold text-orange-600 mb-3 flex items-center">
+                      <i class="fas fa-lightbulb mr-2"></i>
+                      专利检索
+                    </h4>
+                    <p class="text-sm text-gray-600">
+                      在海量专利数据库中通过语义搜索找到最相关的现有专利，帮助研究人员评估发明新颖性，避免重复研究和侵权风险。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 4 -->
+          <section id="section-4" class="section-anchor mb-16">
+            <h2 class="font-serif text-4xl font-bold text-gray-900 mb-8">4. RAG技术的挑战与未来展望</h2>
+
+            <!-- 性能对比图表 -->
+            <div class="chart-container mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">RAG vs 传统LLM性能对比</h3>
+              
+              <!-- 交互式图表 -->
+              <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                  <h4 class="font-semibold mb-4 text-gray-700">准确率对比</h4>
+                  <canvas id="accuracyChart" style="max-height: 300px;"></canvas>
+                </div>
+                <div>
+                  <h4 class="font-semibold mb-4 text-gray-700">幻觉率对比</h4>
+                  <canvas id="hallucinationChart" style="max-height: 300px;"></canvas>
+                </div>
+              </div>
+
+              <!-- 综合性能雷达图 -->
+              <div class="mt-8">
+                <h4 class="font-semibold mb-4 text-gray-700 text-center">综合性能对比雷达图</h4>
+                <div class="flex justify-center">
+                  <canvas id="radarChart" style="max-width: 500px; max-height: 500px;"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div id="section-4-1" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">4.1 RAG技术面临的挑战</h3>
+
+              <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-red-50 p-6 rounded-lg">
+                  <h4 class="font-semibold text-red-800 mb-3">检索质量与相关性</h4>
+                  <ul class="text-sm text-red-700 space-y-1">
+                    <li>• 语义鸿沟：专业术语或歧义查询的检索不准</li>
+                    <li>• 上下文丢失：文本分块策略导致关键信息切断</li>
+                    <li>• 知识库噪声：错误、过时或矛盾信息的影响</li>
+                    <li>• 长尾问题：罕见查询的信息不足</li>
+                  </ul>
+                </div>
+                <div class="bg-orange-50 p-6 rounded-lg">
+                  <h4 class="font-semibold text-orange-800 mb-3">生成模型的可控性</h4>
+                  <ul class="text-sm text-orange-700 space-y-1">
+                    <li>• 模型不听话：依赖内部知识而非提供上下文</li>
+                    <li>• 幻觉残余：信息整合时的不当推理</li>
+                    <li>• 可控性难题：输出风格、格式和长度的精确控制</li>
+                  </ul>
+                </div>
+                <div class="bg-purple-50 p-6 rounded-lg">
+                  <h4 class="font-semibold text-purple-800 mb-3">系统复杂性与成本</h4>
+                  <ul class="text-sm text-purple-700 space-y-1">
+                    <li>• 系统维护：多组件的持续维护和优化</li>
+                    <li>• 计算成本：向量化、检索和生成的资源需求</li>
+                    <li>• 延迟问题：复杂策略和迭代流程的响应时间</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div id="section-4-2" class="section-anchor mb-12">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">4.2 RAG技术的未来发展方向</h3>
+
+              <div class="space-y-8">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
+                  <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+                    <i class="fas fa-images mr-2"></i>
+                    多模态RAG
+                  </h4>
+                  <p class="text-blue-700 text-sm leading-relaxed">
+                    将检索和生成的能力扩展到图像、音频、视频等多种数据类型。用户可以上传图片并提问，系统能够从图像中检索相关信息并生成答案，拓宽应用场景如智能相册管理、视频内容分析等。
+                  </p>
+                </div>
+
+                <div class="bg-gradient-to-r from-green-50 to-teal-50 p-6 rounded-lg">
+                  <h4 class="font-semibold text-green-800 mb-3 flex items-center">
+                    <i class="fas fa-brain mr-2"></i>
+                    更智能的检索与排序策略
+                  </h4>
+                  <div class="text-green-700 text-sm space-y-2">
+                    <p><strong>查询理解：</strong>利用LLM更深入理解用户意图、情感和上下文</p>
+                    <p><strong>自适应检索：</strong>根据初步结果和用户反馈动态调整检索策略</p>
+                    <p><strong>混合检索优化：</strong>智能融合关键词和语义检索结果</p>
+                  </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg">
+                  <h4 class="font-semibold text-purple-800 mb-3 flex items-center">
+                    <i class="fas fa-project-diagram mr-2"></i>
+                    与知识图谱的深度融合
+                  </h4>
+                  <div class="text-purple-700 text-sm space-y-2">
+                    <p><strong>自动生成图谱：</strong>利用LLM从非结构化文本中抽取实体和关系</p>
+                    <p><strong>图增强检索：</strong>检索相关子图，为LLM提供更丰富的结构化上下文</p>
+                    <p><strong>可解释性增强：</strong>展示知识图谱上的推理路径，增加透明度</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-r from-gray-50 to-blue-50 p-8 rounded-lg mt-8">
+                <h4 class="font-serif text-xl font-bold text-gray-900 mb-4">总结与展望</h4>
+                <p class="text-gray-700 leading-relaxed">
+                  RAG技术正处于快速发展阶段，它通过巧妙地结合检索和生成，为构建更可靠、更智能的AI系统提供了一条极具前景的路径。随着技术的不断成熟和应用场景的持续拓宽，RAG有望在未来的人工智能生态中扮演越来越重要的角色，成为连接静态知识库与动态智能生成的关键桥梁。
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 5: 代码示例 -->
+          <section id="section-5" class="section-anchor mb-16">
+            <h2 class="font-serif text-4xl font-bold text-gray-900 mb-8">5. RAG技术实现示例</h2>
+
+            <div class="mb-8">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">5.1 基础RAG实现（Python示例）</h3>
+              
+              <div class="code-block mb-6">
+                <div class="code-header">
+                  <span class="code-lang">Python - LangChain实现</span>
+                  <button class="copy-btn" onclick="copyCode(this)">
+                    <i class="fas fa-copy mr-1"></i>复制
+                  </button>
+                </div>
+                <pre><code>from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import Chroma
+from langchain.chains import RetrievalQA
+from langchain.llms import OpenAI
+
+# 1. 加载文档
+loader = PyPDFLoader("document.pdf")
+documents = loader.load()
+
+# 2. 文本分块
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200
+)
+chunks = text_splitter.split_documents(documents)
+
+# 3. 向量化并存储
+embeddings = OpenAIEmbeddings()
+vectorstore = Chroma.from_documents(
+    documents=chunks,
+    embedding=embeddings
+)
+
+# 4. 创建检索链
+qa_chain = RetrievalQA.from_chain_type(
+    llm=OpenAI(),
+    retriever=vectorstore.as_retriever(),
+    return_source_documents=True
+)
+
+# 5. 查询
+query = "什么是RAG技术？"
+result = qa_chain({"query": query})
+print(result["result"])</code></pre>
+              </div>
+
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-800 mb-2">代码说明</h4>
+                <ul class="text-sm text-blue-700 space-y-1">
+                  <li>• <strong>文档加载</strong>：使用PyPDFLoader加载PDF文档</li>
+                  <li>• <strong>文本分块</strong>：将长文档分割成适合检索的片段</li>
+                  <li>• <strong>向量化</strong>：使用嵌入模型将文本转换为向量</li>
+                  <li>• <strong>向量存储</strong>：将向量存入Chroma向量数据库</li>
+                  <li>• <strong>检索生成</strong>：结合检索和LLM生成答案</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="font-serif text-2xl font-bold text-gray-900 mb-6">5.2 高级RAG：查询重写示例</h3>
+              
+              <div class="code-block mb-6">
+                <div class="code-header">
+                  <span class="code-lang">Python - 查询优化</span>
+                  <button class="copy-btn" onclick="copyCode(this)">
+                    <i class="fas fa-copy mr-1"></i>复制
+                  </button>
+                </div>
+                <pre><code>from langchain.prompts import PromptTemplate
+from langchain.llms import OpenAI
+
+# 查询重写提示模板
+rewrite_prompt = PromptTemplate(
+    input_variables=["original_query", "conversation_history"],
+    template="""
+    基于以下对话历史和原始查询，生成一个优化的搜索查询。
+    
+    对话历史：{conversation_history}
+    原始查询：{original_query}
+    
+    优化后的查询：
+    """
+)
+
+llm = OpenAI()
+
+def rewrite_query(original_query, conversation_history=""):
+    """重写查询以提高检索质量"""
+    prompt = rewrite_prompt.format(
+        original_query=original_query,
+        conversation_history=conversation_history
+    )
+    optimized_query = llm(prompt)
+    return optimized_query
+
+# 使用示例
+original = "它是什么？"
+history = "用户：RAG技术有什么优势？\n助手：RAG技术可以..."
+optimized = rewrite_query(original, history)
+print(f"优化后：{optimized}")</code></pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 6: FAQ -->
+          <section id="section-6" class="section-anchor mb-16">
+            <h2 class="font-serif text-4xl font-bold text-gray-900 mb-8">6. 常见问题（FAQ）</h2>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                  <span>RAG和微调（Fine-tuning）有什么区别？</span>
+                  <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>RAG和微调是两种不同的知识注入方式：</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li><strong>RAG</strong>：通过外部知识库检索相关信息，动态注入到提示中，无需修改模型参数，知识更新灵活</li>
+                    <li><strong>微调</strong>：通过训练数据更新模型参数，知识固化在模型中，更新需要重新训练</li>
+                  </ul>
+                  <p class="mt-2">RAG更适合需要频繁更新知识、处理大量文档的场景，而微调更适合领域特定的语言风格和任务模式。</p>
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                  <span>如何选择合适的文本分块策略？</span>
+                  <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>文本分块策略的选择取决于文档类型和查询特点：</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li><strong>固定大小分块</strong>：适合结构化文档，简单高效</li>
+                    <li><strong>语义分块</strong>：基于句子相似度，保持语义完整性</li>
+                    <li><strong>层次化分块</strong>：保留文档结构，适合长文档</li>
+                    <li><strong>滑动窗口</strong>：增加重叠，避免边界信息丢失</li>
+                  </ul>
+                  <p class="mt-2">建议根据实际效果调整chunk_size和chunk_overlap参数，平衡检索精度和上下文完整性。</p>
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                  <span>RAG系统的响应速度如何优化？</span>
+                  <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>可以从多个维度优化RAG系统的响应速度：</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li><strong>向量数据库选择</strong>：使用高性能向量数据库如Milvus、Pinecone</li>
+                    <li><strong>检索策略优化</strong>：减少Top-K数量，使用近似最近邻搜索</li>
+                    <li><strong>模型选择</strong>：使用更快的嵌入模型和生成模型</li>
+                    <li><strong>缓存机制</strong>：缓存常见查询结果</li>
+                    <li><strong>异步处理</strong>：并行执行检索和生成步骤</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                  <span>如何处理RAG系统中的幻觉问题？</span>
+                  <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>虽然RAG可以显著减少幻觉，但仍需采取额外措施：</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li><strong>检索质量提升</strong>：优化检索器，确保返回相关文档</li>
+                    <li><strong>提示工程</strong>：明确要求模型基于检索内容回答</li>
+                    <li><strong>答案验证</strong>：使用纠错RAG模式，验证答案与源文档的一致性</li>
+                    <li><strong>引用标注</strong>：要求模型标注答案来源，便于人工审核</li>
+                    <li><strong>置信度评分</strong>：对答案进行置信度评估，低置信度时提示用户</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                  <span>RAG系统适合处理哪些类型的数据？</span>
+                  <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>RAG系统可以处理多种类型的数据：</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li><strong>文本文档</strong>：PDF、Word、Markdown、HTML等</li>
+                    <li><strong>结构化数据</strong>：数据库、表格、JSON等（需要转换）</li>
+                    <li><strong>代码</strong>：源代码文件、API文档等</li>
+                    <li><strong>多模态数据</strong>：结合多模态RAG可处理图像、音频等</li>
+                  </ul>
+                  <p class="mt-2">关键是选择合适的文档加载器和文本分割策略，确保信息完整性和检索质量。</p>
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                  <span>如何评估RAG系统的效果？</span>
+                  <i class="fas fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>RAG系统的评估可以从多个维度进行：</p>
+                  <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li><strong>检索质量</strong>：精确率（Precision）、召回率（Recall）、MRR（Mean Reciprocal Rank）</li>
+                    <li><strong>生成质量</strong>：BLEU、ROUGE、语义相似度</li>
+                    <li><strong>忠实度</strong>：答案与源文档的一致性</li>
+                    <li><strong>相关性</strong>：答案与问题的匹配程度</li>
+                    <li><strong>用户满意度</strong>：实际使用中的反馈和评分</li>
+                  </ul>
+                  <p class="mt-2">建议使用RAGAS（RAG Assessment）等专业评估框架进行综合评估。</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </article>
+    </main>
+
+    <script>
+        // Initialize Mermaid with custom configuration
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#f8fafc',
+                primaryTextColor: '#0f172a',
+                primaryBorderColor: '#1e40af',
+                lineColor: '#64748b',
+                secondaryColor: '#e2e8f0',
+                tertiaryColor: '#f1f5f9',
+                background: '#ffffff',
+                mainBkg: '#f8fafc',
+                secondBkg: '#e2e8f0',
+                tertiaryBkg: '#f1f5f9',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px'
+            },
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20
+            },
+            securityLevel: 'loose'
+        });
+
+        // Initialize Mermaid Controls for zoom and pan
+        function initializeMermaidControls() {
+            const containers = document.querySelectorAll('.mermaid-container');
+
+            containers.forEach(container => {
+            const mermaidElement = container.querySelector('.mermaid');
+            let scale = 1;
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+
+            // 触摸相关状态
+            let isTouch = false;
+            let touchStartTime = 0;
+            let initialDistance = 0;
+            let initialScale = 1;
+            let isPinching = false;
+
+            // Zoom controls
+            const zoomInBtn = container.querySelector('.zoom-in');
+            const zoomOutBtn = container.querySelector('.zoom-out');
+            const resetBtn = container.querySelector('.reset-zoom');
+            const fullscreenBtn = container.querySelector('.fullscreen');
+
+            function updateTransform() {
+                mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+
+                if (scale > 1) {
+                container.classList.add('zoomed');
+                } else {
+                container.classList.remove('zoomed');
+                }
+
+                mermaidElement.style.cursor = isDragging ? 'grabbing' : 'grab';
+            }
+
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', () => {
+                scale = Math.min(scale * 1.25, 4);
+                updateTransform();
+                });
+            }
+
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', () => {
+                scale = Math.max(scale / 1.25, 0.3);
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+                updateTransform();
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+                });
+            }
+
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+                });
+            }
+
+            // Mouse Events
+            mermaidElement.addEventListener('mousedown', (e) => {
+                if (isTouch) return; // 如果是触摸设备，忽略鼠标事件
+
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                mermaidElement.style.cursor = 'grabbing';
+                updateTransform();
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && !isTouch) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseleave', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            // 获取两点之间的距离
+            function getTouchDistance(touch1, touch2) {
+                return Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+                );
+            }
+
+            // Touch Events - 触摸事件处理
+            mermaidElement.addEventListener('touchstart', (e) => {
+                isTouch = true;
+                touchStartTime = Date.now();
+
+                if (e.touches.length === 1) {
+                // 单指拖动
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+
+                } else if (e.touches.length === 2) {
+                // 双指缩放
+                isPinching = true;
+                isDragging = false;
+
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialDistance = getTouchDistance(touch1, touch2);
+                initialScale = scale;
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && isDragging && !isPinching) {
+                // 单指拖动
+                const touch = e.touches[0];
+                translateX = touch.clientX - startX;
+                translateY = touch.clientY - startY;
+                updateTransform();
+
+                } else if (e.touches.length === 2 && isPinching) {
+                // 双指缩放
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = getTouchDistance(touch1, touch2);
+
+                if (initialDistance > 0) {
+                    const newScale = Math.min(Math.max(
+                    initialScale * (currentDistance / initialDistance),
+                    0.3
+                    ), 4);
+                    scale = newScale;
+                    updateTransform();
+                }
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchend', (e) => {
+                // 重置状态
+                if (e.touches.length === 0) {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+
+                // 延迟重置isTouch，避免鼠标事件立即触发
+                setTimeout(() => {
+                    isTouch = false;
+                }, 100);
+                } else if (e.touches.length === 1 && isPinching) {
+                // 从双指变为单指，切换为拖动模式
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+                }
+
+                updateTransform();
+            });
+
+            mermaidElement.addEventListener('touchcancel', (e) => {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+
+                setTimeout(() => {
+                isTouch = false;
+                }, 100);
+
+                updateTransform();
+            });
+
+            // Enhanced wheel zoom with better center point handling
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = container.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = Math.min(Math.max(scale * delta, 0.3), 4);
+
+                // Adjust translation to zoom towards center
+                if (newScale !== scale) {
+                const scaleDiff = newScale / scale;
+                translateX = translateX * scaleDiff;
+                translateY = translateY * scaleDiff;
+                scale = newScale;
+
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+
+                updateTransform();
+                }
+            });
+
+            // Initialize display
+            updateTransform();
+            });
+        }
+
+        // Initialize mermaid controls when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMermaidControls();
+        });
+
+        // Mobile TOC Toggle
+        document.getElementById('toc-toggle').addEventListener('click', function() {
+            const toc = document.getElementById('toc');
+            const overlay = document.getElementById('toc-overlay');
+            toc.classList.toggle('mobile-open');
+            overlay.classList.toggle('hidden');
+        });
+
+        // Overlay click to close TOC
+        document.getElementById('toc-overlay').addEventListener('click', function() {
+            const toc = document.getElementById('toc');
+            const overlay = document.getElementById('toc-overlay');
+            toc.classList.remove('mobile-open');
+            overlay.classList.add('hidden');
+        });
+
+        // Smooth scrolling for TOC links
+        document.querySelectorAll('.toc-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+                // Close mobile TOC after clicking
+                if (window.innerWidth <= 1280) {
+                    document.getElementById('toc').classList.remove('mobile-open');
+                }
+            });
+        });
+
+        // Highlight active section in TOC
+        function highlightActiveSection() {
+            const sections = document.querySelectorAll('.section-anchor');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            
+            let currentSection = '';
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= 100 && rect.bottom >= 100) {
+                    currentSection = section.id;
+                }
+            });
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('text-blue-600', 'font-semibold');
+                link.classList.add('text-gray-600');
+                if (link.getAttribute('href') === `#${currentSection}`) {
+                    link.classList.remove('text-gray-600');
+                    link.classList.add('text-blue-600', 'font-semibold');
+                }
+            });
+        }
+
+        // Update active section highlighting on scroll
+        window.addEventListener('scroll', highlightActiveSection);
+        window.addEventListener('load', highlightActiveSection);
+
+        // 搜索功能
+        const searchToggle = document.getElementById('search-toggle');
+        const searchModal = document.getElementById('search-modal');
+        const searchInput = document.getElementById('search-input');
+        const searchClose = document.getElementById('search-close');
+        const searchResults = document.getElementById('search-results');
+
+        // 页面内容索引（用于搜索）
+        const pageContent = {
+            sections: [
+                { id: 'section-1', title: 'RAG技术核心原理与架构', content: '检索增强生成技术，融合信息检索与文本生成，提升大型语言模型在知识密集型任务中的表现' },
+                { id: 'section-1-1', title: 'RAG的诞生背景与核心思想', content: '解决大语言模型的局限性：知识截止日期、无法访问私有数据、幻觉问题' },
+                { id: 'section-1-2', title: 'RAG的基础架构与工作流程', content: '核心组件：检索器与生成器。工作流程：查询向量化、语义检索、召回相关文档、构建增强提示、LLM生成答案' },
+                { id: 'section-2', title: '九种主流RAG模型', content: '标准RAG、纠错RAG、推测RAG、融合RAG、自主RAG、自反RAG、图谱RAG、模块化RAG、RadioRAG' },
+                { id: 'section-3', title: '实际应用案例', content: '智能客服、知识库问答、内容创作、法律金融、教育医疗等领域的应用' },
+                { id: 'section-4', title: '挑战与未来展望', content: '技术挑战：检索质量、生成可控性、系统复杂性。未来方向：多模态RAG、智能检索、知识图谱融合' }
+            ]
+        };
+
+        searchToggle.addEventListener('click', () => {
+            searchModal.classList.remove('hidden');
+            searchModal.classList.add('show');
+            searchInput.focus();
+        });
+
+        searchClose.addEventListener('click', () => {
+            searchModal.classList.add('hidden');
+            searchModal.classList.remove('show');
+            searchInput.value = '';
+            searchResults.innerHTML = '<p class="text-gray-500 text-center">输入关键词开始搜索...</p>';
+        });
+
+        searchModal.addEventListener('click', (e) => {
+            if (e.target === searchModal) {
+                searchClose.click();
+            }
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (query.length === 0) {
+                searchResults.innerHTML = '<p class="text-gray-500 text-center">输入关键词开始搜索...</p>';
+                return;
+            }
+
+            const results = pageContent.sections.filter(section => 
+                section.title.toLowerCase().includes(query) || 
+                section.content.toLowerCase().includes(query)
+            );
+
+            if (results.length === 0) {
+                searchResults.innerHTML = '<p class="text-gray-500 text-center">未找到相关内容</p>';
+                return;
+            }
+
+            searchResults.innerHTML = results.map(section => {
+                const highlightedTitle = section.title.replace(
+                    new RegExp(query, 'gi'), 
+                    match => `<span class="highlight">${match}</span>`
+                );
+                return `
+                    <div class="search-result-item" onclick="scrollToSection('${section.id}')">
+                        <div class="result-title">${highlightedTitle}</div>
+                        <div class="result-snippet">${section.content.substring(0, 100)}...</div>
+                    </div>
+                `;
+            }).join('');
+        });
+
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                searchClose.click();
+            }
+        }
+
+        // 阅读进度条
+        const readingProgress = document.getElementById('reading-progress');
+        
+        function updateReadingProgress() {
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight - windowHeight;
+            const scrolled = window.pageYOffset;
+            const progress = (scrolled / documentHeight) * 100;
+            readingProgress.style.width = Math.min(progress, 100) + '%';
+        }
+
+        window.addEventListener('scroll', () => {
+            updateReadingProgress();
+            
+            // 返回顶部按钮显示/隐藏
+            const backToTop = document.getElementById('back-to-top');
+            if (window.pageYOffset > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        // 返回顶部功能
+        const backToTop = document.getElementById('back-to-top');
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // PDF导出功能
+        const pdfExportBtn = document.getElementById('pdf-export');
+        pdfExportBtn.addEventListener('click', () => {
+            // 显示加载提示
+            const originalHTML = pdfExportBtn.innerHTML;
+            pdfExportBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-xl"></i>';
+            pdfExportBtn.disabled = true;
+
+            // 配置PDF选项
+            const element = document.body;
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: 'RAG技术知识介绍.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait' 
+                }
+            };
+
+            // 导出PDF
+            html2pdf().set(opt).from(element).save().then(() => {
+                pdfExportBtn.innerHTML = originalHTML;
+                pdfExportBtn.disabled = false;
+            }).catch((error) => {
+                console.error('PDF导出失败:', error);
+                alert('PDF导出失败，请使用浏览器的打印功能（Ctrl/Cmd + P）');
+                pdfExportBtn.innerHTML = originalHTML;
+                pdfExportBtn.disabled = false;
+            });
+        });
+
+        // FAQ展开/收起功能
+        function toggleFaq(element) {
+            const faqItem = element.closest('.faq-item');
+            const isActive = faqItem.classList.contains('active');
+            
+            // 关闭所有FAQ
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 如果当前项未激活，则激活它
+            if (!isActive) {
+                faqItem.classList.add('active');
+            }
+        }
+
+        // 代码复制功能
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block');
+            const code = codeBlock.querySelector('code').textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check mr-1"></i>已复制';
+                button.style.background = '#10b981';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = '#334155';
+                }, 2000);
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('复制失败，请手动选择文本复制');
+            });
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + K 打开搜索
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchToggle.click();
+            }
+            // ESC 关闭搜索或分享
+            if (e.key === 'Escape') {
+                if (!searchModal.classList.contains('hidden')) {
+                    searchClose.click();
+                }
+                if (!document.getElementById('share-modal').classList.contains('hidden')) {
+                    document.getElementById('share-close').click();
+                }
+            }
+        });
+
+        // 暗色模式切换
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIconMoon = document.getElementById('theme-icon-moon');
+        const themeIconSun = document.getElementById('theme-icon-sun');
+        const html = document.documentElement;
+        
+        // 检查本地存储的主题偏好
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                themeIconMoon.style.display = 'none';
+                themeIconSun.style.display = 'inline';
+            } else {
+                themeIconMoon.style.display = 'inline';
+                themeIconSun.style.display = 'none';
+            }
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        // 分享功能
+        const shareToggle = document.getElementById('share-toggle');
+        const shareModal = document.getElementById('share-modal');
+        const shareClose = document.getElementById('share-close');
+        const shareUrl = document.getElementById('share-url');
+
+        // 设置当前页面URL
+        shareUrl.value = window.location.href;
+
+        shareToggle.addEventListener('click', () => {
+            shareModal.classList.remove('hidden');
+            shareModal.classList.add('show');
+        });
+
+        shareClose.addEventListener('click', () => {
+            shareModal.classList.add('hidden');
+            shareModal.classList.remove('show');
+        });
+
+        shareModal.addEventListener('click', (e) => {
+            if (e.target === shareModal) {
+                shareClose.click();
+            }
+        });
+
+        function copyShareUrl() {
+            shareUrl.select();
+            shareUrl.setSelectionRange(0, 99999); // 移动端兼容
+            navigator.clipboard.writeText(shareUrl.value).then(() => {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            }).catch(() => {
+                // 降级方案
+                document.execCommand('copy');
+                alert('链接已复制到剪贴板');
+            });
+        }
+
+        function shareToWeibo(e) {
+            e.preventDefault();
+            const url = encodeURIComponent(shareUrl.value);
+            const title = encodeURIComponent(document.title);
+            window.open(`https://service.weibo.com/share/share.php?url=${url}&title=${title}`, '_blank', 'width=600,height=400');
+        }
+
+        function shareToWeChat(e) {
+            e.preventDefault();
+            const qrcodeContainer = document.getElementById('wechat-qrcode');
+            const qrcodeCanvas = document.getElementById('qrcode-canvas');
+            
+            // 切换二维码显示
+            if (qrcodeContainer.style.display === 'none') {
+                qrcodeContainer.style.display = 'block';
+                // 生成二维码
+                QRCode.toCanvas(qrcodeCanvas, window.location.href, {
+                    width: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                }, function (error) {
+                    if (error) {
+                        console.error('二维码生成失败:', error);
+                        alert('二维码生成失败，请复制链接发送给好友');
+                    }
+                });
+            } else {
+                qrcodeContainer.style.display = 'none';
+            }
+        }
+
+        function shareToTwitter(e) {
+            e.preventDefault();
+            const url = encodeURIComponent(shareUrl.value);
+            const text = encodeURIComponent(document.title);
+            window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=600,height=400');
+        }
+
+        function shareToLinkedIn(e) {
+            e.preventDefault();
+            const url = encodeURIComponent(shareUrl.value);
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=600,height=400');
+        }
+
+        // 检测系统主题偏好（首次访问）
+        if (!localStorage.getItem('theme')) {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = prefersDark ? 'dark' : 'light';
+            html.setAttribute('data-theme', initialTheme);
+            updateThemeIcon(initialTheme);
+        }
+
+        // 初始化交互式图表
+        function initCharts() {
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#374151';
+            const gridColor = isDark ? '#334155' : '#e5e7eb';
+
+            // 准确率对比柱状图
+            const accuracyCtx = document.getElementById('accuracyChart');
+            if (accuracyCtx) {
+                new Chart(accuracyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['标准LLM', 'RAG增强'],
+                        datasets: [{
+                            label: '准确率 (%)',
+                            data: [62, 89],
+                            backgroundColor: ['#ef4444', '#10b981'],
+                            borderColor: ['#dc2626', '#059669'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return '准确率: ' + context.parsed.y + '%';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: textColor,
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: textColor
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 幻觉率对比柱状图
+            const hallucinationCtx = document.getElementById('hallucinationChart');
+            if (hallucinationCtx) {
+                new Chart(hallucinationCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['标准LLM', 'RAG增强'],
+                        datasets: [{
+                            label: '幻觉率 (%)',
+                            data: [23, 5],
+                            backgroundColor: ['#ef4444', '#10b981'],
+                            borderColor: ['#dc2626', '#059669'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return '幻觉率: ' + context.parsed.y + '%';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 30,
+                                ticks: {
+                                    color: textColor,
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: textColor
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 综合性能雷达图
+            const radarCtx = document.getElementById('radarChart');
+            if (radarCtx) {
+                new Chart(radarCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['准确率', '相关性', '完整性', '可解释性', '响应速度', '成本效益'],
+                        datasets: [{
+                            label: '标准LLM',
+                            data: [62, 58, 55, 45, 85, 70],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                            borderWidth: 2
+                        }, {
+                            label: 'RAG增强',
+                            data: [89, 92, 88, 85, 75, 80],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: textColor
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.r + '%';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: textColor,
+                                    stepSize: 20
+                                },
+                                grid: {
+                                    color: gridColor
+                                },
+                                pointLabels: {
+                                    color: textColor
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // 页面加载完成后初始化图表
+        window.addEventListener('load', () => {
+            setTimeout(initCharts, 500); // 延迟确保DOM完全加载
+        });
+
+        // 主题切换时重新初始化图表
+        themeToggle.addEventListener('click', () => {
+            setTimeout(initCharts, 100);
+        });
+    </script>
+  
+
+</body></html>

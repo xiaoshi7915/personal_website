@@ -142,6 +142,7 @@ const sidebars = {
       label: 'RAG技术',
       items: [
         'rag/intro',
+        'rag/comprehensive-intro',
         'rag/getting-started',
         'rag/development',
         'rag/github-projects',
@@ -193,6 +194,7 @@ const sidebars = {
       label:"向量数据库",
       items:[
         'vector-database/intro',
+        'vector-database/comprehensive-intro',
         'vector-database/principles',
         'vector-database/architecture',
         'vector-database/applications',

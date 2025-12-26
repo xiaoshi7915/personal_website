@@ -1,0 +1,242 @@
+/**
+ * RAG技术深度解析文档的自定义样式
+ * 适配Docusaurus主题和暗色模式
+ */
+
+/* Hero区域样式 */
+.hero-gradient {
+  background: linear-gradient(135deg, #1e40af 0%, #3730a3 50%, #1e1b4b 100%);
+  padding: 3rem 0;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+}
+
+[data-theme='dark'] .hero-gradient {
+  background: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e1b4b 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #1e40af, #0ea5e9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 高亮框样式 */
+.highlight-box {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left: 4px solid #0ea5e9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+
+[data-theme='dark'] .highlight-box {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  border-left-color: #3b82f6;
+}
+
+/* Mermaid容器样式 */
+.mermaid-container {
+  display: flex;
+  justify-content: center;
+  min-height: 300px;
+  max-height: 800px;
+  background: var(--ifm-background-color);
+  border: 2px solid var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+  padding: 30px;
+  margin: 30px 0;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme='dark'] .mermaid-container {
+  border-color: var(--ifm-color-emphasis-200);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.mermaid-container .mermaid {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  cursor: grab;
+  transition: transform 0.3s ease;
+  transform-origin: center center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  touch-action: none;
+  user-select: none;
+}
+
+.mermaid-container .mermaid:active {
+  cursor: grabbing;
+}
+
+.mermaid-controls {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  gap: 10px;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .mermaid-controls {
+  background: rgba(30, 30, 30, 0.95);
+}
+
+.mermaid-control-btn {
+  background: var(--ifm-background-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--ifm-color-content);
+  font-size: 14px;
+  min-width: 36px;
+  height: 36px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mermaid-control-btn:hover {
+  background: var(--ifm-color-emphasis-100);
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+/* 图表容器样式 */
+.performance-charts-container {
+  margin: 2rem 0;
+}
+
+.chart-placeholder {
+  padding: 2rem;
+  text-align: center;
+  color: var(--ifm-color-content-secondary);
+}
+
+/* 引用链接样式 */
+.citation-link {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.citation-link:hover {
+  color: var(--ifm-color-primary-dark);
+  text-decoration: underline;
+}
+
+/* 表格样式增强 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background: var(--ifm-background-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] table {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+table thead {
+  background: var(--ifm-color-emphasis-100);
+}
+
+[data-theme='dark'] table thead {
+  background: var(--ifm-color-emphasis-200);
+}
+
+table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  border-bottom: 2px solid var(--ifm-color-emphasis-300);
+}
+
+table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-content);
+}
+
+table tbody tr:hover {
+  background: var(--ifm-color-emphasis-50);
+}
+
+[data-theme='dark'] table tbody tr:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* 代码块样式增强 */
+.prism-code {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .prism-code {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .mermaid-container {
+    padding: 15px;
+    overflow-x: auto;
+  }
+
+  .mermaid-control-btn:not(.reset-zoom) {
+    display: none;
+  }
+
+  .mermaid-controls {
+    top: auto;
+    bottom: 15px;
+    right: 15px;
+  }
+
+  .hero-gradient {
+    padding: 2rem 1rem;
+  }
+
+  table {
+    font-size: 0.875rem;
+  }
+
+  table th,
+  table td {
+    padding: 8px 12px;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .mermaid-controls,
+  .back-to-top,
+  .pdf-export-btn,
+  .share-btn {
+    display: none !important;
+  }
+
+  .mermaid-container {
+    page-break-inside: avoid;
+  }
+}
+

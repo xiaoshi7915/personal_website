@@ -1,0 +1,99 @@
+/* 对比表格容器 */
+.comparisonTableWrapper {
+  margin: 2rem 0;
+  overflow-x: auto;
+  background: var(--ifm-background-surface-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.comparisonTable {
+  width: 100%;
+  min-width: 600px;
+}
+
+/* 表格样式 */
+.comparisonTable table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+/* 表头样式 */
+.comparisonTable thead {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.comparisonTable th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  border-bottom: 2px solid var(--ifm-color-emphasis-300);
+  white-space: nowrap;
+}
+
+/* 表格单元格样式 */
+.comparisonTable td {
+  padding: 1rem;
+  text-align: left;
+  color: var(--ifm-color-content);
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  vertical-align: top;
+}
+
+/* 第一列（通常是维度名称）加粗 */
+.comparisonTable td:first-child {
+  font-weight: 500;
+  color: var(--ifm-heading-color);
+}
+
+/* 暗色模式适配 */
+[data-theme='dark'] .comparisonTableWrapper {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .comparisonTable thead {
+  background: var(--ifm-color-emphasis-200);
+}
+
+[data-theme='dark'] .comparisonTable th {
+  border-bottom-color: var(--ifm-color-emphasis-400);
+}
+
+[data-theme='dark'] .comparisonTable td {
+  border-bottom-color: var(--ifm-color-emphasis-300);
+}
+
+/* 响应式设计 - 移动端横向滚动 */
+@media (max-width: 768px) {
+  .comparisonTableWrapper {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+  }
+
+  .comparisonTable {
+    min-width: 800px;
+  }
+
+  .comparisonTable th,
+  .comparisonTable td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .comparisonTableWrapper {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+
+  .comparisonTable th,
+  .comparisonTable td {
+    border: 1px solid #ddd;
+  }
+}
+

@@ -1,0 +1,228 @@
+/* 向量数据库深度解析文档自定义样式 */
+
+/* Hero区域样式 */
+.vector-hero {
+  margin: 2rem 0 3rem;
+}
+
+.vector-hero-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: rgb(37, 99, 235);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+[data-theme='dark'] .vector-hero-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: rgb(96, 165, 250);
+}
+
+.vector-hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  color: var(--ifm-heading-color);
+}
+
+.vector-hero-subtitle {
+  font-size: 2.25rem;
+  font-style: italic;
+  color: var(--ifm-color-primary);
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.vector-hero-description {
+  font-size: 1.25rem;
+  color: var(--ifm-color-content-secondary);
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+/* 关键数据展示网格 */
+.vector-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.vector-stat-card {
+  background: var(--ifm-color-emphasis-100);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+[data-theme='dark'] .vector-stat-card {
+  background: var(--ifm-color-emphasis-200);
+}
+
+.vector-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ifm-color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.vector-stat-label {
+  font-size: 0.875rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+/* 技术卡片样式 */
+.vector-tech-card {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.vector-tech-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: var(--ifm-color-primary);
+  transform: translateY(-2px);
+}
+
+[data-theme='dark'] .vector-tech-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.vector-tech-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.vector-tech-card-icon {
+  font-size: 1.5rem;
+  margin-right: 0.75rem;
+}
+
+.vector-tech-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ifm-heading-color);
+  margin: 0;
+}
+
+.vector-tech-card-content {
+  color: var(--ifm-color-content);
+  line-height: 1.7;
+}
+
+/* 高亮框样式 */
+.vector-highlight-box {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%);
+  border-left: 4px solid var(--ifm-color-primary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+[data-theme='dark'] .vector-highlight-box {
+  background: linear-gradient(135deg, rgba(30, 58, 95, 0.5) 0%, rgba(30, 74, 111, 0.5) 100%);
+}
+
+.vector-highlight-box-title {
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  margin-bottom: 0.5rem;
+}
+
+/* 引用链接样式 */
+.vector-citation {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px dotted var(--ifm-color-primary);
+  transition: all 0.2s ease;
+}
+
+.vector-citation:hover {
+  color: var(--ifm-color-primary-dark);
+  border-bottom-style: solid;
+}
+
+/* 图片样式 */
+.vector-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .vector-image {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* 网格布局 */
+.vector-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.vector-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 996px) {
+  .vector-hero-title {
+    font-size: 2.5rem;
+  }
+
+  .vector-hero-subtitle {
+    font-size: 1.875rem;
+  }
+
+  .vector-hero-description {
+    font-size: 1.125rem;
+  }
+
+  .vector-grid-2,
+  .vector-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .vector-hero-title {
+    font-size: 2rem;
+  }
+
+  .vector-hero-subtitle {
+    font-size: 1.5rem;
+  }
+
+  .vector-hero-description {
+    font-size: 1rem;
+  }
+
+  .vector-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .vector-tech-card,
+  .vector-highlight-box {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+

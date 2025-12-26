@@ -1,0 +1,207 @@
+/* Timeline容器样式 */
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+  margin: 2rem 0;
+}
+
+/* 时间线连接线 */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ifm-color-primary);
+  border-radius: 2px;
+}
+
+/* 暗色模式下的连接线 */
+[data-theme='dark'] .timeline::before {
+  background: var(--ifm-color-primary-dark);
+}
+
+/* Timeline节点样式 */
+.timelineItem {
+  position: relative;
+  margin-bottom: 3rem;
+  padding-left: 2rem;
+}
+
+/* 时间线节点圆点 */
+.timelineItem::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 0;
+  width: 13px;
+  height: 13px;
+  background: var(--ifm-color-primary);
+  border-radius: 50%;
+  border: 3px solid var(--ifm-background-color);
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+/* 暗色模式下的圆点 */
+[data-theme='dark'] .timelineItem::before {
+  border-color: var(--ifm-background-color);
+}
+
+/* 节点内容区域 */
+.timelineContent {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.timelineItem:hover .timelineContent {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: var(--ifm-color-primary);
+  transform: translateX(4px);
+}
+
+/* 节点头部 */
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* 时间标签 */
+.timeLabel {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 不同颜色的时间标签 */
+.timeLabel-blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: rgb(37, 99, 235);
+}
+
+.timeLabel-green {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(22, 163, 74);
+}
+
+.timeLabel-purple {
+  background: rgba(168, 85, 247, 0.1);
+  color: rgb(147, 51, 234);
+}
+
+.timeLabel-red {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgb(220, 38, 38);
+}
+
+/* 暗色模式下的时间标签 */
+[data-theme='dark'] .timeLabel-blue {
+  background: rgba(59, 130, 246, 0.2);
+  color: rgb(96, 165, 250);
+}
+
+[data-theme='dark'] .timeLabel-green {
+  background: rgba(34, 197, 94, 0.2);
+  color: rgb(74, 222, 128);
+}
+
+[data-theme='dark'] .timeLabel-purple {
+  background: rgba(168, 85, 247, 0.2);
+  color: rgb(196, 181, 253);
+}
+
+[data-theme='dark'] .timeLabel-red {
+  background: rgba(239, 68, 68, 0.2);
+  color: rgb(248, 113, 113);
+}
+
+/* 节点标题 */
+.timelineTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ifm-heading-color);
+  margin: 0;
+}
+
+/* 节点内容主体 */
+.timelineBody {
+  color: var(--ifm-color-content);
+  line-height: 1.7;
+}
+
+/* 不同颜色的连接线 */
+.color-blue::before {
+  background: rgb(59, 130, 246);
+}
+
+.color-green::before {
+  background: rgb(34, 197, 94);
+}
+
+.color-purple::before {
+  background: rgb(168, 85, 247);
+}
+
+.color-red::before {
+  background: rgb(239, 68, 68);
+}
+
+/* 响应式设计 - 移动端 */
+@media (max-width: 768px) {
+  .timeline {
+    padding-left: 1.5rem;
+  }
+
+  .timelineItem {
+    padding-left: 1.5rem;
+  }
+
+  .timelineItem::before {
+    left: -1.25rem;
+    width: 11px;
+    height: 11px;
+  }
+
+  .timelineHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .timelineTitle {
+    font-size: 1.25rem;
+  }
+
+  .timelineContent {
+    padding: 1rem;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .timeline::before,
+  .timelineItem::before {
+    display: none;
+  }
+
+  .timelineItem {
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .timelineContent {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+
