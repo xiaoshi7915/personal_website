@@ -91,6 +91,11 @@ const config = {
             position: 'left',
             label: 'AI学习文档',
           },
+          {
+            type: 'html',
+            position: 'left',
+            value: '<a href="http://121.36.205.70:12345/" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">AI工具网站</a>',
+          },
         ],
       },
       footer: {

@@ -270,3 +270,4 @@ def parallel_search(index, query_vectors, top_k=10, num_workers=4):
 3. **降低成本**：通过合理的资源使用
 4. **提升用户体验**：通过快速响应
 
+

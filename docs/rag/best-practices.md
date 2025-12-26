@@ -268,3 +268,4 @@ def check_access_permission(user_id: str, document_id: str) -> bool:
 4. **确保安全**：通过数据隐私保护和访问控制
 5. **持续改进**：通过评估和监控
 
+

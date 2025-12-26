@@ -276,3 +276,4 @@ async def multimodal_inference(image: bytes, text: str):
 4. **准确评估**：通过合适的评估指标
 5. **高效部署**：通过模型优化和服务化
 
+
