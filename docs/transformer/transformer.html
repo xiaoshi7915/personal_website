@@ -1,0 +1,2626 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Transformer架构深度研究报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <!-- PDF导出库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- MathJax for mathematical formulas -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --accent: #f1f5f9;
+            --text: #1e293b;
+            --background: #ffffff;
+            --muted: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            color: var(--text);
+            background: var(--background);
+            overflow-x: hidden;
+        }
+        
+        .serif {
+            font-family: 'Crimson Text', serif;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .toc-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--muted);
+            border-right: 1px solid #e2e8f0;
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 2rem 1.5rem;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .toc-link {
+            display: block;
+            padding: 0.5rem 0;
+            color: var(--secondary);
+            text-decoration: none;
+            border-left: 2px solid transparent;
+            padding-left: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .toc-link:hover, .toc-link.active {
+            color: var(--primary);
+            border-left-color: var(--primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+        
+        .toc-link.level-2 {
+            padding-left: 2rem;
+            font-size: 0.9rem;
+        }
+        
+        .citation {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .citation:hover {
+            text-decoration: underline;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .bento-item {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mermaid-container {
+            display: flex;
+            justify-content: center;
+            min-height: 300px;
+            max-height: 800px;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mermaid-container .mermaid {
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            cursor: grab;
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .mermaid-container .mermaid svg {
+            max-width: 100%;
+            height: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .mermaid-container .mermaid:active {
+            cursor: grabbing;
+        }
+
+        .mermaid-container.zoomed .mermaid {
+            height: 100%;
+            width: 100%;
+            cursor: grab;
+        }
+
+        .mermaid-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .mermaid-control-btn {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #374151;
+            font-size: 14px;
+            min-width: 36px;
+            height: 36px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mermaid-control-btn:hover {
+            background: #f8fafc;
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .mermaid-control-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Mermaid theme customization for better contrast */
+        .mermaid .node rect,
+        .mermaid .node circle,
+        .mermaid .node ellipse,
+        .mermaid .node polygon {
+            stroke: #1e293b !important;
+            stroke-width: 2px !important;
+        }
+        
+        .mermaid .node .label {
+            color: #1e293b !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+        }
+        
+        .mermaid .edgeLabel {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            color: #1e293b !important;
+            font-weight: 500 !important;
+            padding: 4px 8px !important;
+            border-radius: 4px !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        .mermaid .edge-pattern-solid {
+            stroke-width: 2px !important;
+        }
+        
+        /* Ensure text readability on all node colors */
+        .mermaid .node[style*="fill:#e3f2fd"] .label,
+        .mermaid .node[style*="fill:#f3e5f5"] .label,
+        .mermaid .node[style*="fill:#e8f5e8"] .label,
+        .mermaid .node[style*="fill:#fff3e0"] .label,
+        .mermaid .node[style*="fill:#e0f2f1"] .label {
+            color: #1e293b !important;
+            font-weight: 700 !important;
+        }
+        
+        /* Override any default mermaid styling that might reduce contrast */
+        .mermaid g.label {
+            color: #1e293b !important;
+        }
+        @media (max-width: 1024px) {
+            .toc-fixed {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .toc-fixed.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mermaid-control-btn:not(.reset-zoom) {
+                display: none;
+            }
+            .mermaid-controls {
+                top: auto;
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+                line-height: 1.2;
+            }
+
+            .hero-title {
+                font-size: 1.5rem;
+            }
+
+            .bento-item {
+                padding: 1rem;
+            }
+
+            .mermaid-container {
+                padding: 15px;
+            }
+
+            .chart-container,
+            .bg-white.rounded-2xl.p-8 {
+                padding: 1rem;
+            }
+
+            .grid.grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .text-sm {
+                font-size: 0.875rem;
+            }
+
+            .text-lg {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero-title {
+                font-size: 1.25rem;
+            }
+
+            .bento-grid {
+                gap: 1rem;
+            }
+
+            .bento-item {
+                padding: 0.75rem;
+            }
+
+            .grid.md\:grid-cols-3,
+            .grid.md\:grid-cols-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 阅读进度条样式 */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            z-index: 9999;
+            transition: width 0.1s ease;
+        }
+        
+        /* 返回顶部按钮样式 */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            background: #1d4ed8;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+        }
+        
+        /* 搜索功能样式 */
+        .search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 10vh;
+        }
+        
+        .search-overlay.active {
+            display: flex;
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .search-results {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .search-result-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background: var(--muted);
+        }
+        
+        /* 工具栏按钮样式 */
+        .toolbar {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+        
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .toolbar-btn:hover {
+            background: var(--muted);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* 代码块样式增强 */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        
+        .code-block code {
+            color: #e2e8f0;
+        }
+        
+        /* 数学公式样式 */
+        .math-formula {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        /* 暗色模式样式 */
+        body.dark-mode {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .toc-fixed {
+            background: #1e293b;
+            border-right-color: #334155;
+        }
+        
+        body.dark-mode .main-content {
+            background: #0f172a;
+        }
+        
+        body.dark-mode .bento-item,
+        body.dark-mode .chart-container,
+        body.dark-mode .search-box,
+        body.dark-mode .code-block {
+            background: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .search-input {
+            background: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .toolbar-btn {
+            background: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .highlight-box {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(30, 64, 175, 0.1));
+        }
+        
+        body.dark-mode .math-formula {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        
+        /* 图片懒加载样式 */
+        img[loading="lazy"] {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        img[loading="lazy"].loaded {
+            opacity: 1;
+        }
+        
+        /* 打印样式优化 */
+        @media print {
+            .toc-fixed,
+            .toolbar,
+            .back-to-top,
+            .reading-progress {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+            }
+            
+            section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+  <base target="_blank">
+</head>
+
+  <body>
+    <!-- 阅读进度条 -->
+    <div class="reading-progress" id="readingProgress"></div>
+    
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <!-- 搜索按钮 -->
+        <button class="toolbar-btn" id="searchBtn" title="搜索 (Ctrl+K)">
+            <i class="fas fa-search"></i>
+        </button>
+        <!-- 暗色模式切换按钮 -->
+        <button class="toolbar-btn" id="themeToggle" title="切换主题">
+            <i class="fas fa-moon"></i>
+        </button>
+        <!-- 分享按钮 -->
+        <button class="toolbar-btn" id="shareBtn" title="分享">
+            <i class="fas fa-share-alt"></i>
+        </button>
+        <!-- PDF导出按钮 -->
+        <button class="toolbar-btn" id="pdfBtn" title="导出PDF" style="background: #ef4444; color: white; border-color: #ef4444;">
+            <i class="fas fa-file-pdf"></i>
+        </button>
+    </div>
+    
+    <!-- 搜索覆盖层 -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索内容... (按ESC关闭)">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+    
+    <!-- 返回顶部按钮 -->
+    <button class="back-to-top" id="backToTop" title="返回顶部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <!-- Table of Contents -->
+    <nav class="toc-fixed">
+      <div class="mb-8">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">目录导航</h3>
+        <div class="space-y-1">
+          <a href="#introduction" class="toc-link">概述</a>
+          <a href="#history" class="toc-link">1. 前世今生</a>
+          <a href="#history-milestones" class="toc-link level-2">1.1 历史发展脉络</a>
+          <a href="#history-evolution" class="toc-link level-2">1.2 技术原理演进</a>
+          <a href="#history-optimization" class="toc-link level-2">1.3 核心组件优化</a>
+
+          <a href="#core-technology" class="toc-link">2. 核心技术原理</a>
+          <a href="#self-attention" class="toc-link level-2">2.1 自注意力机制</a>
+          <a href="#multi-head" class="toc-link level-2">2.2 多头注意力</a>
+          <a href="#encoder-decoder" class="toc-link level-2">2.3 编解码器结构</a>
+          <a href="#other-components" class="toc-link level-2">2.4 其他关键组件</a>
+
+          <a href="#implementation" class="toc-link">3. 实现与现状</a>
+          <a href="#implementation-code" class="toc-link level-2">3.1 实现方式</a>
+          <a href="#implementation-pros-cons" class="toc-link level-2">3.2 优缺点分析</a>
+          <a href="#implementation-ecosystem" class="toc-link level-2">3.3 生态系统</a>
+
+          <a href="#nlp-applications" class="toc-link">4. NLP应用与未来</a>
+          <a href="#nlp-progress" class="toc-link level-2">4.1 最新进展</a>
+          <a href="#nlp-future" class="toc-link level-2">4.2 未来方向</a>
+
+          <a href="#other-domains" class="toc-link">5. 其他领域拓展</a>
+          <a href="#cv-applications" class="toc-link level-2">5.1 计算机视觉</a>
+          <a href="#speech-applications" class="toc-link level-2">5.2 语音处理</a>
+          <a href="#multimodal" class="toc-link level-2">5.3 多模态学习</a>
+
+          <a href="#use-cases" class="toc-link">6. 使用案例与应用场景</a>
+          <a href="#cv-use-cases" class="toc-link level-2">6.2 计算机视觉应用</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero Section -->
+      <section id="introduction" class="hero-gradient text-white">
+        <div class="container mx-auto px-8 py-16">
+          <div class="bento-grid">
+            <div class="bento-item bg-white/10 backdrop-blur-sm">
+              <h1 class="serif text-5xl font-bold mb-6 leading-tight">
+                <em>Transformer</em> 架构深度研究报告
+              </h1>
+              <p class="text-xl mb-8 text-white/90">
+                从序列模型革命到通用人工智能基石的技术演进
+              </p>
+              <div class="flex flex-wrap gap-4">
+                <span class="bg-white/20 px-4 py-2 rounded-full text-sm">自注意力机制</span>
+                <span class="bg-white/20 px-4 py-2 rounded-full text-sm">并行计算</span>
+                <span class="bg-white/20 px-4 py-2 rounded-full text-sm">多模态学习</span>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bento-item bg-white/10 backdrop-blur-sm">
+                <h3 class="font-bold mb-2">关键突破</h3>
+                <p class="text-sm">完全并行计算与高效捕捉长距离依赖关系</p>
+              </div>
+              <div class="bento-item bg-white/10 backdrop-blur-sm">
+                <h3 class="font-bold mb-2">应用领域</h3>
+                <p class="text-sm">NLP、计算机视觉、语音处理、多模态学习</p>
+              </div>
+              <div class="bento-item bg-white/10 backdrop-blur-sm">
+                <h3 class="font-bold mb-2">影响范围</h3>
+                <p class="text-sm">成为GPT、BERT等大型语言模型的基础架构</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Content Sections -->
+      <div class="container mx-auto px-8 py-12">
+        <!-- Section 1: History -->
+        <section id="history" class="mb-16">
+          <h2 class="serif text-4xl font-bold mb-8 text-gray-900">1. Transformer架构的前世今生</h2>
+
+          <div id="history-milestones" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">1.1 历史发展脉络与关键里程碑</h3>
+
+            <div class="highlight-box p-6 rounded-lg mb-8">
+              <h4 class="font-bold mb-3">从RNN到Transformer：并行计算的迫切需求</h4>
+              <p class="text-gray-700 mb-4">
+                在Transformer出现之前，<strong>循环神经网络（RNN）</strong>及其变体，如<strong>长短时记忆网络（LSTM）</strong>是处理序列数据的标准范式。然而，它们固有的顺序计算特性带来了两大核心瓶颈：
+              </p>
+              <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li><strong>顺序处理导致计算效率低下</strong>，无法充分利用现代GPU等并行计算硬件的优势</li>
+                <li><strong>捕捉远距离依赖关系的能力仍然受限</strong>，信息在逐层传递过程中容易丢失或衰减</li>
+              </ul>
+              <p class="text-sm text-gray-600 mt-4">
+                <a href="https://cloud.tencent.com/developer/article/2587262" class="citation">[1]</a>
+              </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-blue-600">2017年：里程碑诞生</h4>
+                <p class="text-gray-700 mb-3">
+                  Google团队发表论文<strong>《Attention Is All You Need》</strong>，正式提出Transformer架构
+                  <a href="https://cloud.tencent.com/developer/article/2587262" class="citation">[1]</a>
+                </p>
+                <ul class="text-sm text-gray-600 space-y-1">
+                  <li>• 完全基于自注意力机制</li>
+                  <li>• 摒弃循环和卷积结构</li>
+                  <li>• 提出缩放点积注意力</li>
+                </ul>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-green-600">2018-2019年：预训练模型崛起</h4>
+                <p class="text-gray-700 mb-3">BERT和GPT的成功确立了&#34;预训练-微调&#34;新范式</p>
+                <ul class="text-sm text-gray-600 space-y-1">
+                  <li>• BERT：双向编码器，擅长理解任务</li>
+                  <li>• GPT：自回归解码器，擅长生成任务</li>
+                  <li>• 推动NLP领域快速发展</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="history-evolution" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">1.2 技术原理的演进</h3>
+
+            <div class="bg-gray-50 rounded-lg p-6 mb-6">
+              <h4 class="font-bold mb-4">自注意力机制的引入与革新</h4>
+              <p class="text-gray-700 mb-4">
+                Transformer最大的革新在于将注意力机制应用于序列内部，即<strong>自注意力机制（Self-Attention）</strong>。与标准的注意力机制不同，自注意力机制的Query、Key和Value均来自同一个序列。
+              </p>
+              <p class="text-gray-700">
+                这种设计使得模型能够<strong>捕捉序列内部任意两个位置之间的依赖关系，无论它们之间的距离有多远</strong>。相比之下，RNN需要逐层传递信息才能建立远距离依赖，而CNN则只能通过堆叠多层来扩大感受野。
+                <a href="https://www.nesc.cn/timerfiles/upload/report/2024/02/20/15813901.pdf" class="citation">[101]</a>
+              </p>
+            </div>
+
+            <div class="chart-container">
+              <h4 class="font-bold mb-4">从序列到序列到通用特征提取器</h4>
+              <p class="text-gray-700 mb-4">
+                最初，Transformer是为机器翻译等序列到序列任务设计的，但其编码器和解码器可以独立地作为强大的<strong>通用特征提取器</strong>。
+              </p>
+              <div class="mermaid-container">
+                <div class="mermaid-controls">
+                  <button class="mermaid-control-btn zoom-in" title="放大">
+                    <i class="fas fa-search-plus"></i>
+                  </button>
+                  <button class="mermaid-control-btn zoom-out" title="缩小">
+                    <i class="fas fa-search-minus"></i>
+                  </button>
+                  <button class="mermaid-control-btn reset-zoom" title="重置">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                  </button>
+                  <button class="mermaid-control-btn fullscreen" title="全屏查看">
+                    <i class="fas fa-expand"></i>
+                  </button>
+                </div>
+                <div class="mermaid">
+                  graph TD
+                  A[&#34;原始序列到序列任务&#34;] --&gt; B[&#34;编码器特征提取&#34;]
+                  A --&gt; C[&#34;解码器特征提取&#34;]
+                  B --&gt; D[&#34;BERT: 双向理解&#34;]
+                  C --&gt; E[&#34;GPT: 单向生成&#34;]
+                  D --&gt; F[&#34;多模态应用&#34;]
+                  E --&gt; F
+                  F --&gt; G[&#34;文本&#34;]
+                  F --&gt; H[&#34;图像&#34;]
+                  F --&gt; I[&#34;音频&#34;]
+                  F --&gt; J[&#34;视频&#34;]
+                </div>
+              </div>
+              <p class="text-sm text-gray-600 mt-4">
+                <a href="https://hub.baai.ac.cn/view/32488" class="citation">[125]</a>
+              </p>
+            </div>
+          </div>
+
+          <div id="history-optimization">
+            <h3 class="text-2xl font-semibold mb-6">1.3 核心组件的迭代优化</h3>
+
+            <div class="grid md:grid-cols-3 gap-6">
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-purple-600">注意力机制优化</h4>
+                <ul class="text-sm text-gray-600 space-y-2">
+                  <li>• 稀疏注意力：降低复杂度到O(n log n)</li>
+                  <li>• 线性注意力：通过核函数分解</li>
+                  <li>• Longformer、BigBird等模型</li>
+                </ul>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-orange-600">位置编码创新</h4>
+                <ul class="text-sm text-gray-600 space-y-2">
+                  <li>• 固定位置编码：正弦余弦函数</li>
+                  <li>• 可学习位置嵌入</li>
+                  <li>• 相对位置编码</li>
+                </ul>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-teal-600">归一化优化</h4>
+                <ul class="text-sm text-gray-600 space-y-2">
+                  <li>• Pre-Norm vs Post-Norm</li>
+                  <li>• RMSNorm简化计算</li>
+                  <li>• 稳定深层网络训练</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 2: Core Technology -->
+        <section id="core-technology" class="mb-16">
+          <h2 class="serif text-4xl font-bold mb-8 text-gray-900">2. Transformer架构的核心技术与原理</h2>
+
+          <div id="self-attention" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">2.1 自注意力机制（Self-Attention）</h3>
+
+            <div class="highlight-box p-6 rounded-lg mb-8">
+              <h4 class="font-bold mb-3">核心思想：计算序列内部元素间的关联</h4>
+              <p class="text-gray-700 mb-4">
+                自注意力机制的核心思想可以概括为&#34;关注自己&#34;。对于一个给定的输入序列，自注意力机制会为序列中的每一个位置生成一个融合了全局上下文信息的表示。
+              </p>
+              <p class="text-gray-700">
+                这种机制使得模型能够<strong>直接捕捉序列内部任意两个元素之间的依赖关系，无论它们在序列中的距离有多远</strong>。
+                <a href="https://www.nesc.cn/timerfiles/upload/report/2024/02/20/15813901.pdf" class="citation">[101]</a>
+              </p>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 shadow-lg mb-8">
+              <h4 class="font-bold mb-4">数学原理：缩放点积注意力</h4>
+              
+              <!-- 数学公式 -->
+              <div class="math-formula mb-6">
+                <h5 class="font-semibold mb-3 text-center">缩放点积注意力公式</h5>
+                <div class="text-lg font-mono">
+                  Attention(Q, K, V) = softmax(QK^T / √d_k) · V
+                </div>
+                <p class="text-sm text-gray-600 mt-2 text-center">
+                  其中：Q、K、V分别表示Query、Key、Value矩阵，d_k是Key的维度
+                </p>
+              </div>
+              
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h5 class="font-semibold mb-3">计算步骤：</h5>
+                  <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                    <li>计算注意力得分矩阵：
+                      <code class="bg-gray-100 px-2 py-1 rounded">score(i,j) = Q_i · K_j^T</code>
+                    </li>
+                    <li>缩放处理（防止梯度消失）：
+                      <code class="bg-gray-100 px-2 py-1 rounded">scaled_score = score/√d_k</code>
+                    </li>
+                    <li>应用Softmax转换为概率分布：
+                      <code class="bg-gray-100 px-2 py-1 rounded">α = softmax(scaled_score)</code>
+                    </li>
+                    <li>加权求和得到最终输出：
+                      <code class="bg-gray-100 px-2 py-1 rounded">Output = α · V</code>
+                    </li>
+                  </ol>
+                </div>
+                <div>
+                  <h5 class="font-semibold mb-3">Query, Key, Value计算：</h5>
+                  <div class="space-y-2 text-sm">
+                    <code class="block bg-gray-100 p-2 rounded">Q = X · W_Q  (维度: n×d_k)</code>
+                    <code class="block bg-gray-100 p-2 rounded">K = X · W_K  (维度: n×d_k)</code>
+                    <code class="block bg-gray-100 p-2 rounded">V = X · W_V  (维度: n×d_v)</code>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-3">
+                    其中X是输入序列，W_Q、W_K、W_V是可学习的权重矩阵
+                  </p>
+                </div>
+              </div>
+              
+              <!-- 复杂度分析 -->
+              <div class="bg-blue-50 rounded-lg p-4 mt-4">
+                <h5 class="font-semibold mb-2 text-blue-700">时间复杂度分析</h5>
+                <ul class="text-sm text-gray-700 space-y-1">
+                  <li>• <strong>计算复杂度：</strong>O(n²·d)，其中n是序列长度，d是特征维度</li>
+                  <li>• <strong>空间复杂度：</strong>O(n²)，需要存储注意力矩阵</li>
+                  <li>• <strong>并行化优势：</strong>所有位置的注意力可以并行计算</li>
+                </ul>
+              </div>
+              
+              <p class="text-sm text-gray-600 mt-4">
+                <a href="https://cloud.tencent.com/developer/article/2587262" class="citation">[1]</a>
+              </p>
+            </div>
+            
+            <!-- 代码实现示例 -->
+            <div class="bg-white rounded-lg p-6 shadow-lg mb-8">
+              <h4 class="font-bold mb-4">PyTorch实现：自注意力机制</h4>
+              <div class="code-block">
+                <pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+class ScaledDotProductAttention(nn.Module):
+    """缩放点积注意力机制实现"""
+    def __init__(self, d_k, dropout=0.1):
+        super(ScaledDotProductAttention, self).__init__()
+        self.d_k = d_k
+        self.dropout = nn.Dropout(dropout)
+    
+    def forward(self, Q, K, V, mask=None):
+        """
+        前向传播
+        Args:
+            Q: Query矩阵 (batch_size, n_heads, seq_len, d_k)
+            K: Key矩阵 (batch_size, n_heads, seq_len, d_k)
+            V: Value矩阵 (batch_size, n_heads, seq_len, d_v)
+            mask: 掩码矩阵，用于屏蔽无效位置
+        Returns:
+            output: 注意力输出 (batch_size, n_heads, seq_len, d_v)
+            attention_weights: 注意力权重 (batch_size, n_heads, seq_len, seq_len)
+        """
+        # 计算注意力得分: QK^T
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.d_k)
+        
+        # 应用掩码（如果有）
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e9)
+        
+        # Softmax归一化
+        attention_weights = F.softmax(scores, dim=-1)
+        attention_weights = self.dropout(attention_weights)
+        
+        # 加权求和
+        output = torch.matmul(attention_weights, V)
+        
+        return output, attention_weights</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div id="multi-head" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">2.2 多头自注意力（Multi-Head Self-Attention）</h3>
+
+            <div class="chart-container">
+              <h4 class="font-bold mb-4">多头注意力机制架构</h4>
+              <div class="mermaid-container">
+                <div class="mermaid-controls">
+                  <button class="mermaid-control-btn zoom-in" title="放大">
+                    <i class="fas fa-search-plus"></i>
+                  </button>
+                  <button class="mermaid-control-btn zoom-out" title="缩小">
+                    <i class="fas fa-search-minus"></i>
+                  </button>
+                  <button class="mermaid-control-btn reset-zoom" title="重置">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                  </button>
+                  <button class="mermaid-control-btn fullscreen" title="全屏查看">
+                    <i class="fas fa-expand"></i>
+                  </button>
+                </div>
+                <div class="mermaid">
+                  graph LR
+                  A[&#34;输入序列 X&#34;] --&gt; B[&#34;线性投影&#34;]
+                  B --&gt; C[&#34;多头并行计算&#34;]
+                  C --&gt; D[&#34;头1: Q1,K1,V1&#34;]
+                  C --&gt; E[&#34;头2: Q2,K2,V2&#34;]
+                  C --&gt; F[&#34;头h: Qh,Kh,Vh&#34;]
+                  D --&gt; G[&#34;注意力输出1&#34;]
+                  E --&gt; H[&#34;注意力输出2&#34;]
+                  F --&gt; I[&#34;注意力输出h&#34;]
+                  G --&gt; J[&#34;拼接 Concat&#34;]
+                  H --&gt; J
+                  I --&gt; J
+                  J --&gt; K[&#34;线性变换 W_O&#34;]
+                  K --&gt; L[&#34;最终输出&#34;]
+                </div>
+              </div>
+              <p class="text-sm text-gray-600 mt-4">
+                <a href="https://www.birentech.com/Research_nstitute_details/18087970.html" class="citation">[127]</a>
+              </p>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 shadow-lg">
+              <h4 class="font-bold mb-4">设计动机与优势</h4>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h5 class="font-semibold mb-3 text-blue-600">设计动机</h5>
+                  <ul class="space-y-2 text-gray-700">
+                    <li>• 不同头关注不同方面信息</li>
+                    <li>• 句法结构、语义关联、实体关系</li>
+                    <li>• 从多个子空间捕捉信息</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 class="font-semibold mb-3 text-green-600">主要优势</h5>
+                  <ul class="space-y-2 text-gray-700">
+                    <li>• 增强模型表达能力</li>
+                    <li>• 提高模型鲁棒性</li>
+                    <li>• 具有正则化效果</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <!-- 多头注意力数学公式 -->
+              <div class="math-formula mt-6">
+                <h5 class="font-semibold mb-3 text-center">多头注意力计算公式</h5>
+                <div class="text-sm space-y-2">
+                  <div class="font-mono">MultiHead(Q, K, V) = Concat(head₁, ..., headₕ)W^O</div>
+                  <div class="font-mono">其中 head_i = Attention(QW^Q_i, KW^K_i, VW^V_i)</div>
+                </div>
+                <p class="text-xs text-gray-600 mt-2 text-center">
+                  h表示头数，每个头有独立的权重矩阵W^Q_i、W^K_i、W^V_i
+                </p>
+              </div>
+            </div>
+            
+            <!-- 多头注意力代码实现 -->
+            <div class="bg-white rounded-lg p-6 shadow-lg mt-8">
+              <h4 class="font-bold mb-4">PyTorch实现：多头自注意力</h4>
+              <div class="code-block">
+                <pre><code>class MultiHeadAttention(nn.Module):
+    """多头自注意力机制实现"""
+    def __init__(self, d_model, n_heads, dropout=0.1):
+        super(MultiHeadAttention, self).__init__()
+        assert d_model % n_heads == 0, "d_model必须能被n_heads整除"
+        
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_k = d_model // n_heads
+        
+        # 线性投影层
+        self.W_Q = nn.Linear(d_model, d_model)
+        self.W_K = nn.Linear(d_model, d_model)
+        self.W_V = nn.Linear(d_model, d_model)
+        self.W_O = nn.Linear(d_model, d_model)
+        
+        self.attention = ScaledDotProductAttention(self.d_k, dropout)
+        self.dropout = nn.Dropout(dropout)
+        self.layer_norm = nn.LayerNorm(d_model)
+    
+    def forward(self, Q, K, V, mask=None):
+        batch_size = Q.size(0)
+        
+        # 残差连接
+        residual = Q
+        
+        # 线性投影并分割为多头
+        Q = self.W_Q(Q).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
+        K = self.W_K(K).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
+        V = self.W_V(V).view(batch_size, -1, self.n_heads, self.d_k).transpose(1, 2)
+        
+        # 计算注意力
+        output, attention_weights = self.attention(Q, K, V, mask)
+        
+        # 拼接多头
+        output = output.transpose(1, 2).contiguous().view(
+            batch_size, -1, self.d_model
+        )
+        
+        # 输出投影
+        output = self.W_O(output)
+        output = self.dropout(output)
+        
+        # 残差连接和层归一化
+        output = self.layer_norm(output + residual)
+        
+        return output, attention_weights</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <div id="encoder-decoder" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">2.3 编码器与解码器结构</h3>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+              <div class="bg-blue-50 rounded-lg p-6">
+                <h4 class="font-bold mb-3 text-blue-700">编码器（Encoder）</h4>
+                <ul class="space-y-2 text-gray-700">
+                  <li>• 多头自注意力层</li>
+                  <li>• 位置全连接前馈网络</li>
+                  <li>• 残差连接和层归一化</li>
+                  <li>• 提取输入序列的高级表示</li>
+                </ul>
+              </div>
+
+              <div class="bg-green-50 rounded-lg p-6">
+                <h4 class="font-bold mb-3 text-green-700">解码器（Decoder）</h4>
+                <ul class="space-y-2 text-gray-700">
+                  <li>• 掩码多头自注意力层</li>
+                  <li>• 编码器-解码器注意力层</li>
+                  <li>• 位置全连接前馈网络</li>
+                  <li>• 基于编码器输出生成目标序列</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="highlight-box p-6 rounded-lg">
+              <h4 class="font-bold mb-3">编码器-解码器注意力机制</h4>
+              <p class="text-gray-700">
+                编码器-解码器注意力层是连接模型&#34;理解&#34;和&#34;生成&#34;两部分的桥梁。解码器当前步骤的隐藏状态作为Query，去与编码器所有步骤的隐藏状态（作为Key和Value）进行注意力计算，建立输入和输出序列之间的对齐关系。
+              </p>
+            </div>
+          </div>
+
+          <div id="other-components">
+            <h3 class="text-2xl font-semibold mb-6">2.4 其他关键组件</h3>
+
+            <div class="grid md:grid-cols-3 gap-6">
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-purple-600">位置编码（Positional Encoding）</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  为模型提供序列的位置信息，采用正弦余弦函数或学习嵌入方式。
+                  <a href="https://xueqiu.com/8185159194/299067685" class="citation">[100]</a>
+                </p>
+                
+                <!-- 位置编码数学公式 -->
+                <div class="math-formula my-4">
+                  <div class="text-sm space-y-1">
+                    <div class="font-mono">PE(pos, 2i) = sin(pos / 10000^(2i/d_model))</div>
+                    <div class="font-mono">PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))</div>
+                  </div>
+                  <p class="text-xs text-gray-600 mt-2">
+                    其中pos是位置，i是维度索引，d_model是模型维度
+                  </p>
+                </div>
+                
+                <!-- 位置编码代码实现 -->
+                <div class="code-block mt-4">
+                  <pre><code>class PositionalEncoding(nn.Module):
+    """位置编码实现"""
+    def __init__(self, d_model, max_len=5000, dropout=0.1):
+        super(PositionalEncoding, self).__init__()
+        self.dropout = nn.Dropout(dropout)
+        
+        # 创建位置编码矩阵
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len).unsqueeze(1).float()
+        
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() *
+                           -(math.log(10000.0) / d_model))
+        
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        
+        pe = pe.unsqueeze(0)  # (1, max_len, d_model)
+        self.register_buffer('pe', pe)
+    
+    def forward(self, x):
+        # x: (batch_size, seq_len, d_model)
+        x = x + self.pe[:, :x.size(1)]
+        return self.dropout(x)</code></pre>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-orange-600">前馈网络（Feed-Forward Network）</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  增强非线性表达能力，对每个位置的表示进行独立处理。通常包含两个线性变换和一个激活函数。
+                </p>
+                
+                <!-- 前馈网络数学公式 -->
+                <div class="math-formula my-4">
+                  <div class="font-mono text-sm">FFN(x) = GELU(xW₁ + b₁)W₂ + b₂</div>
+                  <p class="text-xs text-gray-600 mt-2">
+                    其中W₁、W₂是权重矩阵，b₁、b₂是偏置，GELU是激活函数
+                  </p>
+                </div>
+                
+                <!-- 前馈网络代码实现 -->
+                <div class="code-block mt-4">
+                  <pre><code>class FeedForward(nn.Module):
+    """前馈网络实现"""
+    def __init__(self, d_model, d_ff, dropout=0.1):
+        super(FeedForward, self).__init__()
+        self.linear1 = nn.Linear(d_model, d_ff)
+        self.linear2 = nn.Linear(d_ff, d_model)
+        self.dropout = nn.Dropout(dropout)
+        self.layer_norm = nn.LayerNorm(d_model)
+    
+    def forward(self, x):
+        # 残差连接
+        residual = x
+        
+        # 前馈网络
+        x = self.linear1(x)
+        x = F.gelu(x)  # GELU激活函数
+        x = self.dropout(x)
+        x = self.linear2(x)
+        x = self.dropout(x)
+        
+        # 残差连接和层归一化
+        x = self.layer_norm(x + residual)
+        
+        return x</code></pre>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-teal-600">残差连接与归一化</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  稳定深层网络训练，缓解梯度消失问题。Transformer使用残差连接和层归一化来稳定训练。
+                </p>
+                
+                <!-- 残差连接数学公式 -->
+                <div class="math-formula my-4">
+                  <div class="text-sm space-y-2">
+                    <div class="font-mono">Post-Norm: output = LN(x + Sublayer(x))</div>
+                    <div class="font-mono">Pre-Norm: output = x + Sublayer(LN(x))</div>
+                  </div>
+                  <p class="text-xs text-gray-600 mt-2">
+                    Pre-Norm通常训练更稳定，现代模型多采用Pre-Norm
+                  </p>
+                </div>
+                
+                <!-- 层归一化代码实现 -->
+                <div class="code-block mt-4">
+                  <pre><code>class LayerNorm(nn.Module):
+    """层归一化实现"""
+    def __init__(self, d_model, eps=1e-6):
+        super(LayerNorm, self).__init__()
+        self.gamma = nn.Parameter(torch.ones(d_model))
+        self.beta = nn.Parameter(torch.zeros(d_model))
+        self.eps = eps
+    
+    def forward(self, x):
+        # x: (batch_size, seq_len, d_model)
+        mean = x.mean(-1, keepdim=True)
+        std = x.std(-1, keepdim=True)
+        return self.gamma * (x - mean) / (std + self.eps) + self.beta</code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 3: Implementation -->
+        <section id="implementation" class="mb-16">
+          <h2 class="serif text-4xl font-bold mb-8 text-gray-900">3. Transformer架构的实现与现状</h2>
+
+          <div id="implementation-code" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">3.1 实现方式与代码解析</h3>
+
+            <div class="bg-gray-900 rounded-lg p-6 mb-8 text-white overflow-x-auto">
+              <h4 class="font-bold mb-4 text-green-400">PyTorch实现示例：完整Transformer模型</h4>
+              <pre class="text-sm"><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+class TransformerModel(nn.Module):
+    """完整的Transformer模型实现"""
+    def __init__(self, vocab_size_src, vocab_size_tgt, d_model=512, 
+                 nhead=8, num_encoder_layers=6, num_decoder_layers=6,
+                 dim_feedforward=2048, dropout=0.1):
+        super(TransformerModel, self).__init__()
+        self.d_model = d_model
+        
+        # 词嵌入层
+        self.embedding_src = nn.Embedding(vocab_size_src, d_model)
+        self.embedding_tgt = nn.Embedding(vocab_size_tgt, d_model)
+        
+        # 位置编码
+        self.pos_encoder = PositionalEncoding(d_model, dropout)
+        self.pos_decoder = PositionalEncoding(d_model, dropout)
+        
+        # Transformer主体
+        self.transformer = nn.Transformer(
+            d_model=d_model, 
+            nhead=nhead, 
+            num_encoder_layers=num_encoder_layers,
+            num_decoder_layers=num_decoder_layers, 
+            dim_feedforward=dim_feedforward, 
+            dropout=dropout
+        )
+        
+        # 输出层
+        self.out = nn.Linear(d_model, vocab_size_tgt)
+        self._reset_parameters()
+
+    def _reset_parameters(self):
+        """Xavier初始化参数"""
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+
+    def forward(self, src, tgt, src_mask=None, tgt_mask=None,
+                memory_mask=None, src_key_padding_mask=None,
+                tgt_key_padding_mask=None, memory_key_padding_mask=None):
+        """
+        前向传播
+        Args:
+            src: 源序列 (batch_size, src_len)
+            tgt: 目标序列 (batch_size, tgt_len)
+            src_mask: 源序列掩码
+            tgt_mask: 目标序列掩码（用于防止看到未来信息）
+        Returns:
+            output: 输出logits (batch_size, tgt_len, vocab_size_tgt)
+        """
+        # 词嵌入并缩放
+        src_emb = self.embedding_src(src) * math.sqrt(self.d_model)
+        tgt_emb = self.embedding_tgt(tgt) * math.sqrt(self.d_model)
+        
+        # 添加位置编码
+        src_emb = self.pos_encoder(src_emb)
+        tgt_emb = self.pos_decoder(tgt_emb)
+        
+        # Transformer编码器-解码器
+        output = self.transformer(
+            src_emb, tgt_emb, 
+            src_mask, tgt_mask, memory_mask,
+            src_key_padding_mask, tgt_key_padding_mask,
+            memory_key_padding_mask
+        )
+        
+        # 输出投影
+        return self.out(output)</code></pre>
+              <p class="text-sm text-gray-400 mt-4">
+                <a href="https://blog.csdn.net/weixin_51960949/article/details/148778679" class="citation">[141]</a>
+              </p>
+            </div>
+            
+            <!-- 编码器层完整实现 -->
+            <div class="bg-white rounded-lg p-6 shadow-lg mb-8">
+              <h4 class="font-bold mb-4">Transformer编码器层完整实现</h4>
+              <div class="code-block">
+                <pre><code>class TransformerEncoderLayer(nn.Module):
+    """Transformer编码器单层实现"""
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1):
+        super(TransformerEncoderLayer, self).__init__()
+        
+        # 多头自注意力
+        self.self_attn = MultiHeadAttention(d_model, nhead, dropout)
+        
+        # 前馈网络
+        self.feed_forward = FeedForward(d_model, dim_feedforward, dropout)
+        
+        # 层归一化（Pre-Norm结构）
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        
+        self.dropout = nn.Dropout(dropout)
+    
+    def forward(self, src, src_mask=None, src_key_padding_mask=None):
+        """
+        编码器层前向传播
+        Args:
+            src: 输入序列 (batch_size, seq_len, d_model)
+            src_mask: 注意力掩码
+            src_key_padding_mask: 填充位置掩码
+        """
+        # Pre-Norm结构：先归一化再计算
+        # 多头自注意力
+        src2 = self.norm1(src)
+        src2, _ = self.self_attn(src2, src2, src2, src_mask, src_key_padding_mask)
+        src = src + self.dropout(src2)
+        
+        # 前馈网络
+        src2 = self.norm2(src)
+        src2 = self.feed_forward(src2)
+        src = src + self.dropout(src2)
+        
+        return src
+
+class TransformerEncoder(nn.Module):
+    """Transformer编码器堆叠"""
+    def __init__(self, encoder_layer, num_layers):
+        super(TransformerEncoder, self).__init__()
+        self.layers = nn.ModuleList([copy.deepcopy(encoder_layer) 
+                                     for _ in range(num_layers)])
+        self.num_layers = num_layers
+    
+    def forward(self, src, mask=None, src_key_padding_mask=None):
+        """逐层处理输入序列"""
+        output = src
+        for layer in self.layers:
+            output = layer(output, src_mask=mask, 
+                          src_key_padding_mask=src_key_padding_mask)
+        return output</code></pre>
+              </div>
+            </div>
+            
+            <!-- 训练技巧 -->
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-8">
+              <h4 class="font-bold mb-4">训练技巧与最佳实践</h4>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h5 class="font-semibold mb-3 text-blue-600">学习率调度</h5>
+                  <ul class="text-sm text-gray-700 space-y-2">
+                    <li>• <strong>Warmup策略</strong>：前10%步数线性增加学习率</li>
+                    <li>• <strong>余弦退火</strong>：后续步数按余弦函数衰减</li>
+                    <li>• <strong>公式：</strong>lr = lr_max * min(step/warmup_steps, 1)</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 class="font-semibold mb-3 text-purple-600">正则化技术</h5>
+                  <ul class="text-sm text-gray-700 space-y-2">
+                    <li>• <strong>Dropout</strong>：通常设置为0.1</li>
+                    <li>• <strong>Label Smoothing</strong>：防止过拟合</li>
+                    <li>• <strong>Gradient Clipping</strong>：防止梯度爆炸</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-container">
+              <h4 class="font-bold mb-4">关键超参数配置</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b">
+                      <th class="text-left py-3 font-semibold">超参数</th>
+                      <th class="text-left py-3 font-semibold">描述</th>
+                      <th class="text-left py-3 font-semibold">常见取值</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-gray-700">
+                    <tr class="border-b">
+                      <td class="py-3 font-mono">d_model</td>
+                      <td class="py-3">模型嵌入维度</td>
+                      <td class="py-3"><strong>512 (Base)</strong>, <strong>768 (Large)</strong></td>
+                    </tr>
+                    <tr class="border-b">
+                      <td class="py-3 font-mono">nhead</td>
+                      <td class="py-3">多头注意力头数</td>
+                      <td class="py-3"><strong>8</strong> 或 <strong>12</strong></td>
+                    </tr>
+                    <tr class="border-b">
+                      <td class="py-3 font-mono">num_encoder_layers</td>
+                      <td class="py-3">编码器层数</td>
+                      <td class="py-3"><strong>6</strong> (原始论文)</td>
+                    </tr>
+                    <tr class="border-b">
+                      <td class="py-3 font-mono">dim_feedforward</td>
+                      <td class="py-3">前馈网络维度</td>
+                      <td class="py-3">通常是 d_model 的 4 倍</td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 font-mono">dropout</td>
+                      <td class="py-3">Dropout比率</td>
+                      <td class="py-3"><strong>0.1</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="implementation-pros-cons" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">3.2 优缺点分析</h3>
+
+            <div class="grid md:grid-cols-2 gap-8">
+              <div class="bg-green-50 rounded-lg p-6">
+                <h4 class="font-bold mb-4 text-green-700 flex items-center">
+                  <i class="fas fa-check-circle mr-2"></i>优势
+                </h4>
+                <ul class="space-y-3 text-gray-700">
+                  <li><strong>并行计算能力</strong>：能够充分利用现代GPU的并行处理能力，极大缩短训练时间
+                    <a href="https://www.cnblogs.com/tfiyuenlau/p/18723181" class="citation">[49]</a>
+                  </li>
+                  <li><strong>长距离依赖建模</strong>：允许序列中任意两个位置直接交互，无论距离多远
+                    <a href="https://docs.feishu.cn/v/wiki/CHGRwwbIkiQTGok06ATcBAjVnhg/a6" class="citation">[51]</a>
+                  </li>
+                  <li><strong>强大表达能力</strong>：多头注意力机制能够从多个子空间学习信息，捕获丰富特征
+                    <a href="https://blog.csdn.net/yuntongliangda/article/details/147981556" class="citation">[41]</a>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="bg-red-50 rounded-lg p-6">
+                <h4 class="font-bold mb-4 text-red-700 flex items-center">
+                  <i class="fas fa-exclamation-triangle mr-2"></i>缺点
+                </h4>
+                <ul class="space-y-3 text-gray-700">
+                  <li><strong>计算复杂度高</strong>：自注意力机制的计算量与序列长度的平方成正比O(N²)
+                    <a href="https://www.qbitai.com/2025/12/359230.html" class="citation">[38]</a>
+                  </li>
+                  <li><strong>内存消耗大</strong>：处理长序列时内存占用急剧增加
+                    <a href="https://www.51cto.com/aigc/3884.html" class="citation">[39]</a>
+                  </li>
+                  <li><strong>数据量要求高</strong>：大模型需要海量数据和计算资源进行训练
+                    <a href="https://www.cnblogs.com/xtkyxnx/p/19314064" class="citation">[35]</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="implementation-ecosystem">
+            <h3 class="text-2xl font-semibold mb-6">3.3 主流模型与生态系统</h3>
+
+            <div class="chart-container mb-8">
+              <h4 class="font-bold mb-4">主流Transformer模型对比</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b">
+                      <th class="text-left py-3 font-semibold">模型</th>
+                      <th class="text-left py-3 font-semibold">核心架构</th>
+                      <th class="text-left py-3 font-semibold">主要任务</th>
+                      <th class="text-left py-3 font-semibold">关键特点</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-gray-700">
+                    <tr class="border-b">
+                      <td class="py-3 font-bold">BERT</td>
+                      <td class="py-3">Encoder-only</td>
+                      <td class="py-3">自然语言理解</td>
+                      <td class="py-3">双向编码，MLM和NSP预训练
+                        <a href="https://cloud.tencent.com/developer/article/2587263" class="citation">[53]</a>
+                      </td>
+                    </tr>
+                    <tr class="border-b">
+                      <td class="py-3 font-bold">GPT</td>
+                      <td class="py-3">Decoder-only</td>
+                      <td class="py-3">自然语言生成</td>
+                      <td class="py-3">自回归语言模型，引领LLM浪潮
+                        <a href="https://www.cnblogs.com/xtkyxnx/p/19314064" class="citation">[35]</a>
+                      </td>
+                    </tr>
+                    <tr class="border-b">
+                      <td class="py-3 font-bold">T5</td>
+                      <td class="py-3">Encoder-Decoder</td>
+                      <td class="py-3">通用文本到文本</td>
+                      <td class="py-3">统一所有NLP任务为文本生成格式
+                        <a href="https://developer.aliyun.com/article/1627090" class="citation">[44]</a>
+                      </td>
+                    </tr>
+                    <tr class="border-b">
+                      <td class="py-3 font-bold">ViT</td>
+                      <td class="py-3">Encoder-only (CV)</td>
+                      <td class="py-3">图像分类</td>
+                      <td class="py-3">将图像分块为序列，挑战CNN地位
+                        <a href="https://www.cnblogs.com/xtkyxnx/p/19314064" class="citation">[35]</a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 font-bold">CLIP</td>
+                      <td class="py-3">Dual Encoders</td>
+                      <td class="py-3">多模态学习</td>
+                      <td class="py-3">对比学习对齐图像和文本特征
+                        <a href="https://github.com/ZiliangMiao/Multimodal_Large_Language_Model_Research" class="citation">[126]</a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
+              <h4 class="font-bold mb-4">Hugging Face生态系统</h4>
+              <p class="text-gray-700 mb-4">
+                <strong>Hugging Face的Transformers库</strong>已经成为事实上的标准，提供了一个统一、易用的API，集成了数千个预训练模型。
+                <a href="https://blog.csdn.net/2401_84494441/article/details/148429233" class="citation">[56]</a>
+              </p>
+              <div class="grid md:grid-cols-3 gap-4">
+                <div class="bg-white rounded p-4">
+                  <h5 class="font-semibold mb-2">模型中心</h5>
+                  <p class="text-sm text-gray-600">社区驱动的平台，分享和下载预训练模型</p>
+                </div>
+                <div class="bg-white rounded p-4">
+                  <h5 class="font-semibold mb-2">部署优化</h5>
+                  <p class="text-sm text-gray-600">量化、知识蒸馏、ONNX导出等技术</p>
+                </div>
+                <div class="bg-white rounded p-4">
+                  <h5 class="font-semibold mb-2">完整生态</h5>
+                  <p class="text-sm text-gray-600">数据集库、分词器库、推理API等工具</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 4: NLP Applications -->
+        <section id="nlp-applications" class="mb-16">
+          <h2 class="serif text-4xl font-bold mb-8 text-gray-900">4. Transformer在NLP领域的应用与未来</h2>
+
+          <div id="nlp-progress" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">4.1 最新进展</h3>
+
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+              <div class="bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg p-6">
+                <h4 class="font-bold mb-3 text-purple-700">大语言模型涌现能力</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  GPT-3等模型展现出的<strong>少样本学习</strong>和<strong>上下文学习</strong>能力，被认为是通往AGI的重要一步。
+                  <a href="https://www.cnblogs.com/xtkyxnx/p/19314064" class="citation">[35]</a>
+                </p>
+                <ul class="text-xs text-gray-600 space-y-1">
+                  <li>• 无需梯度更新</li>
+                  <li>• 仅通过示例完成任务</li>
+                  <li>• 自发表现新能力</li>
+                </ul>
+              </div>
+
+              <div class="bg-gradient-to-br from-green-100 to-teal-100 rounded-lg p-6">
+                <h4 class="font-bold mb-3 text-green-700">指令微调与对齐</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  通过<strong>指令微调</strong>和<strong>RLHF</strong>技术，让模型更好地理解人类意图并生成符合期望的输出。
+                </p>
+                <ul class="text-xs text-gray-600 space-y-1">
+                  <li>• 监督微调</li>
+                  <li>• 人类反馈强化学习</li>
+                  <li>• ChatGPT成功应用</li>
+                </ul>
+              </div>
+
+              <div class="bg-gradient-to-br from-orange-100 to-red-100 rounded-lg p-6">
+                <h4 class="font-bold mb-3 text-orange-700">模型压缩与高效推理</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  通过<strong>量化</strong>、<strong>剪枝</strong>、<strong>知识蒸馏</strong>等技术降低部署成本。
+                  <a href="https://cloud.tencent.com/developer/article/2587263" class="citation">[53]</a>
+                </p>
+                <ul class="text-xs text-gray-600 space-y-1">
+                  <li>• 8位/4位量化</li>
+                  <li>• LoRA高效微调</li>
+                  <li>• 轻量级部署</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div id="nlp-future">
+            <h3 class="text-2xl font-semibold mb-6">4.2 未来方向</h3>
+
+            <div class="chart-container">
+              <h4 class="font-bold mb-6">Transformer在NLP领域的未来发展路径</h4>
+              <div class="mermaid-container">
+                <div class="mermaid-controls">
+                  <button class="mermaid-control-btn zoom-in" title="放大">
+                    <i class="fas fa-search-plus"></i>
+                  </button>
+                  <button class="mermaid-control-btn zoom-out" title="缩小">
+                    <i class="fas fa-search-minus"></i>
+                  </button>
+                  <button class="mermaid-control-btn reset-zoom" title="重置">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                  </button>
+                  <button class="mermaid-control-btn fullscreen" title="全屏查看">
+                    <i class="fas fa-expand"></i>
+                  </button>
+                </div>
+                <div class="mermaid">
+                  graph TD
+                  A[&#34;当前状态&#34;] --&gt; B[&#34;多模态大模型&#34;]
+                  A --&gt; C[&#34;具身智能&#34;]
+                  A --&gt; D[&#34;可解释性与安全性&#34;]
+
+                  B --&gt; E[&#34;统一处理文本、图像、音频&#34;]
+                  B --&gt; F[&#34;跨模态融合与对齐&#34;]
+                  B --&gt; G[&#34;GPT-4V等模型&#34;]
+
+                  C --&gt; H[&#34;自然语言控制机器人&#34;]
+                  C --&gt; I[&#34;空间推理与物理直觉&#34;]
+                  C --&gt; J[&#34;环境交互能力&#34;]
+
+                  D --&gt; K[&#34;模型可解释性工具&#34;]
+                  D --&gt; L[&#34;安全性与伦理对齐&#34;]
+                  D --&gt; M[&#34;偏见消除与信任建立&#34;]
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6">
+              <h4 class="font-bold mb-4">未来发展趋势</h4>
+              <div class="grid md:grid-cols-3 gap-6">
+                <div>
+                  <h5 class="font-semibold mb-2 text-indigo-600">多模态融合</h5>
+                  <p class="text-sm text-gray-700">
+                    构建能够统一处理和理解多种模态信息的强大模型，如GPT-4V展示的强大图文理解能力。
+                  </p>
+                </div>
+                <div>
+                  <h5 class="font-semibold mb-2 text-purple-600">具身智能</h5>
+                  <p class="text-sm text-gray-700">
+                    将语言模型与物理实体结合，实现通过自然语言指令控制机器人完成复杂任务。
+                  </p>
+                </div>
+                <div>
+                  <h5 class="font-semibold mb-2 text-pink-600">可解释性与安全</h5>
+                  <p class="text-sm text-gray-700">
+                    发展工具和方法理解模型内部机制，确保模型安全性，防止恶意利用。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 5: Other Domains -->
+        <section id="other-domains" class="mb-16">
+          <h2 class="serif text-4xl font-bold mb-8 text-gray-900">5. Transformer在其他领域的应用拓展</h2>
+
+          <div id="cv-applications" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">5.1 计算机视觉（CV）</h3>
+
+            <div class="highlight-box p-6 rounded-lg mb-8">
+              <h4 class="font-bold mb-3">Vision Transformer (ViT) 原理</h4>
+              <p class="text-gray-700 mb-4">
+                ViT将标准Transformer架构直接应用于图像识别，核心思想是将图像视为序列化的输入。工作流程包括：
+              </p>
+              <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>将2D图像分割成固定大小的图像块（patches）</li>
+                <li>每个patch展平并通过线性投影嵌入</li>
+                <li>添加位置编码保留空间信息</li>
+                <li>添加[class] token用于分类</li>
+                <li>送入标准Transformer编码器处理</li>
+              </ol>
+              <p class="text-sm text-gray-600 mt-4">
+                <a href="https://blog.csdn.net/qq_32275289/article/details/123973687" class="citation">[85]</a>
+                <a href="https://i3s.wzu.edu.cn/info/1052/1111.htm" class="citation">[86]</a>
+              </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-blue-600">图像分类</h4>
+                <ul class="text-sm text-gray-600 space-y-2">
+                  <li>• ViT直接挑战CNN统治地位</li>
+                  <li>• Swin Transformer引入移位窗口</li>
+                  <li>• Pyramid Vision Transformer (PVT)</li>
+                  <li>• Convolutional vision Transformer (CvT)</li>
+                </ul>
+                <p class="text-xs text-gray-500 mt-3">
+                  <a href="https://blog.csdn.net/Android23333/article/details/152223617" class="citation">[87]</a>
+                </p>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-green-600">目标检测</h4>
+                <ul class="text-sm text-gray-600 space-y-2">
+                  <li>• DETR：端到端检测里程碑</li>
+                  <li>• 摒弃锚框和NMS后处理</li>
+                  <li>• Deformable DETR改进</li>
+                  <li>• DAB-DETR动态锚框</li>
+                </ul>
+                <p class="text-xs text-gray-500 mt-3">
+                  <a href="https://developer.baidu.com/article/details/2868080" class="citation">[83]</a>
+                  <a href="https://blog.csdn.net/lishanlu136/article/details/140502888" class="citation">[91]</a>
+                </p>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-purple-600">语义分割</h4>
+                <ul class="text-sm text-gray-600 space-y-2">
+                  <li>• Segmenter直接应用ViT</li>
+                  <li>• Mask2Former通用框架</li>
+                  <li>• 视频分割：VITA、SeqFormer</li>
+                  <li>• 长程依赖建模优势</li>
+                </ul>
+                <p class="text-xs text-gray-500 mt-3">
+                  <a href="http://cjc.ict.ac.cn/online/onlinepaper/lws-2024121794359.pdf" class="citation">[79]</a>
+                </p>
+              </div>
+            </div>
+
+            <div class="chart-container">
+              <h4 class="font-bold mb-4">CNN与Transformer融合方式</h4>
+              <div class="mermaid-container">
+                <div class="mermaid-controls">
+                  <button class="mermaid-control-btn zoom-in" title="放大">
+                    <i class="fas fa-search-plus"></i>
+                  </button>
+                  <button class="mermaid-control-btn zoom-out" title="缩小">
+                    <i class="fas fa-search-minus"></i>
+                  </button>
+                  <button class="mermaid-control-btn reset-zoom" title="重置">
+                    <i class="fas fa-expand-arrows-alt"></i>
+                  </button>
+                  <button class="mermaid-control-btn fullscreen" title="全屏查看">
+                    <i class="fas fa-expand"></i>
+                  </button>
+                </div>
+                <div class="mermaid">
+                  graph TD
+                  A[&#34;CNN-Transformer融合&#34;] --&gt; B[&#34;串行式融合&#34;]
+                  A --&gt; C[&#34;并行式融合&#34;]
+                  A --&gt; D[&#34;层级式/混合式融合&#34;]
+
+                  B --&gt; E[&#34;CNN特征提取 + Transformer关系建模&#34;]
+                  B --&gt; F[&#34;BoTNet、DETR范式&#34;]
+
+                  C --&gt; G[&#34;CNN分支 ⊕ Transformer分支&#34;]
+                  C --&gt; H[&#34;CoAtNet&#34;]
+
+                  D --&gt; I[&#34;不同层级引入Transformer&#34;]
+                  D --&gt; J[&#34;Swin Transformer、PVT、CvT&#34;]
+                </div>
+              </div>
+              <p class="text-sm text-gray-600 mt-4">
+                <a href="https://blog.csdn.net/Android23333/article/details/152223617" class="citation">[87]</a>
+              </p>
+            </div>
+          </div>
+
+          <div id="speech-applications" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">5.2 语音处理</h3>
+
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
+              <p class="text-gray-700">
+                Transformer在语音处理领域凭借其并行计算能力和对长时依赖的建模优势，有效克服了传统RNN的训练瓶颈，在语音识别、语音合成等任务中展现出卓越性能。
+              </p>
+            </div>
+          </div>
+
+          <div id="multimodal">
+            <h3 class="text-2xl font-semibold mb-6">5.3 多模态学习</h3>
+
+            <div class="highlight-box p-6 rounded-lg">
+              <h4 class="font-bold mb-3">多模态Transformer应用</h4>
+              <p class="text-gray-700 mb-4">
+                Transformer成为构建统一模型的基石，通过设计精巧的跨模态注意力机制，实现了文本、图像、语音等不同模态信息的深度融合与对齐。
+              </p>
+              <p class="text-gray-700">
+                代表性模型如OpenAI的<strong>CLIP</strong>通过对比学习，将图像和文本映射到同一语义空间，实现了强大的跨模态理解能力。
+                <a href="https://github.com/ZiliangMiao/Multimodal_Large_Language_Model_Research" class="citation">[126]</a>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 6: Use Cases -->
+        <section id="use-cases" class="mb-16">
+          <h2 class="serif text-4xl font-bold mb-8 text-gray-900">6. 使用案例与应用场景</h2>
+
+          <div id="cv-use-cases" class="mb-12">
+            <h3 class="text-2xl font-semibold mb-6">6.2 计算机视觉应用</h3>
+
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-blue-600">自动驾驶</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  基于Transformer的模型如DETR能够直接对整个场景进行全局推理，更准确地检测各种尺度目标。
+                </p>
+                <ul class="text-xs text-gray-600 space-y-1">
+                  <li>• 实时环境感知</li>
+                  <li>• 多传感器数据融合</li>
+                  <li>• 端到端目标检测</li>
+                </ul>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-green-600">遥感影像分析</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  基于Transformer的视觉分割技术在航拍影像分析中展现巨大潜力。
+                  <a href="http://cjc.ict.ac.cn/online/onlinepaper/lws-2024121794359.pdf" class="citation">[79]</a>
+                </p>
+                <ul class="text-xs text-gray-600 space-y-1">
+                  <li>• 地物分类与目标检测</li>
+                  <li>• 变化检测分析</li>
+                  <li>• 道路分割与提取</li>
+                </ul>
+              </div>
+
+              <div class="bg-white rounded-lg p-6 shadow-lg">
+                <h4 class="font-bold mb-3 text-purple-600">生物特征识别</h4>
+                <p class="text-sm text-gray-700 mb-3">
+                  以牛只识别为例，利用多头注意力特征融合方法实现高精度识别。
+                  <a href="https://developer.volcengine.com/articles/7487815625499213865" class="citation">[88]</a>
+                </p>
+                <ul class="text-xs text-gray-600 space-y-1">
+                  <li>• 牛鼻纹特征提取</li>
+                  <li>• CNN-Transformer融合</li>
+                  <li>• 识别准确率99.88%</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-6">
+              <h4 class="font-bold mb-4">实际应用案例：牛只识别系统</h4>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h5 class="font-semibold mb-3 text-blue-600">技术挑战</h5>
+                  <ul class="space-y-2 text-sm text-gray-700">
+                    <li>• 牛鼻纹纹理复杂，细节丰富</li>
+                    <li>• 图像采集存在光照、角度变化</li>
+                    <li>• 个体间差异可能非常细微</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 class="font-semibold mb-3 text-green-600">解决方案</h5>
+                  <ul class="space-y-2 text-sm text-gray-700">
+                    <li>• 多头注意力特征融合(MHAFF)</li>
+                    <li>• 动态融合CNN局部特征和Transformer全局特征</li>
+                    <li>• 识别准确率分别达99.88%和99.52%</li>
+                  </ul>
+                </div>
+              </div>
+              <p class="text-sm text-gray-600 mt-4">
+                该案例生动展示了Transformer在处理复杂生物特征识别任务中的巨大潜力，通过巧妙融合不同模型优势，实现远超单一模型的性能。
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+        // ==================== 工具函数 ====================
+        
+        /**
+         * 防抖函数 - 限制函数执行频率，优化性能
+         * @param {Function} func - 要执行的函数
+         * @param {number} wait - 等待时间（毫秒）
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // ==================== Mermaid初始化 ====================
+        
+        /**
+         * 初始化Mermaid图表库，配置自定义主题
+         */
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#ffffff',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#1e293b',
+                lineColor: '#475569',
+                secondaryColor: '#f8fafc',
+                tertiaryColor: '#f1f5f9',
+                background: '#ffffff',
+                mainBkg: '#ffffff',
+                secondBkg: '#f8fafc',
+                tertiaryBkg: '#f1f5f9',
+                nodeBorder: '#1e293b',
+                clusterBkg: '#f8fafc',
+                edgeLabelBackground: 'rgba(255, 255, 255, 0.9)',
+                nodeTextColor: '#1e293b',
+                textColor: '#1e293b',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 50,
+                rankSpacing: 80,
+                diagramPadding: 20
+            },
+            graph: {
+                htmlLabels: true,
+                padding: 20
+            }
+        });
+        
+        // ==================== MathJax配置 ====================
+        
+        /**
+         * 配置MathJax用于渲染数学公式
+         */
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            }
+        };
+
+        // ==================== 阅读进度条功能 ====================
+        
+        /**
+         * 更新阅读进度条
+         */
+        function updateReadingProgress() {
+            const progressBar = document.getElementById('readingProgress');
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const progress = (scrollTop / (documentHeight - windowHeight)) * 100;
+            progressBar.style.width = Math.min(progress, 100) + '%';
+        }
+        
+        // 滚动时更新进度条
+        window.addEventListener('scroll', debounce(updateReadingProgress, 10));
+
+        // ==================== 返回顶部功能 ====================
+        
+        /**
+         * 返回顶部按钮显示/隐藏控制
+         */
+        function toggleBackToTop() {
+            const backToTopBtn = document.getElementById('backToTop');
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        }
+        
+        /**
+         * 返回顶部按钮点击事件
+         */
+        document.getElementById('backToTop').addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // 滚动时控制返回顶部按钮显示
+        window.addEventListener('scroll', debounce(toggleBackToTop, 100));
+
+        // ==================== 搜索功能 ====================
+        
+        /**
+         * 搜索功能实现
+         */
+        const searchOverlay = document.getElementById('searchOverlay');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const searchBtn = document.getElementById('searchBtn');
+        
+        // 获取所有可搜索的内容
+        const searchableContent = Array.from(document.querySelectorAll('h2, h3, h4, p, li')).map(el => ({
+            text: el.textContent.trim(),
+            element: el,
+            id: el.id || el.closest('section')?.id || el.closest('div[id]')?.id || ''
+        })).filter(item => item.text.length > 10); // 过滤太短的内容
+        
+        /**
+         * 执行搜索
+         */
+        function performSearch(query) {
+            if (!query.trim()) {
+                searchResults.innerHTML = '';
+                return;
+            }
+            
+            const lowerQuery = query.toLowerCase();
+            const results = searchableContent
+                .filter(item => item.text.toLowerCase().includes(lowerQuery))
+                .slice(0, 10); // 限制结果数量
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item">未找到相关内容</div>';
+                return;
+            }
+            
+            searchResults.innerHTML = results.map(item => {
+                const section = item.element.closest('section') || item.element.closest('div[id]');
+                const sectionTitle = section?.querySelector('h2, h3')?.textContent || '未知章节';
+                const preview = item.text.substring(0, 100) + '...';
+                return `
+                    <div class="search-result-item" onclick="scrollToElement('${item.id || section?.id}')">
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">${sectionTitle}</div>
+                        <div style="font-size: 0.9rem; color: #64748b;">${preview}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * 滚动到指定元素
+         */
+        window.scrollToElement = function(id) {
+            const element = document.getElementById(id) || document.querySelector(`[id="${id}"]`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                searchOverlay.classList.remove('active');
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+            }
+        };
+        
+        // 搜索按钮点击事件
+        searchBtn.addEventListener('click', () => {
+            searchOverlay.classList.add('active');
+            searchInput.focus();
+        });
+        
+        // 搜索输入事件（实时搜索）
+        searchInput.addEventListener('input', (e) => {
+            performSearch(e.target.value);
+        });
+        
+        // ESC键关闭搜索
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchOverlay.classList.remove('active');
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+            }
+        });
+        
+        // 点击覆盖层关闭搜索
+        searchOverlay.addEventListener('click', (e) => {
+            if (e.target === searchOverlay) {
+                searchOverlay.classList.remove('active');
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+            }
+        });
+        
+        // Ctrl/Cmd + K 快捷键打开搜索
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchOverlay.classList.add('active');
+                searchInput.focus();
+            }
+        });
+
+        // ==================== 暗色模式功能 ====================
+        
+        /**
+         * 暗色模式切换
+         */
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // 检测系统主题偏好
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('transformer-theme');
+        
+        // 应用主题
+        function applyTheme(theme) {
+            if (theme === 'dark' || (!savedTheme && prefersDark)) {
+                body.classList.add('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                body.classList.remove('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+        
+        // 初始化主题
+        applyTheme(savedTheme);
+        
+        // 主题切换按钮点击事件
+        themeToggle.addEventListener('click', () => {
+            const isDark = body.classList.contains('dark-mode');
+            const newTheme = isDark ? 'light' : 'dark';
+            localStorage.setItem('transformer-theme', newTheme);
+            applyTheme(newTheme);
+        });
+        
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('transformer-theme')) {
+                applyTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+
+        // ==================== 分享功能 ====================
+        
+        /**
+         * 分享功能实现
+         */
+        const shareBtn = document.getElementById('shareBtn');
+        
+        shareBtn.addEventListener('click', async () => {
+            const url = window.location.href;
+            const title = document.title;
+            const text = 'Transformer架构深度研究报告：从序列模型革命到通用人工智能基石';
+            
+            // 检查是否支持Web Share API
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: title,
+                        text: text,
+                        url: url
+                    });
+                } catch (err) {
+                    // 用户取消分享
+                    console.log('分享已取消');
+                }
+            } else {
+                // 降级方案：复制链接到剪贴板
+                try {
+                    await navigator.clipboard.writeText(url);
+                    alert('链接已复制到剪贴板！');
+                } catch (err) {
+                    // 备用方案：显示提示
+                    prompt('请复制以下链接：', url);
+                }
+            }
+        });
+
+        // ==================== PDF导出功能 ====================
+        
+        /**
+         * PDF导出功能
+         */
+        const pdfBtn = document.getElementById('pdfBtn');
+        
+        pdfBtn.addEventListener('click', () => {
+            const element = document.querySelector('.main-content');
+            const opt = {
+                margin: 1,
+                filename: 'Transformer架构深度研究报告.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            
+            // 显示加载提示
+            pdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            pdfBtn.disabled = true;
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                pdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                pdfBtn.disabled = false;
+            }).catch(() => {
+                alert('PDF导出失败，请稍后重试');
+                pdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                pdfBtn.disabled = false;
+            });
+        });
+
+        // ==================== 图片懒加载 ====================
+        
+        /**
+         * 图片懒加载实现
+         */
+        if ('loading' in HTMLImageElement.prototype) {
+            // 浏览器支持原生懒加载
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                img.loading = 'lazy';
+                img.addEventListener('load', () => {
+                    img.classList.add('loaded');
+                });
+            });
+        } else {
+            // 降级方案：使用Intersection Observer
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src || img.src;
+                        img.classList.add('loaded');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('img').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // ==================== Mermaid图表控制 ====================
+        
+        /**
+         * 初始化Mermaid图表控制（缩放、拖拽、全屏）
+         */
+        function initializeMermaidControls() {
+            const containers = document.querySelectorAll('.mermaid-container');
+
+            containers.forEach(container => {
+            const mermaidElement = container.querySelector('.mermaid');
+            let scale = 1;
+            let isDragging = false;
+            let startX, startY, translateX = 0, translateY = 0;
+
+            // 触摸相关状态
+            let isTouch = false;
+            let touchStartTime = 0;
+            let initialDistance = 0;
+            let initialScale = 1;
+            let isPinching = false;
+
+            // Zoom controls
+            const zoomInBtn = container.querySelector('.zoom-in');
+            const zoomOutBtn = container.querySelector('.zoom-out');
+            const resetBtn = container.querySelector('.reset-zoom');
+            const fullscreenBtn = container.querySelector('.fullscreen');
+
+            function updateTransform() {
+                mermaidElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+
+                if (scale > 1) {
+                container.classList.add('zoomed');
+                } else {
+                container.classList.remove('zoomed');
+                }
+
+                mermaidElement.style.cursor = isDragging ? 'grabbing' : 'grab';
+            }
+
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', () => {
+                scale = Math.min(scale * 1.25, 4);
+                updateTransform();
+                });
+            }
+
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', () => {
+                scale = Math.max(scale / 1.25, 0.3);
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+                updateTransform();
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+                });
+            }
+
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+                });
+            }
+
+            // Mouse Events
+            mermaidElement.addEventListener('mousedown', (e) => {
+                if (isTouch) return; // 如果是触摸设备，忽略鼠标事件
+
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                mermaidElement.style.cursor = 'grabbing';
+                updateTransform();
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && !isTouch) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            document.addEventListener('mouseleave', () => {
+                if (isDragging && !isTouch) {
+                isDragging = false;
+                mermaidElement.style.cursor = 'grab';
+                updateTransform();
+                }
+            });
+
+            // 获取两点之间的距离
+            function getTouchDistance(touch1, touch2) {
+                return Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+                );
+            }
+
+            // Touch Events - 触摸事件处理
+            mermaidElement.addEventListener('touchstart', (e) => {
+                isTouch = true;
+                touchStartTime = Date.now();
+
+                if (e.touches.length === 1) {
+                // 单指拖动
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+
+                } else if (e.touches.length === 2) {
+                // 双指缩放
+                isPinching = true;
+                isDragging = false;
+
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialDistance = getTouchDistance(touch1, touch2);
+                initialScale = scale;
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && isDragging && !isPinching) {
+                // 单指拖动
+                const touch = e.touches[0];
+                translateX = touch.clientX - startX;
+                translateY = touch.clientY - startY;
+                updateTransform();
+
+                } else if (e.touches.length === 2 && isPinching) {
+                // 双指缩放
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = getTouchDistance(touch1, touch2);
+
+                if (initialDistance > 0) {
+                    const newScale = Math.min(Math.max(
+                    initialScale * (currentDistance / initialDistance),
+                    0.3
+                    ), 4);
+                    scale = newScale;
+                    updateTransform();
+                }
+                }
+
+                e.preventDefault();
+            }, { passive: false });
+
+            mermaidElement.addEventListener('touchend', (e) => {
+                // 重置状态
+                if (e.touches.length === 0) {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+
+                // 延迟重置isTouch，避免鼠标事件立即触发
+                setTimeout(() => {
+                    isTouch = false;
+                }, 100);
+                } else if (e.touches.length === 1 && isPinching) {
+                // 从双指变为单指，切换为拖动模式
+                isPinching = false;
+                isDragging = true;
+
+                const touch = e.touches[0];
+                startX = touch.clientX - translateX;
+                startY = touch.clientY - translateY;
+                }
+
+                updateTransform();
+            });
+
+            mermaidElement.addEventListener('touchcancel', (e) => {
+                isDragging = false;
+                isPinching = false;
+                initialDistance = 0;
+
+                setTimeout(() => {
+                isTouch = false;
+                }, 100);
+
+                updateTransform();
+            });
+
+            // Enhanced wheel zoom with better center point handling
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = container.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                const newScale = Math.min(Math.max(scale * delta, 0.3), 4);
+
+                // Adjust translation to zoom towards center
+                if (newScale !== scale) {
+                const scaleDiff = newScale / scale;
+                translateX = translateX * scaleDiff;
+                translateY = translateY * scaleDiff;
+                scale = newScale;
+
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+
+                updateTransform();
+                }
+            });
+
+            // Initialize display
+            updateTransform();
+            });
+        }
+
+        // Initialize the controls when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMermaidControls();
+        });
+
+        // ==================== 目录导航功能 ====================
+        
+        /**
+         * 目录导航功能：平滑滚动和活跃章节高亮
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const sections = document.querySelectorAll('section[id], div[id]');
+            
+            /**
+             * 平滑滚动到目标章节
+             */
+            tocLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        // 移动端点击后关闭目录
+                        if (window.innerWidth <= 1024) {
+                            const toc = document.querySelector('.toc-fixed');
+                            toc.classList.remove('open');
+                        }
+                    }
+                });
+            });
+            
+            /**
+             * 高亮当前活跃章节
+             */
+            function highlightActiveSection() {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (window.scrollY >= (sectionTop - 200)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+            
+            // 滚动时更新活跃章节（使用防抖优化）
+            window.addEventListener('scroll', debounce(highlightActiveSection, 100));
+            highlightActiveSection(); // 初始调用
+        });
+
+        // ==================== 移动端菜单切换 ====================
+        
+        /**
+         * 移动端目录显示/隐藏切换
+         */
+        function toggleMobileMenu() {
+            const toc = document.querySelector('.toc-fixed');
+            toc.classList.toggle('open');
+            
+            // 添加遮罩层
+            if (toc.classList.contains('open')) {
+                const overlay = document.createElement('div');
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden';
+                overlay.id = 'toc-overlay';
+                overlay.onclick = () => {
+                    toc.classList.remove('open');
+                    document.body.removeChild(overlay);
+                };
+                document.body.appendChild(overlay);
+            } else {
+                const overlay = document.getElementById('toc-overlay');
+                if (overlay) {
+                    document.body.removeChild(overlay);
+                }
+            }
+        }
+
+        /**
+         * 在移动端添加菜单按钮
+         */
+        if (window.innerWidth <= 1024) {
+            const mobileMenuBtn = document.createElement('button');
+            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            mobileMenuBtn.className = 'fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg lg:hidden';
+            mobileMenuBtn.onclick = toggleMobileMenu;
+            document.body.appendChild(mobileMenuBtn);
+        }
+
+        /**
+         * 处理窗口大小变化
+         */
+        window.addEventListener('resize', function() {
+            const toc = document.querySelector('.toc-fixed');
+            const overlay = document.getElementById('toc-overlay');
+            
+            if (window.innerWidth > 1024) {
+                // 大屏幕时移除移动端菜单类
+                toc.classList.remove('open');
+                if (overlay) {
+                    document.body.removeChild(overlay);
+                }
+            }
+        });
+        
+        // ==================== 初始化完成 ====================
+        
+        console.log('Transformer架构页面初始化完成！');
+    </script>
+  
+
+</body></html>

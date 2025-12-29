@@ -1,0 +1,546 @@
+---
+sidebar_position: 1.5
+title: MCP协议深度解析
+description: 深入解析MCP协议的架构、原理与未来趋势
+---
+
+import React from 'react';
+import InteractiveMermaid from '@site/src/components/InteractiveMermaid/InteractiveMermaid';
+import InteractiveArchitecture from '@site/src/components/InteractiveArchitecture/InteractiveArchitecture';
+import CodeBlock from '@site/src/components/CodeBlock/CodeBlock';
+import FAQ from '@site/src/components/FAQ/FAQ';
+import FAQItem from '@site/src/components/FAQ/FAQItem';
+import ReadingProgress from '@site/src/components/ReadingProgress/ReadingProgress';
+import BackToTop from '@site/src/components/BackToTop/BackToTop';
+import GlobalDocTools from '@site/src/components/GlobalDocTools/GlobalDocTools';
+
+<ReadingProgress />
+<BackToTop />
+<GlobalDocTools />
+
+<div id="main-content" className="mcp-intro">
+
+# 深入解析MCP协议：架构、原理与未来趋势
+
+探索模型上下文协议如何革命性地改变AI与外部系统的集成方式，从碎片化连接到标准化协作的转变
+
+## 核心洞察
+
+<div className="mcp-grid mcp-grid-3">
+
+<div className="mcp-highlight-box">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+    <div className="mcp-icon-container" style={{ marginRight: '0.75rem', marginBottom: 0 }}>🔌</div>
+    <h3 style={{ fontWeight: 600, margin: 0, fontSize: '1.25rem' }}>USB-C接口类比</h3>
+  </div>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    标准化连接方式，解决N×M集成难题，将复杂性从N×M降低到M+N个组件
+  </p>
+</div>
+
+<div className="mcp-highlight-box">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+    <div className="mcp-icon-container" style={{ marginRight: '0.75rem', marginBottom: 0 }}>🧩</div>
+    <h3 style={{ fontWeight: 600, margin: 0, fontSize: '1.25rem' }}>解耦设计</h3>
+  </div>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    AI的"意图"与外部系统的"实现"彻底分离，提升系统模块化和可维护性
+  </p>
+</div>
+
+<div className="mcp-highlight-box">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+    <div className="mcp-icon-container" style={{ marginRight: '0.75rem', marginBottom: 0 }}>📈</div>
+    <h3 style={{ fontWeight: 600, margin: 0, fontSize: '1.25rem' }}>动态扩展</h3>
+  </div>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    运行时动态发现和调用能力，支持局部和远程两种传输方式
+  </p>
+</div>
+
+</div>
+
+---
+
+## 协议概述与前世今生 {#overview}
+
+### MCP协议简介
+
+模型上下文协议（Model Context Protocol, MCP）是由Anthropic公司于2024年11月推出的一项开创性开放标准。该协议的核心目标是为AI应用程序（如Claude或ChatGPT）与外部数据源、工具及工作流之间建立一种安全、标准化的双向通信机制。
+
+:::tip 核心创新
+MCP被形象地比喻为AI应用的**"USB-C接口"**，通过提供统一的连接方式，极大地简化了AI与多样化外部世界的交互，解决了长期以来困扰开发者的"N×M"集成难题。
+:::
+
+通过MCP，AI模型能够突破其训练数据集的限制，动态地访问实时信息、调用外部工具并执行复杂的工作流，从而生成更具上下文感知能力和现实相关性的响应。传统方式需要N×M个定制化的连接器，而MCP通过标准化的客户端-服务器架构，将这一复杂性降低为M+N个组件。
+
+### MCP协议的起源与发展
+
+MCP协议由Anthropic公司的Mahesh Murag主导开发，并于2024年11月正式发布。其诞生的背景是大型语言模型（LLM）能力的飞速发展与现实世界应用需求之间的鸿沟日益扩大。
+
+:::info 技术灵感来源
+MCP的设计深受微软的**语言服务器协议（Language Server Protocol, LSP）**的启发。LSP通过基于JSON-RPC 2.0的标准协议，成功地将代码编辑器与各种编程语言的语言服务解耦。
+:::
+
+自发布以来，MCP迅速获得了业界的广泛关注，并进入了一个快速发展的阶段。最初，MCP主要通过Python和TypeScript SDK提供支持，开发者可以利用这些SDK快速构建MCP服务器和客户端。随着社区的壮大，越来越多的开发者开始贡献各种预构建的MCP服务器。
+
+:::success 生态系统增长
+到2025年，已有超过5500个公开的MCP服务器被发布，显示出其强大的生命力和应用潜力。
+:::
+
+---
+
+## 核心设计理念：解耦意图与实现 {#concepts}
+
+MCP协议最核心的设计理念之一是**"解耦意图与实现"（Decoupling Intent from Implementation）**。这一设计原则旨在彻底改变AI代理与外部工具的传统交互模式。
+
+<div className="mcp-grid mcp-grid-2">
+
+<div className="mcp-card mcp-card-danger">
+  <h4 style={{ color: 'var(--ifm-color-danger-dark)', marginBottom: '0.75rem', fontSize: '1.125rem', fontWeight: 600 }}>
+    ❌ 传统模式问题
+  </h4>
+  <ul className="mcp-list">
+    <li>高度耦合的架构</li>
+    <li>复杂的集成逻辑</li>
+    <li>工具变更需要修改AI代码</li>
+    <li>维护成本高</li>
+  </ul>
+</div>
+
+<div className="mcp-card mcp-card-success">
+  <h4 style={{ color: 'var(--ifm-color-success-dark)', marginBottom: '0.75rem', fontSize: '1.125rem', fontWeight: 600 }}>
+    ✅ MCP解决方案
+  </h4>
+  <ul className="mcp-list">
+    <li>标准化中间层</li>
+    <li>AI只表达"做什么"</li>
+    <li>服务器处理"如何做"</li>
+    <li>动态发现和调用</li>
+  </ul>
+</div>
+
+</div>
+
+在这种新模式下，AI模型（作为MCP客户端的一部分）不再需要关心工具的具体实现细节。当模型判断需要执行某个外部操作时，它只需向MCP服务器发送一个标准化的请求，表达其"意图"，例如"调用名为`search_knowledge_base`的工具，参数为`{'query': 'latest sales figures'}`"。
+
+### 解耦带来的优势
+
+<div className="mcp-grid mcp-grid-3">
+
+<div className="mcp-card" style={{ textAlign: 'center' }}>
+  <div className="mcp-icon-container" style={{ margin: '0 auto 0.75rem' }}>🔄</div>
+  <h5 style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '1.125rem' }}>可移植性</h5>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    同一AI代理可与任何符合MCP标准的服务器协同工作
+  </p>
+</div>
+
+<div className="mcp-card" style={{ textAlign: 'center' }}>
+  <div className="mcp-icon-container" style={{ margin: '0 auto 0.75rem' }}>🛡️</div>
+  <h5 style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '1.125rem' }}>安全性</h5>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    工具执行被隔离在MCP服务器中，可沙箱化、审计
+  </p>
+</div>
+
+<div className="mcp-card" style={{ textAlign: 'center' }}>
+  <div className="mcp-icon-container" style={{ margin: '0 auto 0.75rem' }}>🔧</div>
+  <h5 style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '1.125rem' }}>可维护性</h5>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    后端系统演进不影响AI客户端，新工具可动态添加
+  </p>
+</div>
+
+</div>
+
+---
+
+## 架构模式：客户端-服务器架构 {#architecture}
+
+MCP协议采用了经典的客户端-服务器（Client-Server）架构模式，该模式旨在解耦AI模型（作为客户端）与提供外部能力的服务端。这种分层设计不仅清晰地划分了各组件的职责，还为系统的可扩展性、灵活性和安全性奠定了基础。
+
+![MCP协议客户端-服务器架构示意图](https://kimi-web-img.moonshot.cn/img/i-blog.csdnimg.cn/0067f5597908db7ac895120f76576fb0e07f9895.jpeg)
+
+<InteractiveArchitecture 
+  type="mcp-layers"
+  title="MCP三层架构"
+  description="点击各层查看详细信息"
+/>
+
+### 架构分层
+
+<div className="mcp-grid mcp-grid-3">
+
+<div className="mcp-card">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+    <div className="mcp-icon-container" style={{ marginRight: '1rem', marginBottom: 0 }}>🖥️</div>
+    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>MCP Host</h3>
+  </div>
+  <p className="mcp-text-secondary" style={{ marginBottom: '1rem' }}>
+    AI模型运行的宿主环境，可以是桌面应用、IDE、CLI等
+  </p>
+  <ul className="mcp-list">
+    <li>启动和管理AI模型进程</li>
+    <li>建立与MCP服务器的连接</li>
+    <li>协调客户端和服务器交互</li>
+  </ul>
+</div>
+
+<div className="mcp-card">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+    <div className="mcp-icon-container" style={{ marginRight: '1rem', marginBottom: 0 }}>🔗</div>
+    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>MCP Client</h3>
+  </div>
+  <p className="mcp-text-secondary" style={{ marginBottom: '1rem' }}>
+    位于AI模型与MCP服务器之间的关键代理层
+  </p>
+  <ul className="mcp-list">
+    <li>处理所有通信细节</li>
+    <li>消息路由和会话管理</li>
+    <li>安全和权限控制</li>
+  </ul>
+</div>
+
+<div className="mcp-card">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+    <div className="mcp-icon-container" style={{ marginRight: '1rem', marginBottom: 0 }}>⚙️</div>
+    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>MCP Server</h3>
+  </div>
+  <p className="mcp-text-secondary" style={{ marginBottom: '1rem' }}>
+    提供具体功能或数据接口的组件
+  </p>
+  <ul className="mcp-list">
+    <li>暴露工具、资源和提示</li>
+    <li>封装外部系统能力</li>
+    <li>处理客户端调用请求</li>
+  </ul>
+</div>
+
+</div>
+
+### 架构分层设计
+
+<div className="mcp-grid mcp-grid-2">
+
+<div className="mcp-card">
+  <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', fontSize: '1.125rem' }}>
+    💾 数据层 (Data Layer)
+  </h4>
+  <p className="mcp-text-secondary" style={{ marginBottom: '0.75rem' }}>
+    MCP协议的核心，定义基于JSON-RPC 2.0的通信规范
+  </p>
+  <ul className="mcp-list">
+    <li>生命周期管理</li>
+    <li>核心原语交互语义</li>
+    <li>通知机制</li>
+  </ul>
+</div>
+
+<div className="mcp-card">
+  <h4 style={{ fontWeight: 600, marginBottom: '0.75rem', fontSize: '1.125rem' }}>
+    🌐 传输层 (Transport Layer)
+  </h4>
+  <p className="mcp-text-secondary" style={{ marginBottom: '0.75rem' }}>
+    处理客户端和服务器之间的实际数据交换
+  </p>
+  <ul className="mcp-list">
+    <li>标准输入输出 (stdio)</li>
+    <li>可流式HTTP (Streamable HTTP)</li>
+    <li>连接抽象和消息帧定</li>
+  </ul>
+</div>
+
+</div>
+
+---
+
+
+## 协议优势分析 {#advantages}
+
+<div className="mcp-grid mcp-grid-3">
+
+<div className="mcp-card">
+  <div className="mcp-icon-container">🔌</div>
+  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>标准化与互操作性</h3>
+  <p className="mcp-text-secondary" style={{ marginBottom: '1rem' }}>
+    MCP最大的优势在于其标准化。通过定义一套统一的协议，MCP解决了AI工具集成的碎片化问题。
+  </p>
+  <ul className="mcp-list">
+    <li>任何支持MCP的AI应用都可以与任何MCP服务器无缝协作</li>
+    <li>无需为每个工具编写特定的适配代码</li>
+    <li>像搭积木一样组合不同的MCP服务器</li>
+    <li>极大地降低了开发成本</li>
+  </ul>
+</div>
+
+<div className="mcp-card">
+  <div className="mcp-icon-container">🛡️</div>
+  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>安全性与权限控制</h3>
+  <p className="mcp-text-secondary" style={{ marginBottom: '1rem' }}>
+    MCP的架构设计将安全性放在了重要位置，通过清晰的权限边界和安全隔离提供保障。
+  </p>
+  <ul className="mcp-list">
+    <li>工具执行逻辑封装在MCP服务器中</li>
+    <li>可以精确控制暴露给AI模型的功能和数据</li>
+    <li>执行严格的认证和授权策略</li>
+    <li>通信流程可审计，便于监控和治理</li>
+  </ul>
+</div>
+
+<div className="mcp-card">
+  <div className="mcp-icon-container">📈</div>
+  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>灵活性与可扩展性</h3>
+  <p className="mcp-text-secondary" style={{ marginBottom: '1rem' }}>
+    MCP的灵活性体现在多个方面，适应不同的部署场景和应用需求。
+  </p>
+  <ul className="mcp-list">
+    <li>传输层无关性（stdio/HTTP）</li>
+    <li>核心原语抽象（工具、资源、提示）</li>
+    <li>动态发现机制，运行时适应环境变化</li>
+    <li>新工具可动态添加，无需修改客户端</li>
+  </ul>
+</div>
+
+</div>
+
+---
+
+## 局限性分析 {#limitations}
+
+<div className="mcp-grid mcp-grid-2">
+
+<div className="mcp-card mcp-card-danger">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+    <span style={{ fontSize: '1.5rem', marginRight: '0.75rem' }}>⚠️</span>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--ifm-color-danger-dark)' }}>技术成熟度与生态系统</h3>
+  </div>
+  <p style={{ color: 'var(--ifm-color-danger-darker)', marginBottom: '1rem' }}>
+    虽然MCP的生态系统正在快速发展，但与成熟技术标准相比，仍然处于早期阶段。
+  </p>
+  <ul className="mcp-list" style={{ color: 'var(--ifm-color-danger-darker)' }}>
+    <li>可用的MCP服务器数量和种类有限</li>
+    <li>企业级应用和垂直行业领域覆盖不足</li>
+    <li>协议的稳定性和向后兼容性需要考验</li>
+    <li>新旧版本平滑过渡面临挑战</li>
+  </ul>
+</div>
+
+<div className="mcp-card mcp-card-warning">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+    <span style={{ fontSize: '1.5rem', marginRight: '0.75rem' }}>⏱️</span>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--ifm-color-warning-dark)' }}>性能与延迟问题</h3>
+  </div>
+  <p style={{ color: 'var(--ifm-color-warning-darker)', marginBottom: '1rem' }}>
+    在某些场景下，MCP可能会引入额外的性能开销。
+  </p>
+  <ul className="mcp-list" style={{ color: 'var(--ifm-color-warning-darker)' }}>
+    <li>远程HTTP传输的网络延迟</li>
+    <li>序列化/反序列化的开销</li>
+    <li>实时交互应用可能受影响</li>
+    <li>本地stdio传输限制分布式能力</li>
+  </ul>
+</div>
+
+<div className="mcp-card mcp-card-warning">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+    <span style={{ fontSize: '1.5rem', marginRight: '0.75rem' }}>📚</span>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--ifm-color-warning-dark)' }}>开发者学习曲线</h3>
+  </div>
+  <p style={{ color: 'var(--ifm-color-warning-darker)', marginBottom: '1rem' }}>
+    对于不熟悉相关概念的开发者，仍然存在一定的学习门槛。
+  </p>
+  <ul className="mcp-list" style={{ color: 'var(--ifm-color-warning-darker)' }}>
+    <li>RPC、JSON Schema等概念需要掌握</li>
+    <li>调试MCP应用比传统API更具挑战性</li>
+    <li>涉及AI决策、协议通信、服务器执行多个环节</li>
+    <li>需要更强的综合能力来定位和解决问题</li>
+  </ul>
+</div>
+
+<div className="mcp-card mcp-card-info">
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+    <span style={{ fontSize: '1.5rem', marginRight: '0.75rem' }}>🌐</span>
+    <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--ifm-color-info-dark)' }}>部署与运维复杂性</h3>
+  </div>
+  <p style={{ color: 'var(--ifm-color-info-darker)', marginBottom: '1rem' }}>
+    MCP服务器的部署和运维带来了新的挑战。
+  </p>
+  <ul className="mcp-list" style={{ color: 'var(--ifm-color-info-darker)' }}>
+    <li>服务器发现和管理机制尚不完善</li>
+    <li>大规模部署时的监控和治理需求</li>
+    <li>跨网络边界的通信安全</li>
+    <li>服务器版本管理和兼容性</li>
+  </ul>
+</div>
+
+</div>
+
+---
+
+## 现状与未来展望 {#future}
+
+### 当前发展现状
+
+目前，MCP协议正处于一个快速发展和被广泛接纳的阶段。由Anthropic发起的这一开放标准，已经吸引了大量开发者和企业的关注，并催生了丰富的开源生态。
+
+![MCP协议技术未来发展趋势概念图](https://kimi-web-img.moonshot.cn/img/www.cursor-ide.com/14947e0d9d5cb90253f9cf0e9976fe2bf566eae5.png)
+
+<div className="mcp-grid mcp-grid-3">
+
+<div className="mcp-card" style={{ textAlign: 'center' }}>
+  <div className="mcp-icon-container-circle">✅</div>
+  <h4 style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '1.125rem' }}>平台集成</h4>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    Claude Desktop、Cursor、Replit等平台已开始集成MCP
+  </p>
+</div>
+
+<div className="mcp-card" style={{ textAlign: 'center' }}>
+  <div className="mcp-icon-container-circle">☁️</div>
+  <h4 style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '1.125rem' }}>云服务商支持</h4>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    各大云服务提供商在其大模型服务平台上提供MCP支持
+  </p>
+</div>
+
+<div className="mcp-card" style={{ textAlign: 'center' }}>
+  <div className="mcp-icon-container-circle">🌿</div>
+  <h4 style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '1.125rem' }}>开源生态</h4>
+  <p className="mcp-text-secondary" style={{ margin: 0 }}>
+    超过5500个公开的MCP服务器，生态系统快速增长
+  </p>
+</div>
+
+</div>
+
+### 2025年发展路线图
+
+<div className="mcp-grid mcp-grid-2">
+
+<div className="mcp-card">
+  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
+    🛣️ 2025年发展路线图
+  </h3>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div style={{ borderLeft: '4px solid var(--ifm-color-primary)', paddingLeft: '1rem' }}>
+      <h4 style={{ fontWeight: 600, marginBottom: '0.25rem', fontSize: '1rem' }}>远程MCP服务器支持</h4>
+      <p className="mcp-text-secondary" style={{ margin: 0 }}>
+        完善基于HTTP的远程通信，集成OAuth 2.1等企业级身份验证机制
+      </p>
+    </div>
+    <div style={{ borderLeft: '4px solid var(--ifm-color-success)', paddingLeft: '1rem' }}>
+      <h4 style={{ fontWeight: 600, marginBottom: '0.25rem', fontSize: '1rem' }}>MCP注册中心</h4>
+      <p className="mcp-text-secondary" style={{ margin: 0 }}>
+        类似"应用商店"的平台，提供服务器发现、评估和部署功能
+      </p>
+    </div>
+    <div style={{ borderLeft: '4px solid var(--ifm-color-primary-light)', paddingLeft: '1rem' }}>
+      <h4 style={{ fontWeight: 600, marginBottom: '0.25rem', fontSize: '1rem' }}>多代理系统支持</h4>
+      <p className="mcp-text-secondary" style={{ margin: 0 }}>
+        支持多代理系统和层次化代理结构，异步操作和长时间运行任务
+      </p>
+    </div>
+  </div>
+</div>
+
+<div className="mcp-card">
+  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
+    🚀 长期愿景
+  </h3>
+  <div className="mcp-highlight-box" style={{ marginBottom: '1rem' }}>
+    <h4 style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '1rem' }}>5-10年展望</h4>
+    <p className="mcp-text-secondary" style={{ margin: 0 }}>
+      MCP有望成为AI代理与现实世界交互的行业标准协议，可能与区块链、边缘计算等新兴技术深度融合。
+    </p>
+  </div>
+  <ul className="mcp-list">
+    <li>✅ 构建更智能、互联的AI生态系统</li>
+    <li>✅ 支持多智能体协作和自主工作流</li>
+    <li>✅ 成为AI基础设施的核心组成部分</li>
+  </ul>
+</div>
+
+</div>
+
+### 核心意义与价值
+
+MCP的发展，标志着AI技术正从孤立的模型向一个开放、互联、可协作的生态系统演进，其最终目标是让AI能够像人类一样，无缝地利用各种工具和资源，解决现实世界中的复杂问题。
+
+:::note 核心理念
+"让AI能够像人类一样使用工具、查询信息并执行任务" — 这不仅是一个技术标准，更是AI发展的重要里程碑，为构建真正智能和自主的AI代理奠定了基础。
+:::
+
+---
+
+## 常见问题 {#faq}
+
+<FAQ>
+
+<FAQItem question="MCP和Function Calling有什么区别？">
+MCP（Model Context Protocol）是一个更高级的协议，相比传统的Function Calling有以下优势：
+
+- **标准化通信**：提供统一的协议规范
+- **更好的扩展性**：支持更复杂的工具和资源管理
+- **类型安全**：更强的类型定义和验证
+- **异步支持**：原生支持异步操作
+- **资源管理**：内置资源生命周期管理
+</FAQItem>
+
+<FAQItem question="如何选择MCP服务器和客户端？">
+选择建议：
+
+**服务器端**：
+- Python：适合快速开发和原型验证
+- JavaScript/TypeScript：适合Web应用和Node.js生态
+- 根据团队技术栈选择
+
+**客户端端**：
+- 如果使用Claude Desktop，使用官方SDK
+- 如果集成到自己的应用，使用对应语言的客户端库
+</FAQItem>
+
+<FAQItem question="MCP支持哪些编程语言？">
+目前官方支持：
+- Python（最完善）
+- JavaScript/TypeScript
+- 其他语言可以通过HTTP协议实现
+</FAQItem>
+
+<FAQItem question="如何调试MCP服务器？">
+调试方法：
+
+1. 启用详细日志
+2. 使用调试模式启动
+3. 添加断点
+4. 使用日志记录
+
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+```
+</FAQItem>
+
+<FAQItem question="如何处理异步操作？">
+异步处理示例：
+
+```python
+import asyncio
+
+async def handle_async_tool(arguments):
+    result = await some_async_function(arguments)
+    return result
+```
+</FAQItem>
+
+<FAQItem question="如何优化MCP服务器的性能？">
+优化建议：
+
+1. **使用异步处理**：使用asyncio并发处理
+2. **实现缓存**：使用LRU缓存减少重复计算
+3. **批量处理**：批量处理而不是逐个处理
+</FAQItem>
+
+</FAQ>
+
+</div>

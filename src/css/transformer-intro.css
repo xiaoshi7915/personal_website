@@ -1,0 +1,396 @@
+/**
+ * Transformer架构深度研究报告文档样式
+ * 统一使用Docusaurus主题色，保持整体风格一致
+ */
+
+/* Transformer文档统一颜色变量 - 使用与整体一致的蓝色主题 */
+:root {
+  --transformer-primary: var(--ifm-color-primary);
+  --transformer-primary-dark: var(--ifm-color-primary-dark);
+  --transformer-primary-light: var(--ifm-color-primary-light);
+  --transformer-secondary: var(--ifm-color-secondary);
+  --transformer-accent: var(--ifm-color-primary-light);
+  --transformer-card-bg: var(--ifm-card-background-color);
+  --transformer-border: var(--ifm-color-emphasis-300);
+  --transformer-text: var(--ifm-color-content);
+  --transformer-text-secondary: var(--ifm-color-content-secondary);
+}
+
+[data-theme='dark'] {
+  --transformer-primary: var(--ifm-color-primary);
+  --transformer-primary-dark: var(--ifm-color-primary-dark);
+  --transformer-primary-light: var(--ifm-color-primary-light);
+  --transformer-card-bg: var(--ifm-background-surface-color);
+  --transformer-border: var(--ifm-color-emphasis-200);
+}
+
+/* 统一的高亮框样式 */
+.transformer-highlight-box {
+  background: var(--transformer-card-bg);
+  border-left: 4px solid var(--transformer-primary);
+  border: 1px solid var(--transformer-border);
+  border-left-width: 4px;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.transformer-highlight-box:hover {
+  box-shadow: 0 4px 12px rgba(56, 97, 251, 0.15);
+  transform: translateY(-2px);
+  border-color: var(--transformer-primary);
+}
+
+[data-theme='dark'] .transformer-highlight-box {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 统一的技术卡片样式 */
+.transformer-card {
+  background: var(--transformer-card-bg);
+  border: 1px solid var(--transformer-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.transformer-card:hover {
+  box-shadow: 0 4px 16px rgba(56, 97, 251, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--transformer-primary);
+}
+
+[data-theme='dark'] .transformer-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 成功/警告/错误卡片变体 */
+.transformer-card-success {
+  border-left: 4px solid var(--ifm-color-success);
+  background: var(--ifm-color-success-lightest);
+}
+
+.transformer-card-warning {
+  border-left: 4px solid var(--ifm-color-warning);
+  background: var(--ifm-color-warning-lightest);
+}
+
+.transformer-card-danger {
+  border-left: 4px solid var(--ifm-color-danger);
+  background: var(--ifm-color-danger-lightest);
+}
+
+.transformer-card-info {
+  border-left: 4px solid var(--ifm-color-info);
+  background: var(--ifm-color-info-lightest);
+}
+
+/* 统一的网格布局 */
+.transformer-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.transformer-grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.transformer-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* 统一的图标容器 */
+.transformer-icon-container {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  background: var(--transformer-primary);
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* 圆形图标容器（用于未来展望等） */
+.transformer-icon-container-circle {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+  background: var(--transformer-primary);
+  color: white;
+  font-size: 2rem;
+}
+
+/* 图片样式统一 */
+.transformer-intro img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+  display: block;
+}
+
+[data-theme='dark'] .transformer-intro img {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 统一的标题样式 */
+.transformer-section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 3rem 0 1.5rem 0;
+  color: var(--transformer-text);
+  border-bottom: 2px solid var(--transformer-border);
+  padding-bottom: 0.75rem;
+}
+
+.transformer-subsection-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 2rem 0 1rem 0;
+  color: var(--transformer-text);
+}
+
+/* 统一的文本样式 */
+.transformer-text {
+  color: var(--transformer-text);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.transformer-text-secondary {
+  color: var(--transformer-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* 章节分隔线 */
+.transformer-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--transformer-border), transparent);
+  margin: 3rem 0;
+  border: none;
+}
+
+/* 统一的列表样式 */
+.transformer-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.transformer-list li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: var(--transformer-text-secondary);
+  line-height: 1.6;
+}
+
+.transformer-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--transformer-primary);
+  font-weight: bold;
+}
+
+/* 数学公式样式 */
+.transformer-math-formula {
+  background: var(--transformer-card-bg);
+  border: 1px solid var(--transformer-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.transformer-math-formula code {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.9rem;
+  background: transparent;
+  padding: 0;
+}
+
+/* 整体文档容器样式 */
+.transformer-intro {
+  max-width: 100%;
+}
+
+.transformer-intro h2 {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--transformer-border);
+}
+
+.transformer-intro h3 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.transformer-intro h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.transformer-intro p {
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+
+/* 统一表格样式 */
+.transformer-intro table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background: var(--transformer-card-bg);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.transformer-intro table th {
+  background: var(--ifm-color-emphasis-100);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--transformer-text);
+  border-bottom: 2px solid var(--transformer-border);
+}
+
+.transformer-intro table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--transformer-border);
+  color: var(--transformer-text-secondary);
+}
+
+.transformer-intro table tr:last-child td {
+  border-bottom: none;
+}
+
+.transformer-intro table tr:hover {
+  background: var(--ifm-color-emphasis-50);
+}
+
+/* 统一代码块容器 */
+.transformer-intro pre {
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+/* 统一引用块样式 */
+.transformer-intro blockquote {
+  border-left: 4px solid var(--transformer-primary);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: var(--transformer-text-secondary);
+  font-style: italic;
+}
+
+/* 引用链接样式 */
+.transformer-intro .citation {
+  color: var(--transformer-primary);
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.transformer-intro .citation:hover {
+  text-decoration: underline;
+}
+
+/* Hero区域样式 */
+.transformer-hero {
+  background: linear-gradient(135deg, var(--transformer-primary) 0%, var(--transformer-primary-dark) 100%);
+  color: white;
+  padding: 3rem 0;
+  border-radius: 0.75rem;
+  margin: 2rem 0;
+}
+
+.transformer-hero h1 {
+  color: white;
+  border-bottom: none;
+  margin-top: 0;
+}
+
+/* 改进卡片间距 */
+.transformer-card + .transformer-card {
+  margin-top: 1.5rem;
+}
+
+/* 改进代码块和图表容器 */
+.transformer-intro .theme-code-block,
+.transformer-intro [class*="mermaid"] {
+  margin: 2rem 0;
+}
+
+/* 改进表格样式 */
+.transformer-intro table {
+  font-size: 0.9375rem;
+}
+
+.transformer-intro table th {
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+
+/* 改进引用链接样式 */
+.transformer-intro .citation {
+  font-size: 0.875rem;
+  vertical-align: super;
+  line-height: 0;
+}
+
+/* 改进分隔线 */
+.transformer-intro hr {
+  margin: 3rem 0;
+  border: none;
+  border-top: 2px solid var(--transformer-border);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .transformer-highlight-box,
+  .transformer-card {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .transformer-grid-2,
+  .transformer-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .transformer-section-title {
+    font-size: 1.75rem;
+  }
+
+  .transformer-subsection-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* 打印样式优化 */
+@media print {
+  .transformer-highlight-box,
+  .transformer-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+

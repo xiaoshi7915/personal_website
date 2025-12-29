@@ -1,0 +1,266 @@
+.comparisonContainer {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--ifm-color-emphasis-0);
+  border-radius: 12px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.modeSwitcher {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.modeButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--ifm-color-emphasis-100);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--ifm-color-content);
+  transition: all 0.2s ease;
+}
+
+.modeButton:hover {
+  background: var(--ifm-color-emphasis-200);
+  border-color: var(--ifm-color-emphasis-400);
+}
+
+.modeButton.active {
+  background: var(--ifm-color-primary);
+  color: white;
+  border-color: var(--ifm-color-primary);
+}
+
+.modeButton.active:hover {
+  background: var(--ifm-color-primary-dark);
+}
+
+/* 表格模式样式 */
+.tableWrapper {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.comparisonTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--ifm-background-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.comparisonTable thead {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.comparisonTable th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ifm-color-content);
+  border-bottom: 2px solid var(--ifm-color-emphasis-300);
+}
+
+.dimensionColumn {
+  width: 20%;
+  min-width: 150px;
+}
+
+.protocolColumn {
+  width: 40%;
+}
+
+.comparisonTable tbody tr {
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  transition: background 0.2s ease;
+}
+
+.comparisonTable tbody tr:hover {
+  background: var(--ifm-color-emphasis-50);
+}
+
+.comparisonTable td {
+  padding: 1rem;
+  vertical-align: top;
+  color: var(--ifm-color-content-secondary);
+}
+
+.dimensionCell {
+  font-weight: 500;
+  color: var(--ifm-color-content);
+}
+
+.protocolCell {
+  line-height: 1.6;
+}
+
+/* 卡片模式样式 */
+.cardsWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 1rem 0;
+}
+
+.protocolCard {
+  background: var(--ifm-background-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.protocolCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+.cardHeader {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.cardTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: var(--ifm-color-primary);
+}
+
+.cardSubtitle {
+  font-size: 0.875rem;
+  color: var(--ifm-color-content-secondary);
+  margin: 0;
+  font-style: italic;
+}
+
+.cardDescription {
+  color: var(--ifm-color-content-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.cardSection {
+  margin-bottom: 1.5rem;
+}
+
+.cardSection:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: var(--ifm-color-content);
+}
+
+.strengthsList,
+.useCasesList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.strengthItem,
+.useCaseItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  color: var(--ifm-color-content-secondary);
+  line-height: 1.5;
+}
+
+.strengthItem {
+  gap: 0.75rem;
+}
+
+.checkIcon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: var(--ifm-color-success);
+}
+
+.useCaseItem {
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.useCaseItem::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--ifm-color-primary);
+  font-weight: bold;
+}
+
+/* 补充说明 */
+.footerNote {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.footerNote p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ifm-color-content-secondary);
+  line-height: 1.6;
+}
+
+.footerNote strong {
+  color: var(--ifm-color-content);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .cardsWrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .comparisonTable {
+    font-size: 0.875rem;
+  }
+
+  .comparisonTable th,
+  .comparisonTable td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .dimensionColumn {
+    min-width: 120px;
+  }
+
+  .modeSwitcher {
+    flex-direction: column;
+  }
+
+  .modeButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 暗色模式适配 */
+[data-theme='dark'] .comparisonContainer {
+  background: var(--ifm-color-emphasis-100);
+}
+
+[data-theme='dark'] .protocolCard {
+  background: var(--ifm-background-color);
+}
+
+[data-theme='dark'] .comparisonTable thead {
+  background: var(--ifm-color-emphasis-200);
+}
+

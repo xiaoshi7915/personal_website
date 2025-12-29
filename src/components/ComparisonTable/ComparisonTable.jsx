@@ -37,3 +37,4 @@ export default function ComparisonTable({ headers, rows, className = '' }) {
   );
 }
 
+

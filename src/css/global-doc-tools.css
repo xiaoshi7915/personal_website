@@ -1,0 +1,282 @@
+/**
+ * 全局文档工具样式
+ * 定义分享按钮、PDF导出按钮的样式、位置和暗色模式适配
+ */
+
+/* 全局文档工具容器 */
+.global-doc-tools {
+  position: fixed;
+  z-index: 40;
+}
+
+/* 分享按钮 - 右上角 */
+.global-doc-tools__share-btn,
+.share-btn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 40;
+  width: 48px;
+  height: 48px;
+  background-color: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+/* 分享按钮悬停效果 */
+.global-doc-tools__share-btn:hover,
+.share-btn:hover {
+  background-color: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* 分享按钮激活状态 */
+.global-doc-tools__share-btn:active,
+.share-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* PDF导出按钮 - 右下角 */
+.global-doc-tools__pdf-btn,
+.pdf-export-btn {
+  position: fixed;
+  bottom: 8rem;
+  right: 2rem;
+  z-index: 40;
+  width: 56px;
+  height: 56px;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+/* PDF导出按钮悬停效果 */
+.global-doc-tools__pdf-btn:hover:not(:disabled),
+.pdf-export-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* PDF导出按钮禁用状态 */
+.global-doc-tools__pdf-btn:disabled,
+.pdf-export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* PDF导出按钮激活状态 */
+.global-doc-tools__pdf-btn:active:not(:disabled),
+.pdf-export-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 暗色模式适配 */
+[data-theme='dark'] .global-doc-tools__share-btn,
+[data-theme='dark'] .share-btn {
+  background-color: #22c55e;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .global-doc-tools__share-btn:hover,
+[data-theme='dark'] .share-btn:hover {
+  background-color: #16a34a;
+  box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .global-doc-tools__pdf-btn,
+[data-theme='dark'] .pdf-export-btn {
+  background-color: #ef4444;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .global-doc-tools__pdf-btn:hover:not(:disabled),
+[data-theme='dark'] .pdf-export-btn:hover:not(:disabled) {
+  background-color: #dc2626;
+  box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* 返回顶部按钮样式 - 确保与PDF导出按钮不重叠 */
+.back-to-top {
+  position: fixed !important;
+  bottom: 2rem !important;
+  right: 2rem !important;
+  z-index: 40 !important;
+}
+
+/* 移动端响应式设计 */
+@media screen and (max-width: 996px) {
+  /* 分享按钮 - 移动端调整位置和大小 */
+  .global-doc-tools__share-btn,
+  .share-btn {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    /* 确保触摸友好 */
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* PDF导出按钮 - 移动端调整位置和大小，确保在返回顶部按钮上方 */
+  .global-doc-tools__pdf-btn,
+  .pdf-export-btn {
+    bottom: 6rem; /* 调整位置，为返回顶部按钮留出空间 */
+    right: 1rem;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    /* 确保触摸友好 */
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* 返回顶部按钮 - 移动端调整位置和大小 */
+  .back-to-top {
+    bottom: 1.5rem !important;
+    right: 1rem !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
+    /* 确保触摸友好 */
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* 小屏幕设备优化 */
+@media screen and (max-width: 576px) {
+  /* 分享按钮 - 小屏幕保持触摸友好尺寸 */
+  .global-doc-tools__share-btn,
+  .share-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 44px; /* 保持最小触摸尺寸 */
+    height: 44px;
+    font-size: 16px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* PDF导出按钮 - 小屏幕保持触摸友好尺寸 */
+  .global-doc-tools__pdf-btn,
+  .pdf-export-btn {
+    bottom: 5.5rem; /* 调整位置，确保不重叠 */
+    right: 0.75rem;
+    width: 44px; /* 保持最小触摸尺寸 */
+    height: 44px;
+    font-size: 16px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* 返回顶部按钮 - 小屏幕保持触摸友好尺寸 */
+  .back-to-top {
+    bottom: 1rem !important;
+    right: 0.75rem !important;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 16px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* 确保按钮不遮挡重要内容 */
+@media screen and (max-width: 996px) {
+  /* 在移动端，确保按钮不会遮挡导航栏或侧边栏 */
+  .global-doc-tools__share-btn,
+  .share-btn {
+    /* 考虑导航栏高度，但不要太大，避免按钮位置过高 */
+    top: max(0.75rem, calc(var(--ifm-navbar-height, 64px) - 50px));
+  }
+
+  /* 确保按钮之间有足够的间距，避免重叠 */
+  .global-doc-tools__pdf-btn,
+  .pdf-export-btn {
+    /* 确保PDF按钮和返回顶部按钮之间有足够间距 */
+    bottom: calc(1.5rem + 44px + 0.5rem); /* 返回顶部按钮高度 + 间距 */
+  }
+}
+
+/* 超小屏幕设备（如iPhone SE） */
+@media screen and (max-width: 375px) {
+  .global-doc-tools__share-btn,
+  .share-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .global-doc-tools__pdf-btn,
+  .pdf-export-btn {
+    bottom: 5rem;
+    right: 0.5rem;
+  }
+
+  .back-to-top {
+    bottom: 0.75rem !important;
+    right: 0.5rem !important;
+  }
+}
+
+/* 动画过渡效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.global-doc-tools__share-btn,
+.global-doc-tools__pdf-btn,
+.share-btn,
+.pdf-export-btn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 可访问性优化 */
+.global-doc-tools__share-btn:focus,
+.global-doc-tools__pdf-btn:focus,
+.share-btn:focus,
+.pdf-export-btn:focus {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+/* 打印时隐藏按钮 */
+@media print {
+  .global-doc-tools,
+  .global-doc-tools__share-btn,
+  .global-doc-tools__pdf-btn,
+  .share-btn,
+  .pdf-export-btn {
+    display: none !important;
+  }
+}
+

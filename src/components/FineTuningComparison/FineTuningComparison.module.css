@@ -1,0 +1,200 @@
+.container {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--ifm-card-background-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] .container {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.placeholder {
+  text-align: center;
+  padding: 3rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+/* 图表类型选择器 */
+.chartTypeSelector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.chartTypeBtn {
+  padding: 0.5rem 1rem;
+  background: var(--ifm-color-emphasis-200);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ifm-color-content);
+  transition: all 0.2s ease;
+}
+
+.chartTypeBtn:hover {
+  background: var(--ifm-color-emphasis-300);
+  border-color: var(--ifm-color-primary);
+}
+
+.chartTypeBtn.active {
+  background: var(--ifm-color-primary);
+  color: white;
+  border-color: var(--ifm-color-primary);
+}
+
+/* 图表区域 */
+.chartSection {
+  margin-bottom: 2rem;
+}
+
+.chartTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--ifm-heading-color);
+  text-align: center;
+}
+
+.chartWrapper {
+  position: relative;
+  max-height: 400px;
+  margin: 1.5rem 0;
+}
+
+.chartNote {
+  font-size: 0.875rem;
+  color: var(--ifm-color-content-secondary);
+  text-align: center;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+/* 表格区域 */
+.tableSection {
+  margin-bottom: 2rem;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.comparisonTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--ifm-card-background-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.comparisonTable thead {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.comparisonTable th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  border-bottom: 2px solid var(--ifm-color-emphasis-300);
+}
+
+.comparisonTable td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-content);
+  vertical-align: top;
+}
+
+.comparisonTable tr:last-child td {
+  border-bottom: none;
+}
+
+.comparisonTable tr:hover {
+  background: var(--ifm-color-emphasis-50);
+}
+
+.methodName {
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  white-space: nowrap;
+}
+
+.prosList,
+.consList,
+.scenariosList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.prosList li,
+.consList li,
+.scenariosList li {
+  padding: 0.25rem 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.prosList li::before {
+  content: '✓ ';
+  color: var(--ifm-color-success);
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.consList li::before {
+  content: '✗ ';
+  color: var(--ifm-color-danger);
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.scenariosList li::before {
+  content: '• ';
+  color: var(--ifm-color-primary);
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .chartTypeSelector {
+    gap: 0.25rem;
+  }
+
+  .chartTypeBtn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .chartTitle {
+    font-size: 1.125rem;
+  }
+
+  .comparisonTable {
+    font-size: 0.875rem;
+  }
+
+  .comparisonTable th,
+  .comparisonTable td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .tableWrapper {
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+

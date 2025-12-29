@@ -75,6 +75,16 @@ Transformer架构的提出标志着深度学习的一个重要里程碑。它不
 
 理解Transformer的基本原理和架构，对于深入学习现代AI技术具有重要意义。它为我们提供了一个强大而灵活的工具，可以应用于各种复杂的AI任务。
 
+## 深入学习
+
+想要更深入地了解Transformer架构？请查看我们的[Transformer架构深度研究报告](/docs/transformer/comprehensive-intro)，其中包含：
+
+- 详细的技术原理和数学公式
+- 完整的PyTorch实现代码
+- 交互式Mermaid架构图
+- 实际应用案例和最佳实践
+- 常见问题解答
+
 ## 参考资源
 
 - [Attention Is All You Need](https://arxiv.org/abs/1706.03762) - 原始论文

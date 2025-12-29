@@ -1,0 +1,366 @@
+/**
+ * LangChain框架深度研究报告文档样式
+ * 统一使用Docusaurus主题色，适配LangChain品牌色（深蓝#1a365d和红色#e53e3e）
+ */
+
+/* LangChain文档统一颜色变量 - 使用Docusaurus主题色，适配LangChain品牌色 */
+:root {
+  --langchain-primary: #1a365d; /* LangChain深蓝 */
+  --langchain-primary-dark: #0f2439;
+  --langchain-primary-light: #2d4a6b;
+  --langchain-accent: #e53e3e; /* LangChain红色 */
+  --langchain-accent-dark: #c53030;
+  --langchain-accent-light: #fc8181;
+  --langchain-secondary: var(--ifm-color-secondary);
+  --langchain-card-bg: var(--ifm-card-background-color);
+  --langchain-border: var(--ifm-color-emphasis-300);
+  --langchain-text: var(--ifm-color-content);
+  --langchain-text-secondary: var(--ifm-color-content-secondary);
+}
+
+[data-theme='dark'] {
+  --langchain-primary: #2d4a6b; /* 暗色模式下使用稍亮的深蓝 */
+  --langchain-primary-dark: #1a365d;
+  --langchain-primary-light: #3d5a7b;
+  --langchain-accent: #fc8181; /* 暗色模式下使用稍亮的红色 */
+  --langchain-accent-dark: #e53e3e;
+  --langchain-accent-light: #feb2b2;
+  --langchain-card-bg: var(--ifm-background-surface-color);
+  --langchain-border: var(--ifm-color-emphasis-200);
+}
+
+/* 统一的高亮框样式 */
+.langchain-highlight-box {
+  background: var(--langchain-card-bg);
+  border-left: 4px solid var(--langchain-primary);
+  border: 1px solid var(--langchain-border);
+  border-left-width: 4px;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.langchain-highlight-box:hover {
+  box-shadow: 0 4px 12px rgba(26, 54, 93, 0.15);
+  transform: translateY(-2px);
+  border-color: var(--langchain-primary);
+}
+
+[data-theme='dark'] .langchain-highlight-box {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 统一的技术卡片样式 */
+.langchain-card {
+  background: var(--langchain-card-bg);
+  border: 1px solid var(--langchain-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.langchain-card:hover {
+  box-shadow: 0 4px 16px rgba(26, 54, 93, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--langchain-primary);
+}
+
+[data-theme='dark'] .langchain-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 成功/警告/错误卡片变体 */
+.langchain-card-success {
+  border-left: 4px solid var(--ifm-color-success);
+  background: var(--ifm-color-success-lightest);
+}
+
+.langchain-card-warning {
+  border-left: 4px solid var(--ifm-color-warning);
+  background: var(--ifm-color-warning-lightest);
+}
+
+.langchain-card-danger {
+  border-left: 4px solid var(--ifm-color-danger);
+  background: var(--ifm-color-danger-lightest);
+}
+
+.langchain-card-info {
+  border-left: 4px solid var(--ifm-color-info);
+  background: var(--ifm-color-info-lightest);
+}
+
+/* 统一的网格布局 */
+.langchain-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.langchain-grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.langchain-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.langchain-grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* 统一的图标容器 */
+.langchain-icon-container {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  background: var(--langchain-primary);
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* 圆形图标容器 */
+.langchain-icon-container-circle {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+  background: var(--langchain-primary);
+  color: white;
+  font-size: 2rem;
+}
+
+/* 图片样式统一 */
+.langchain-intro img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+  display: block;
+}
+
+[data-theme='dark'] .langchain-intro img {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 统一的标题样式 */
+.langchain-section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 3rem 0 1.5rem 0;
+  color: var(--langchain-text);
+  border-bottom: 2px solid var(--langchain-border);
+  padding-bottom: 0.75rem;
+}
+
+.langchain-subsection-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 2rem 0 1rem 0;
+  color: var(--langchain-text);
+}
+
+/* 统一的文本样式 */
+.langchain-text {
+  color: var(--langchain-text);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.langchain-text-secondary {
+  color: var(--langchain-text-secondary);
+  font-size: 0.9375rem;
+}
+
+/* 章节分隔线 */
+.langchain-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--langchain-border), transparent);
+  margin: 3rem 0;
+  border: none;
+}
+
+/* 统一的列表样式 */
+.langchain-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 1rem 0;
+}
+
+.langchain-list li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  color: var(--langchain-text-secondary);
+  line-height: 1.6;
+}
+
+.langchain-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--langchain-primary);
+  font-weight: bold;
+}
+
+/* 整体文档容器样式 */
+.langchain-intro {
+  max-width: 100%;
+}
+
+.langchain-intro h2 {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--langchain-border);
+}
+
+.langchain-intro h3 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.langchain-intro p {
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+
+/* 统一表格样式 */
+.langchain-intro table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background: var(--langchain-card-bg);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.langchain-intro table th {
+  background: var(--ifm-color-emphasis-100);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--langchain-text);
+  border-bottom: 2px solid var(--langchain-border);
+}
+
+.langchain-intro table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--langchain-border);
+  color: var(--langchain-text-secondary);
+}
+
+.langchain-intro table tr:last-child td {
+  border-bottom: none;
+}
+
+.langchain-intro table tr:hover {
+  background: var(--ifm-color-emphasis-50);
+}
+
+/* 统一代码块容器 */
+.langchain-intro pre {
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+/* 统一引用块样式 */
+.langchain-intro blockquote {
+  border-left: 4px solid var(--langchain-primary);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: var(--langchain-text-secondary);
+  font-style: italic;
+}
+
+/* 引用链接样式 */
+.langchain-citation-link {
+  color: var(--langchain-accent);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px dotted var(--langchain-accent);
+  transition: all 0.2s ease;
+}
+
+.langchain-citation-link:hover {
+  background-color: rgba(229, 62, 62, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  border-bottom-style: solid;
+}
+
+[data-theme='dark'] .langchain-citation-link {
+  color: var(--langchain-accent-light);
+}
+
+[data-theme='dark'] .langchain-citation-link:hover {
+  background-color: rgba(252, 129, 129, 0.15);
+}
+
+/* 响应式优化 */
+@media (max-width: 996px) {
+  .langchain-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .langchain-highlight-box,
+  .langchain-card {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .langchain-grid-2,
+  .langchain-grid-3,
+  .langchain-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .langchain-section-title {
+    font-size: 1.75rem;
+  }
+
+  .langchain-subsection-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Hero区域样式优化 */
+.langchain-intro > div:first-child {
+  position: relative;
+}
+
+/* 暗色模式下的Hero区域 */
+[data-theme='dark'] .langchain-intro > div:first-child {
+  background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+}
+
+/* 打印样式优化 */
+@media print {
+  .langchain-highlight-box,
+  .langchain-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  .langchain-intro > div:first-child {
+    background: white !important;
+    color: black !important;
+  }
+}
+

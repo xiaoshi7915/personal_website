@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 /**
  * 阅读进度条组件
  * 在页面顶部显示阅读进度
+ * 使用节流优化性能，避免频繁更新
  */
 export default function ReadingProgress() {
   const [progress, setProgress] = useState(0);
+  const rafId = useRef(null);
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      return;
+  // 使用requestAnimationFrame优化滚动事件处理
+  const updateProgress = useCallback(() => {
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
     }
-    
-    const updateProgress = () => {
+
+    rafId.current = requestAnimationFrame(() => {
       // 获取页面总高度和当前滚动位置
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
@@ -25,11 +28,17 @@ export default function ReadingProgress() {
         : 0;
       
       setProgress(Math.min(progressPercent, 100));
-    };
+    });
+  }, []);
 
-    // 监听滚动事件
-    window.addEventListener('scroll', updateProgress);
-    window.addEventListener('resize', updateProgress);
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
+    // 监听滚动事件 - 使用passive选项提升性能
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress, { passive: true });
     
     // 初始计算
     updateProgress();
@@ -37,8 +46,11 @@ export default function ReadingProgress() {
     return () => {
       window.removeEventListener('scroll', updateProgress);
       window.removeEventListener('resize', updateProgress);
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
     };
-  }, []);
+  }, [updateProgress]);
 
   return (
     <div

@@ -179,6 +179,18 @@ LangChain为构建强大的LLM应用提供了一套全面的工具和抽象层�
 
 随着LLM技术的快速发展，LangChain持续演进，不断加入新功能和优化现有组件，保持其作为领先LLM应用开发框架的地位。
 
+## 深度研究报告
+
+如果您想深入了解LangChain框架的技术细节、架构演进、应用案例和发展趋势，请查看我们的[LangChain框架深度研究报告](/langchain/comprehensive-intro)。
+
+该报告涵盖了：
+- 核心概念与技术实现（架构演进、六大核心模块、LCEL编排）
+- 前世今生（起源与发展、设计理念演进）
+- 现状分析（生态系统成熟度、应用落地案例）
+- 应用场景与行业案例（RAG系统、智能代理、企业应用）
+- 框架对比分析（LangChain vs LlamaIndex vs Haystack）
+- 发展趋势与未来展望
+
 ## 参考资源
 
 - [官方文档](https://python.langchain.com/docs/get_started/introduction)

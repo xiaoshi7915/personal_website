@@ -4,6 +4,9 @@
  * work well for content-centric websites.
  */
 
+/* Import MCP intro styles */
+@import './mcp-intro.css';
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-color-primary: #3861fb; /* 主色 - 蓝色 */
@@ -249,3 +252,18 @@ td {
 
 /* 导入向量数据库文档专用样式 */
 @import './vector-database-intro.css';
+
+/* 导入全局文档工具样式 */
+@import './global-doc-tools.css';
+
+/* 导入A2A文档专用样式 */
+@import './a2a-intro.css';
+
+/* 导入Transformer文档专用样式 */
+@import './transformer-intro.css';
+
+/* 导入LangChain文档专用样式 */
+@import './langchain-intro.css';
+
+/* 导入微调技术文档专用样式 */
+@import './finetune-intro.css';

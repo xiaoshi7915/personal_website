@@ -1,32 +1,42 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 
 /**
  * 返回顶部按钮组件
  * 当页面滚动一定距离后显示，点击返回顶部
+ * 使用requestAnimationFrame优化性能
  */
 export default function BackToTop() {
   const [isVisible, setIsVisible] = useState(false);
+  const rafId = useRef(null);
+
+  // 使用requestAnimationFrame优化滚动事件处理
+  const toggleVisibility = useCallback(() => {
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+    }
+
+    rafId.current = requestAnimationFrame(() => {
+      // 当页面滚动超过300px时显示按钮
+      const shouldShow = window.pageYOffset > 300;
+      setIsVisible(shouldShow);
+    });
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
-    
-    const toggleVisibility = () => {
-      // 当页面滚动超过300px时显示按钮
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
 
-    window.addEventListener('scroll', toggleVisibility);
+    // 监听滚动事件 - 使用passive选项提升性能
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', toggleVisibility);
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
     };
-  }, []);
+  }, [toggleVisibility]);
 
   const scrollToTop = () => {
     window.scrollTo({

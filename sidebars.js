@@ -25,6 +25,7 @@ const sidebars = {
       label: 'A2A协议',
       items: [
         'a2a/intro',
+        'a2a/comprehensive-intro',
         'a2a/getting-started',
         'a2a/development',
         'a2a/github-projects',
@@ -37,6 +38,7 @@ const sidebars = {
       label: 'MCP协议',
       items: [
         'mcp/intro',
+        'mcp/comprehensive-intro',
         {
           type: 'category',
           label: '服务器开发',
@@ -156,6 +158,7 @@ const sidebars = {
       label: '微调技术',
       items: [
         'finetune/intro',
+        'finetune/comprehensive-intro',
         'finetune/getting-started',
         'finetune/development',
         'finetune/github-projects',
@@ -208,6 +211,7 @@ const sidebars = {
       label: 'LangChain框架',
       items: [
         'langchain/intro',
+        'langchain/comprehensive-intro',
         'langchain/getting-started',
         'langchain/development',
         'langchain/github-projects',
@@ -220,6 +224,7 @@ const sidebars = {
       label: 'Transformer架构',
       items: [
         'transformer/intro',
+        'transformer/comprehensive-intro',
         'transformer/architecture',
         'transformer/implementation',
         'transformer/variants',

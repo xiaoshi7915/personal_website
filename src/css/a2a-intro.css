@@ -1,0 +1,351 @@
+/**
+ * A2A协议深度解析文档样式
+ * 统一使用Docusaurus主题色，保持整体风格一致
+ */
+
+/* A2A文档统一颜色变量 - 使用与整体一致的蓝色主题 */
+:root {
+  --a2a-primary: var(--ifm-color-primary);
+  --a2a-primary-dark: var(--ifm-color-primary-dark);
+  --a2a-primary-light: var(--ifm-color-primary-light);
+  --a2a-secondary: var(--ifm-color-secondary);
+  --a2a-accent: var(--ifm-color-primary-light);
+  --a2a-card-bg: var(--ifm-card-background-color);
+  --a2a-border: var(--ifm-color-emphasis-300);
+  --a2a-text: var(--ifm-color-content);
+  --a2a-text-secondary: var(--ifm-color-content-secondary);
+}
+
+[data-theme='dark'] {
+  --a2a-primary: var(--ifm-color-primary);
+  --a2a-primary-dark: var(--ifm-color-primary-dark);
+  --a2a-primary-light: var(--ifm-color-primary-light);
+  --a2a-card-bg: var(--ifm-background-surface-color);
+  --a2a-border: var(--ifm-color-emphasis-200);
+}
+
+/* 统一的高亮框样式 */
+.a2a-highlight-box {
+  background: var(--a2a-card-bg);
+  border-left: 4px solid var(--a2a-primary);
+  border: 1px solid var(--a2a-border);
+  border-left-width: 4px;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.a2a-highlight-box:hover {
+  box-shadow: 0 4px 12px rgba(56, 97, 251, 0.15);
+  transform: translateY(-2px);
+  border-color: var(--a2a-primary);
+}
+
+[data-theme='dark'] .a2a-highlight-box {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 统一的技术卡片样式 */
+.a2a-card {
+  background: var(--a2a-card-bg);
+  border: 1px solid var(--a2a-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.a2a-card:hover {
+  box-shadow: 0 4px 16px rgba(56, 97, 251, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--a2a-primary);
+}
+
+[data-theme='dark'] .a2a-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 成功/警告/错误卡片变体 */
+.a2a-card-success {
+  border-left: 4px solid var(--ifm-color-success);
+  background: var(--ifm-color-success-lightest);
+}
+
+.a2a-card-warning {
+  border-left: 4px solid var(--ifm-color-warning);
+  background: var(--ifm-color-warning-lightest);
+}
+
+.a2a-card-danger {
+  border-left: 4px solid var(--ifm-color-danger);
+  background: var(--ifm-color-danger-lightest);
+}
+
+.a2a-card-info {
+  border-left: 4px solid var(--ifm-color-info);
+  background: var(--ifm-color-info-lightest);
+}
+
+/* 统一的网格布局 */
+.a2a-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.a2a-grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.a2a-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* 统一的图标容器 */
+.a2a-icon-container {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  background: var(--a2a-primary);
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* 时间线样式 */
+.a2a-timeline {
+  position: relative;
+  padding-left: 2rem;
+  margin: 2rem 0;
+}
+
+.a2a-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--a2a-primary);
+}
+
+.a2a-timeline-item {
+  position: relative;
+  padding-bottom: 2rem;
+  padding-left: 2rem;
+}
+
+.a2a-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  background: var(--a2a-primary);
+  border-radius: 50%;
+  border: 3px solid var(--ifm-background-color);
+}
+
+.a2a-timeline-item h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--a2a-text);
+}
+
+.a2a-timeline-item p {
+  color: var(--a2a-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 案例研究卡片 */
+.a2a-case-study {
+  background: var(--ifm-color-info-lightest);
+  border-left: 4px solid var(--ifm-color-info);
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.a2a-case-study h3,
+.a2a-case-study h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--a2a-text);
+}
+
+.a2a-case-study p {
+  color: var(--a2a-text-secondary);
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+
+/* 图片样式统一 */
+.a2a-intro img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+  display: block;
+}
+
+[data-theme='dark'] .a2a-intro img {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 统一的标题样式 */
+.a2a-section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 3rem 0 1.5rem 0;
+  color: var(--a2a-text);
+  border-bottom: 2px solid var(--a2a-border);
+  padding-bottom: 0.75rem;
+}
+
+.a2a-subsection-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 2rem 0 1rem 0;
+  color: var(--a2a-text);
+}
+
+/* 统一的文本样式 */
+.a2a-text {
+  color: var(--a2a-text);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.a2a-text-secondary {
+  color: var(--a2a-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* 整体文档容器样式 */
+.a2a-intro {
+  max-width: 100%;
+}
+
+.a2a-intro h2 {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--a2a-border);
+}
+
+.a2a-intro h3 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.a2a-intro h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.a2a-intro p {
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+
+/* 统一表格样式 */
+.a2a-intro table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background: var(--a2a-card-bg);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.a2a-intro table th {
+  background: var(--ifm-color-emphasis-100);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--a2a-text);
+  border-bottom: 2px solid var(--a2a-border);
+}
+
+.a2a-intro table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--a2a-border);
+  color: var(--a2a-text-secondary);
+}
+
+.a2a-intro table tr:last-child td {
+  border-bottom: none;
+}
+
+.a2a-intro table tr:hover {
+  background: var(--ifm-color-emphasis-50);
+}
+
+/* 统一代码块容器 */
+.a2a-intro pre {
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+/* 统一引用块样式 */
+.a2a-intro blockquote {
+  border-left: 4px solid var(--a2a-primary);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: var(--a2a-text-secondary);
+  font-style: italic;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .a2a-highlight-box,
+  .a2a-card {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .a2a-grid-2,
+  .a2a-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .a2a-section-title {
+    font-size: 1.75rem;
+  }
+
+  .a2a-subsection-title {
+    font-size: 1.25rem;
+  }
+
+  .a2a-timeline {
+    padding-left: 1.5rem;
+  }
+
+  .a2a-timeline-item {
+    padding-left: 1.5rem;
+  }
+}
+
+/* 打印样式优化 */
+@media print {
+  .a2a-highlight-box,
+  .a2a-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

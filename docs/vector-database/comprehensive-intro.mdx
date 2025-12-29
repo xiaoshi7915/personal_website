@@ -4,53 +4,9 @@ title: 向量数据库深度解析
 description: 从向量空间模型到生成式AI时代的关键基础设施
 ---
 
-import React, { useState } from 'react';
 import Timeline from '@site/src/components/Timeline/Timeline';
 import TimelineItem from '@site/src/components/Timeline/TimelineItem';
 import ComparisonTable from '@site/src/components/ComparisonTable/ComparisonTable';
-import ShareModal from '@site/src/components/ShareModal/ShareModal';
-import PDFExport from '@site/src/components/PDFExport/PDFExport';
-import ReadingProgress from '@site/src/components/ReadingProgress/ReadingProgress';
-import BackToTop from '@site/src/components/BackToTop/BackToTop';
-
-<ReadingProgress />
-<BackToTop />
-
-export const ShareButton = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <>
-      <button
-        onClick={() => setIsOpen(true)}
-        style={{
-          position: 'fixed',
-          top: '1rem',
-          right: '5rem',
-          zIndex: 50,
-          backgroundColor: '#16a34a',
-          color: 'white',
-          padding: '0.75rem',
-          borderRadius: '50%',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          cursor: 'pointer',
-          border: 'none',
-          width: '48px',
-          height: '48px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-        title="分享"
-      >
-        📤
-      </button>
-      <ShareModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
-    </>
-  );
-};
-
-<ShareButton />
-<PDFExport targetId="main-content" />
 
 <div id="main-content">
 

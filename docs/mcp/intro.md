@@ -89,6 +89,7 @@ MCP协议适用于多种应用场景，以下是几种典型的应用实例：
 
 在接下来的章节中，我们将详细介绍如何设置和使用MCP系统，包括：
 
+- **[MCP协议深度解析](/docs/mcp/comprehensive-intro)** - 深入解析MCP协议的架构、原理与未来趋势
 - [服务器端开发指南](/docs/mcp/server/examples/index)
 - [客户端集成指南](/docs/mcp/client/getting-started)
 - [实际应用案例](/docs/mcp/examples)

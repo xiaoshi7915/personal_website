@@ -1,0 +1,717 @@
+/**
+ * 微调技术深度研究报告文档样式
+ * 统一使用Docusaurus主题色，适配微调技术品牌色（深蓝#1e40af和天蓝#0ea5e9）
+ */
+
+/* 微调文档统一颜色变量 - 使用品牌色但保持与Docusaurus主题兼容 */
+:root {
+  --finetune-primary: #1e40af; /* 深蓝品牌色 */
+  --finetune-primary-light: #0ea5e9; /* 天蓝品牌色 */
+  --finetune-primary-dark: #1e3a8a;
+  --finetune-secondary: var(--ifm-color-secondary);
+  --finetune-accent: #0ea5e9;
+  --finetune-card-bg: var(--ifm-card-background-color);
+  --finetune-border: var(--ifm-color-emphasis-300);
+  --finetune-text: var(--ifm-color-content);
+  --finetune-text-secondary: var(--ifm-color-content-secondary);
+}
+
+[data-theme='dark'] {
+  --finetune-primary: #3b82f6; /* 暗色模式下使用稍亮的蓝色 */
+  --finetune-primary-light: #60a5fa;
+  --finetune-primary-dark: #2563eb;
+  --finetune-card-bg: var(--ifm-background-surface-color);
+  --finetune-border: var(--ifm-color-emphasis-200);
+}
+
+/* 统一的高亮框样式 */
+.finetune-highlight-box {
+  background: var(--finetune-card-bg);
+  border-left: 4px solid var(--finetune-primary);
+  border: 1px solid var(--finetune-border);
+  border-left-width: 4px;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: var(--finetune-text);
+}
+
+.finetune-highlight-box p,
+.finetune-highlight-box h5,
+.finetune-highlight-box h6,
+.finetune-highlight-box li,
+.finetune-highlight-box span {
+  color: var(--finetune-text);
+}
+
+.finetune-highlight-box:hover {
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
+  transform: translateY(-2px);
+  border-color: var(--finetune-primary);
+}
+
+[data-theme='dark'] .finetune-highlight-box {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 统一的技术卡片样式 */
+.finetune-card {
+  background: var(--finetune-card-bg);
+  border: 1px solid var(--finetune-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  color: var(--finetune-text);
+}
+
+.finetune-card h3,
+.finetune-card h4,
+.finetune-card h5,
+.finetune-card h6,
+.finetune-card p,
+.finetune-card li,
+.finetune-card span {
+  color: var(--finetune-text);
+}
+
+.finetune-card:hover {
+  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--finetune-primary);
+}
+
+[data-theme='dark'] .finetune-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 确保带背景色的卡片文字可见 */
+.finetune-card[style*="background"] h5,
+.finetune-card[style*="background"] h6,
+.finetune-card[style*="background"] p,
+.finetune-card[style*="background"] li {
+  color: var(--finetune-text) !important;
+}
+
+/* 成功/警告/错误卡片变体 */
+.finetune-card-success {
+  border-left: 4px solid var(--ifm-color-success);
+  background: var(--ifm-color-success-lightest);
+}
+
+.finetune-card-success h5,
+.finetune-card-success h6,
+.finetune-card-success p,
+.finetune-card-success li {
+  color: var(--ifm-color-content);
+}
+
+.finetune-card-warning {
+  border-left: 4px solid var(--ifm-color-warning);
+  background: var(--ifm-color-warning-lightest);
+}
+
+.finetune-card-warning h5,
+.finetune-card-warning h6,
+.finetune-card-warning p,
+.finetune-card-warning li {
+  color: var(--ifm-color-content);
+}
+
+.finetune-card-danger {
+  border-left: 4px solid var(--ifm-color-danger);
+  background: var(--ifm-color-danger-lightest);
+}
+
+.finetune-card-danger h5,
+.finetune-card-danger h6,
+.finetune-card-danger p,
+.finetune-card-danger li {
+  color: var(--ifm-color-content);
+}
+
+.finetune-card-info {
+  border-left: 4px solid var(--ifm-color-info);
+  background: var(--ifm-color-info-lightest);
+}
+
+.finetune-card-info h5,
+.finetune-card-info h6,
+.finetune-card-info p,
+.finetune-card-info li {
+  color: var(--ifm-color-content);
+}
+
+/* 统一的网格布局 */
+.finetune-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.finetune-grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.finetune-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* 统一的图标容器 */
+.finetune-icon-container {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--finetune-primary) 0%, var(--finetune-primary-light) 100%);
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* 时间线样式 */
+.finetune-timeline {
+  position: relative;
+  padding-left: 2rem;
+  margin: 2rem 0;
+}
+
+.finetune-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--finetune-primary) 0%, var(--finetune-primary-light) 100%);
+}
+
+.finetune-timeline-item {
+  position: relative;
+  padding-bottom: 2rem;
+  padding-left: 2rem;
+}
+
+.finetune-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  background: var(--finetune-primary);
+  border-radius: 50%;
+  border: 3px solid var(--ifm-background-color);
+}
+
+.finetune-timeline-item h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--finetune-text);
+}
+
+.finetune-timeline-item p {
+  color: var(--finetune-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 案例研究卡片 */
+.finetune-case-study {
+  background: var(--ifm-color-info-lightest);
+  border-left: 4px solid var(--ifm-color-info);
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.finetune-case-study h3,
+.finetune-case-study h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--finetune-text);
+}
+
+.finetune-case-study p {
+  color: var(--finetune-text-secondary);
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+
+/* 图片样式统一 */
+.finetune-intro img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+  display: block;
+}
+
+[data-theme='dark'] .finetune-intro img {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 统一的标题样式 */
+.finetune-section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 3rem 0 1.5rem 0;
+  color: var(--finetune-text);
+  border-bottom: 2px solid var(--finetune-border);
+  padding-bottom: 0.75rem;
+}
+
+.finetune-subsection-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 2rem 0 1rem 0;
+  color: var(--finetune-text);
+}
+
+/* 统一的文本样式 */
+.finetune-text {
+  color: var(--finetune-text);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.finetune-text-secondary {
+  color: var(--finetune-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* 整体文档容器样式 */
+.finetune-intro {
+  max-width: 100%;
+}
+
+.finetune-intro h2 {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--finetune-border);
+}
+
+.finetune-intro h3 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.finetune-intro h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.finetune-intro p {
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+}
+
+/* 统一表格样式 */
+.finetune-intro table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background: var(--finetune-card-bg);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.finetune-intro table th {
+  background: var(--ifm-color-emphasis-100);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--finetune-text);
+  border-bottom: 2px solid var(--finetune-border);
+}
+
+.finetune-intro table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--finetune-border);
+  color: var(--finetune-text-secondary);
+}
+
+.finetune-intro table tr:last-child td {
+  border-bottom: none;
+}
+
+.finetune-intro table tr:hover {
+  background: var(--ifm-color-emphasis-50);
+}
+
+/* 统一代码块容器 */
+.finetune-intro pre {
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+/* 统一引用块样式 */
+.finetune-intro blockquote {
+  border-left: 4px solid var(--finetune-primary);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: var(--finetune-text-secondary);
+  font-style: italic;
+}
+
+/* 数学公式样式 */
+.finetune-math-formula {
+  background: var(--finetune-card-bg);
+  border: 1px solid var(--finetune-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  color: var(--finetune-text);
+}
+
+.finetune-math-formula p {
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+
+.finetune-math-formula div {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 0.25rem;
+}
+
+/* 引用链接样式 */
+.finetune-citation-link {
+  color: var(--finetune-primary-light);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px dotted var(--finetune-primary-light);
+  transition: all 0.2s ease;
+}
+
+.finetune-citation-link:hover {
+  background-color: rgba(14, 165, 233, 0.1);
+  border-bottom-style: solid;
+}
+
+/* Hero区域样式 */
+.finetune-hero {
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%);
+  padding: 3rem 2rem;
+  border-radius: 1rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.finetune-hero h1 {
+  background: linear-gradient(135deg, var(--finetune-primary) 0%, var(--finetune-primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .finetune-highlight-box,
+  .finetune-card {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .finetune-grid-2,
+  .finetune-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .finetune-section-title {
+    font-size: 1.75rem;
+  }
+
+  .finetune-subsection-title {
+    font-size: 1.25rem;
+  }
+
+  .finetune-timeline {
+    padding-left: 1.5rem;
+  }
+
+  .finetune-timeline-item {
+    padding-left: 1.5rem;
+  }
+
+  .finetune-hero h1 {
+    font-size: 2rem;
+  }
+
+  .finetune-stat-card {
+    min-height: 140px;
+    padding: 1.25rem;
+  }
+
+  .finetune-stat-number {
+    font-size: 2rem;
+  }
+
+  .finetune-step-item {
+    padding: 1rem;
+  }
+
+  .finetune-step-number {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+    margin-right: 0.75rem;
+  }
+}
+
+/* 步骤编号美化 */
+.finetune-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: white;
+  margin-right: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.finetune-step-number:hover {
+  transform: scale(1.1);
+}
+
+.finetune-step-number.primary {
+  background: linear-gradient(135deg, var(--finetune-primary) 0%, var(--finetune-primary-dark) 100%);
+}
+
+.finetune-step-number.accent {
+  background: linear-gradient(135deg, var(--finetune-primary-light) 0%, var(--finetune-primary) 100%);
+}
+
+.finetune-step-number.secondary {
+  background: linear-gradient(135deg, var(--finetune-text-secondary) 0%, var(--finetune-primary) 100%);
+}
+
+/* 步骤项容器 */
+.finetune-step-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s ease;
+  background: var(--ifm-color-emphasis-50);
+  border: 1px solid var(--finetune-border);
+}
+
+.finetune-step-item:hover {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--finetune-primary);
+}
+
+.finetune-step-content {
+  flex: 1;
+}
+
+.finetune-step-content h6 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--finetune-text);
+  font-size: 1rem;
+}
+
+.finetune-step-content p {
+  font-size: 0.875rem;
+  margin: 0;
+  color: var(--finetune-text);
+  line-height: 1.6;
+}
+
+/* 数字高亮展示 */
+.finetune-number-highlight {
+  display: inline-block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--finetune-primary);
+  line-height: 1.2;
+  margin-right: 0.5rem;
+  /* 渐变文字效果 */
+  background: linear-gradient(135deg, var(--finetune-primary) 0%, var(--finetune-primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@supports not (-webkit-background-clip: text) {
+  .finetune-number-highlight {
+    color: var(--finetune-primary);
+    background: none;
+    -webkit-text-fill-color: var(--finetune-primary);
+  }
+}
+
+[data-theme='dark'] .finetune-number-highlight {
+  color: var(--finetune-primary-light);
+  background: linear-gradient(135deg, var(--finetune-primary-light) 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@supports not (-webkit-background-clip: text) {
+  [data-theme='dark'] .finetune-number-highlight {
+    color: var(--finetune-primary-light);
+    background: none;
+    -webkit-text-fill-color: var(--finetune-primary-light);
+  }
+}
+
+.finetune-number-label {
+  font-size: 0.875rem;
+  color: var(--finetune-text-secondary);
+  margin-top: 0.25rem;
+}
+
+/* 统计卡片 */
+.finetune-stat-card {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--finetune-card-bg);
+  border: 1px solid var(--finetune-border);
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.finetune-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(30, 64, 175, 0.15);
+  border-color: var(--finetune-primary);
+}
+
+.finetune-stat-card > div:first-child {
+  margin-bottom: 0.75rem;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.finetune-stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--finetune-primary);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+  display: block;
+  min-height: 2.5rem;
+  /* 渐变文字效果 */
+  background: linear-gradient(135deg, var(--finetune-primary) 0%, var(--finetune-primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 如果浏览器不支持渐变文字，使用纯色 */
+@supports not (-webkit-background-clip: text) {
+  .finetune-stat-number {
+    color: var(--finetune-primary);
+    background: none;
+    -webkit-text-fill-color: var(--finetune-primary);
+  }
+}
+
+[data-theme='dark'] .finetune-stat-number {
+  color: var(--finetune-primary-light);
+  background: linear-gradient(135deg, var(--finetune-primary-light) 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@supports not (-webkit-background-clip: text) {
+  [data-theme='dark'] .finetune-stat-number {
+    color: var(--finetune-primary-light);
+    background: none;
+    -webkit-text-fill-color: var(--finetune-primary-light);
+  }
+}
+
+.finetune-stat-label {
+  font-size: 0.875rem;
+  color: var(--finetune-text);
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+.finetune-stat-desc {
+  font-size: 0.75rem;
+  color: var(--finetune-text-secondary);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+/* 年份标签 */
+.finetune-year-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: var(--finetune-primary);
+  color: white;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+  box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
+}
+
+/* 百分比标签美化 */
+.finetune-percent-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: linear-gradient(135deg, var(--finetune-primary-light) 0%, var(--finetune-primary) 100%);
+  color: white;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.finetune-percent-badge:hover {
+  transform: scale(1.05);
+}
+
+/* 打印样式优化 */
+@media print {
+  .finetune-highlight-box,
+  .finetune-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+

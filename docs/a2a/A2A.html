@@ -1,0 +1,1998 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>A2A协议技术深度研究报告：代理互联网的HTTP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <!-- PDF导出库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #1e293b;
+            --secondary: #475569;
+            --accent: #3b82f6;
+            --surface: #f8fafc;
+            --text: #0f172a;
+            --text-muted: #64748b;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            color: var(--text);
+            overflow-wrap: break-word;
+        }
+        
+        .serif {
+            font-family: 'Crimson Text', serif;
+        }
+        
+        .toc-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            z-index: 40;
+            overflow-y: auto;
+            padding: 2rem 1.5rem;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            min-height: 60vh;
+        }
+        
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        .section-header {
+            border-left: 4px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 4rem 0 2rem 0;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .citation {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px dotted var(--accent);
+        }
+        
+        .citation:hover {
+            background: #eff6ff;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        
+        .component-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .protocol-diagram {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 2px dashed #cbd5e1;
+        }
+        
+        .case-study {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #0ea5e9;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 0 12px 12px 0;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        @media (max-width: 1024px) {
+            .toc-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .toc-sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .hero-grid h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-grid p.text-xl {
+                font-size: 1.1rem;
+            }
+            
+            .hero-grid img {
+                height: auto;
+            }
+            
+            .section-header {
+                margin: 2rem 0 1rem 0;
+            }
+            
+            .highlight-box,
+            .component-card,
+            .protocol-diagram,
+            .case-study {
+                padding: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero-grid h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-grid p.text-xl {
+                font-size: 1rem;
+            }
+            
+            .highlight-box,
+            .component-card,
+            .protocol-diagram,
+            .case-study {
+                padding: 1rem;
+            }
+        }
+        
+        /* 阅读进度条样式 */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #1e40af);
+            z-index: 9999;
+            transition: width 0.1s ease;
+        }
+        
+        /* 返回顶部按钮样式 */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .back-to-top:hover {
+            background: #2563eb;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* 搜索功能样式 */
+        .search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 10vh;
+        }
+        
+        .search-overlay.active {
+            display: flex;
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .search-results {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .search-result-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background: #f8fafc;
+        }
+        
+        /* 工具栏按钮样式 */
+        .toolbar {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+        
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .toolbar-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin: 1.5rem 0;
+        }
+        
+        .code-block code {
+            color: #e2e8f0;
+        }
+        
+        /* 暗色模式样式 */
+        body.dark-mode {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .toc-sidebar {
+            background: #1e293b;
+            border-right-color: #334155;
+        }
+        
+        body.dark-mode .main-content {
+            background: #0f172a;
+        }
+        
+        body.dark-mode .component-card,
+        body.dark-mode .search-box,
+        body.dark-mode .code-block {
+            background: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .search-input {
+            background: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .toolbar-btn {
+            background: #1e293b;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .highlight-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(30, 64, 175, 0.1));
+        }
+        
+        /* 图片懒加载样式 */
+        img[loading="lazy"] {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        img[loading="lazy"].loaded {
+            opacity: 1;
+        }
+        
+        /* 打印样式优化 */
+        @media print {
+            .toc-sidebar,
+            .toolbar,
+            .back-to-top,
+            .reading-progress {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+            }
+            
+            section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+  <base target="_blank">
+</head>
+
+  <body class="bg-gray-50">
+    <!-- 阅读进度条 -->
+    <div class="reading-progress" id="readingProgress"></div>
+    
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <!-- 搜索按钮 -->
+        <button class="toolbar-btn" id="searchBtn" title="搜索 (Ctrl+K)">
+            <i class="fas fa-search"></i>
+        </button>
+        <!-- 暗色模式切换按钮 -->
+        <button class="toolbar-btn" id="themeToggle" title="切换主题">
+            <i class="fas fa-moon"></i>
+        </button>
+        <!-- 分享按钮 -->
+        <button class="toolbar-btn" id="shareBtn" title="分享">
+            <i class="fas fa-share-alt"></i>
+        </button>
+        <!-- PDF导出按钮 -->
+        <button class="toolbar-btn" id="pdfBtn" title="导出PDF" style="background: #ef4444; color: white; border-color: #ef4444;">
+            <i class="fas fa-file-pdf"></i>
+        </button>
+    </div>
+    
+    <!-- 搜索覆盖层 -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索内容... (按ESC关闭)">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+    
+    <!-- 返回顶部按钮 -->
+    <button class="back-to-top" id="backToTop" title="返回顶部">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <!-- Table of Contents Sidebar -->
+    <nav class="toc-sidebar">
+      <div class="mb-8">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">目录导航</h3>
+        <ul class="space-y-2 text-sm">
+          <li>
+            <a href="#introduction" class="block py-1 px-2 rounded hover:bg-gray-100 text-gray-700">引言</a>
+          </li>
+          <li>
+            <a href="#history" class="block py-1 px-2 rounded hover:bg-gray-100 text-gray-700">前世今生与发展趋势</a>
+          </li>
+          <li>
+            <a href="#core-concepts" class="block py-1 px-2 rounded hover:bg-gray-100 text-gray-700">核心概念与原理</a>
+          </li>
+          <li>
+            <a href="#implementation" class="block py-1 px-2 rounded hover:bg-gray-100 text-gray-700">实现方式与技术细节</a>
+          </li>
+          <li>
+            <a href="#advantages" class="block py-1 px-2 rounded hover:bg-gray-100 text-gray-700">优缺点分析</a>
+          </li>
+          <li>
+            <a href="#current-status" class="block py-1 px-2 rounded hover:bg-gray-100 text-gray-700">现状与行业采用</a>
+          </li>
+          <li>
+            <a href="#applications" class="block py-1 px-2 rounded hover:bg-gray-100 text-gray-700">使用案例与应用场景</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Mobile TOC Toggle -->
+    <button id="tocToggle" class="fixed top-4 left-4 z-50 lg:hidden bg-blue-600 text-white p-3 rounded-full shadow-lg">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="container mx-auto px-8 py-16">
+          <div class="hero-grid">
+            <div>
+              <h1 class="serif text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                <em class="text-blue-600">A2A协议技术深度研究</em>
+                <br/>
+                代理互联网的HTTP
+              </h1>
+              <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+                探索Google于2025年推出的开放标准，如何通过标准化的通信协议打破AI代理间的孤岛效应，
+                构建一个互联互通、协作共赢的智能体生态系统。
+              </p>
+              <div class="flex items-center space-x-6 text-sm text-gray-500">
+                <span><i class="fas fa-calendar mr-2"></i>2025年6月</span>
+                <span><i class="fas fa-users mr-2"></i>50+行业伙伴</span>
+                <span><i class="fas fa-code mr-2"></i>开源标准</span>
+              </div>
+            </div>
+            <div class="relative">
+              <img src="https://kimi-web-img.moonshot.cn/img/crad.ict.ac.cn/c4089f0d5623fa56ac6ced775b3724c784f0ec90.jpg" alt="抽象的神经网络连接图" class="rounded-2xl shadow-2xl" loading="lazy" referrerpolicy="no-referrer"/>
+              <div class="floating-element top-10 right-10">
+                <i class="fas fa-network-wired text-6xl text-blue-400"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Introduction -->
+      <section id="introduction" class="bg-white py-16">
+        <div class="container mx-auto px-8">
+          <div class="max-w-4xl mx-auto">
+            <div class="highlight-box">
+              <h2 class="serif text-3xl font-bold mb-6">执行摘要</h2>
+              <p class="text-lg text-gray-700 leading-relaxed mb-6">
+                <strong>A2A（Agent2Agent）协议是Google于2025年4月联合50余家行业伙伴推出的一项开放标准</strong>，
+                旨在成为&#34;代理互联网的HTTP&#34;。它通过定义一套基于现有Web技术（如HTTP、JSON-RPC 2.0、SSE）的通用通信规范，
+                打破不同AI代理（Agent）之间的技术壁垒，解决长期存在的&#34;孤岛效应&#34;。
+                <a href="#ref-103" class="citation">[103]</a>
+              </p>
+              <p class="text-gray-600 leading-relaxed">
+                A2A协议的核心组件包括用于能力发现的Agent Card、用于管理复杂协作的Task模型、
+                用于多模态信息交换的Message，以及用于交付结果的Artifact。
+                该协议由Linux基金会托管，确保了其开放与中立。
+                尽管面临性能、安全和标准化等挑战，A2A已在企业自动化、金融、医疗等领域展现出巨大潜力，
+                并获得了微软、Salesforce等巨头的支持，正朝着构建更复杂、更自主的多智能体生态系统方向发展。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- History Section -->
+      <section id="history" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-8">
+          <div class="section-header">
+            <h2 class="serif text-4xl font-bold text-gray-900">A2A协议的前世今生与发展趋势</h2>
+            <p class="text-lg text-gray-600 mt-4">从打破孤岛效应到构建智能体互联网的演进之路</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="component-card">
+              <h3 class="text-2xl font-bold mb-4 text-blue-600">
+                <i class="fas fa-exclamation-triangle mr-3"></i>起源：打破AI代理的孤岛效应
+              </h3>
+              <p class="text-gray-700 mb-4">
+                随着大型语言模型（LLM）技术的飞速发展，AI智能体正从单一任务的执行者演变为能够处理复杂工作流的强大工具。
+                然而，在A2A协议出现之前，AI智能体生态系统呈现出高度碎片化的&#34;孤岛&#34;状态。
+                <a href="#ref-3" class="citation">[3]</a>
+              </p>
+              <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                <h4 class="font-bold text-red-800 mb-2">互操作性挑战</h4>
+                <ul class="text-red-700 space-y-1">
+                  <li>• 技术栈的异构性：不同框架间难以直接通信</li>
+                  <li>• 所有权的隔离：企业内部逻辑和数据保密</li>
+                  <li>• 通信模式的复杂性：多轮对话、状态管理需求</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="component-card">
+              <h3 class="text-2xl font-bold mb-4 text-green-600">
+                <i class="fas fa-rocket mr-3"></i>重要里程碑
+              </h3>
+              <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                  <div class="bg-blue-100 rounded-full p-2">
+                    <i class="fas fa-calendar-alt text-blue-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold">2025年4月：正式发布</h4>
+                    <p class="text-gray-600">Google联合50+行业伙伴推出A2A协议
+                      <a href="#ref-9" class="citation">[9]</a>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="bg-purple-100 rounded-full p-2">
+                    <i class="fas fa-handshake text-purple-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold">2025年6月：开源托管</h4>
+                    <p class="text-gray-600">捐赠给Linux基金会，确保中立治理
+                      <a href="#ref-124" class="citation">[124]</a>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="bg-green-100 rounded-full p-2">
+                    <i class="fas fa-users text-green-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold">行业支持</h4>
+                    <p class="text-gray-600">微软、Salesforce、SAP等巨头加入
+                      <a href="#ref-134" class="citation">[134]</a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="protocol-diagram">
+            <h3 class="text-2xl font-bold mb-6 text-center">发展历程时间线</h3>
+            <img src="https://kimi-web-img.moonshot.cn/img/aijishu.com/c3ea0fc26d03ae7d5d39a8297aecfad177d3a9fe" alt="A2A协议发展历程时间线" class="mx-auto rounded-lg shadow-lg" loading="lazy" referrerpolicy="no-referrer"/>
+          </div>
+
+          <div class="case-study">
+            <h3 class="text-2xl font-bold mb-4">
+              <i class="fas fa-crystal-ball mr-3"></i>未来发展趋势与关键技术挑战
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="bg-white p-6 rounded-lg">
+                <h4 class="font-bold text-blue-600 mb-3">复杂生态系统</h4>
+                <p class="text-gray-700">构建更复杂的多智能体生态系统，实现自组织、自协商的协作模式
+                  <a href="#ref-127" class="citation">[127]</a>
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg">
+                <h4 class="font-bold text-green-600 mb-3">自主协作</h4>
+                <p class="text-gray-700">实现更高级别的AI自主协作与任务委派，减少人工干预
+                  <a href="#ref-140" class="citation">[140]</a>
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg">
+                <h4 class="font-bold text-red-600 mb-3">技术挑战</h4>
+                <p class="text-gray-700">安全性、标准化与性能优化的持续改进需求
+                  <a href="#ref-112" class="citation">[112]</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Core Concepts -->
+      <section id="core-concepts" class="py-16 bg-white">
+        <div class="container mx-auto px-8">
+          <div class="section-header">
+            <h2 class="serif text-4xl font-bold text-gray-900">A2A协议核心概念与原理</h2>
+            <p class="text-lg text-gray-600 mt-4">作为&#34;代理互联网的HTTP&#34;的架构设计理念</p>
+          </div>
+
+          <div class="highlight-box mb-12">
+            <h3 class="text-2xl font-bold mb-4">架构设计理念</h3>
+            <p class="text-lg text-gray-700 leading-relaxed">
+              A2A协议最核心的设计理念，就是将自己定位为<strong>&#34;代理互联网（Agentic Internet）的HTTP&#34;</strong>
+              <a href="#ref-113" class="citation">[113]</a>。
+              正如HTTP协议通过提供一个简单、统一的请求-响应模型，将全球数以亿计的信息系统连接成一个庞大的万维网，
+              A2A协议也希望通过提供一个标准化的通信框架，将未来数以亿计的AI代理连接成一个能够自主协作的智能网络。
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="component-card">
+              <h3 class="text-2xl font-bold mb-4 text-blue-600">
+                <i class="fas fa-language mr-3"></i>开放标准与通用语言定位
+              </h3>
+              <p class="text-gray-700 mb-4">
+                A2A协议从诞生之初就被设计为一个开放标准，其规范以Apache 2.0许可证开源，
+                并交由Linux基金会进行中立治理<a href="#ref-124" class="citation">[124]</a>。
+              </p>
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-bold text-blue-800 mb-2">核心特征</h4>
+                <ul class="text-blue-700 space-y-1">
+                  <li>• 开放标准，而非私有协议</li>
+                  <li>• 基于现有的、被广泛接受的技术</li>
+                  <li>• 足够简单和通用，适应复杂场景</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="component-card">
+              <h3 class="text-2xl font-bold mb-4 text-green-600">
+                <i class="fas fa-layer-group mr-3"></i>基于现有Web标准的协议栈
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                  <div class="bg-red-100 rounded p-2">
+                    <i class="fas fa-globe text-red-600"></i>
+                  </div>
+                  <div>
+                    <strong>HTTP(S)</strong> - 传输层协议
+                    <p class="text-sm text-gray-600">互联网最通用、最受支持的协议</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="bg-yellow-100 rounded p-2">
+                    <i class="fas fa-code text-yellow-600"></i>
+                  </div>
+                  <div>
+                    <strong>JSON-RPC 2.0</strong> - 数据交换格式
+                    <p class="text-sm text-gray-600">轻量级、语言无关的RPC协议</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="bg-blue-100 rounded p-2">
+                    <i class="fas fa-stream text-blue-600"></i>
+                  </div>
+                  <div>
+                    <strong>SSE</strong> - 实时通信
+                    <p class="text-sm text-gray-600">服务器推送技术，支持长任务</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="protocol-diagram">
+            <h3 class="text-2xl font-bold mb-6 text-center">核心架构组件</h3>
+            <img src="https://kimi-web-img.moonshot.cn/img/a2aprotocol.ai/5ffef0e7d0808bc15fba6682194a502cc3d45d8c.png" alt="A2A协议核心架构组件" class="mx-auto rounded-lg shadow-lg" loading="lazy" referrerpolicy="no-referrer"/>
+          </div>
+
+          <!-- Core Components Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div class="component-card">
+              <h3 class="text-xl font-bold mb-4 text-purple-600">
+                <i class="fas fa-id-card mr-2"></i>Agent Card
+              </h3>
+              <p class="text-gray-700 mb-3">
+                智能体的&#34;数字名片&#34;或&#34;能力说明书&#34;，发布在
+                <code class="bg-gray-100 px-2 py-1 rounded">/.well-known/agent.json</code>
+                <a href="#ref-100" class="citation">[100]</a>
+              </p>
+              <div class="bg-purple-50 p-3 rounded text-sm">
+                <strong>包含信息：</strong>身份描述、服务端点、能力声明、技能列表、认证要求
+              </div>
+            </div>
+
+            <div class="component-card">
+              <h3 class="text-xl font-bold mb-4 text-orange-600">
+                <i class="fas fa-tasks mr-2"></i>Task
+              </h3>
+              <p class="text-gray-700 mb-3">
+                管理复杂、长周期协作的核心抽象，定义任务完整生命周期
+                <a href="#ref-33" class="citation">[33]</a>
+              </p>
+              <div class="bg-orange-50 p-3 rounded text-sm">
+                <strong>状态管理：</strong>submitted → working → completed/failed
+              </div>
+            </div>
+
+            <div class="component-card">
+              <h3 class="text-xl font-bold mb-4 text-green-600">
+                <i class="fas fa-envelope mr-2"></i>Message
+              </h3>
+              <p class="text-gray-700 mb-3">
+                智能体之间信息交换的基本单元，支持多模态内容
+                <a href="#ref-17" class="citation">[17]</a>
+              </p>
+              <div class="bg-green-50 p-3 rounded text-sm">
+                <strong>内容类型：</strong>文本、文件、结构化数据、UI元素
+              </div>
+            </div>
+
+            <div class="component-card">
+              <h3 class="text-xl font-bold mb-4 text-blue-600">
+                <i class="fas fa-gem mr-2"></i>Artifact
+              </h3>
+              <p class="text-gray-700 mb-3">
+                交付任务最终成果的核心组件，封装产出结果
+                <a href="#ref-55" class="citation">[55]</a>
+              </p>
+              <div class="bg-blue-50 p-3 rounded text-sm">
+                <strong>结构：</strong>标准化、可扩展的结果交付方式
+              </div>
+            </div>
+          </div>
+
+          <!-- Design Principles -->
+          <div class="highlight-box">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-compass mr-3"></i>五大核心设计原则
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div class="bg-white p-4 rounded-lg border-l-4 border-blue-500">
+                <h4 class="font-bold text-blue-600 mb-2">拥抱Agent原生能力</h4>
+                <p class="text-gray-700 text-sm">支持和增强智能体的自主性、推理能力和工具使用能力
+                  <a href="#ref-3" class="citation">[3]</a>
+                </p>
+              </div>
+              <div class="bg-white p-4 rounded-lg border-l-4 border-green-500">
+                <h4 class="font-bold text-green-600 mb-2">基于现有标准</h4>
+                <p class="text-gray-700 text-sm">建立在HTTP、JSON-RPC、SSE等成熟Web标准之上
+                  <a href="#ref-57" class="citation">[57]</a>
+                </p>
+              </div>
+              <div class="bg-white p-4 rounded-lg border-l-4 border-red-500">
+                <h4 class="font-bold text-red-600 mb-2">默认安全</h4>
+                <p class="text-gray-700 text-sm">支持企业级的身份验证和授权机制
+                  <a href="#ref-57" class="citation">[57]</a>
+                </p>
+              </div>
+              <div class="bg-white p-4 rounded-lg border-l-4 border-purple-500">
+                <h4 class="font-bold text-purple-600 mb-2">支持长任务</h4>
+                <p class="text-gray-700 text-sm">管理需要很长时间才能完成的任务，支持异步通信
+                  <a href="#ref-3" class="citation">[3]</a>
+                </p>
+              </div>
+              <div class="bg-white p-4 rounded-lg border-l-4 border-orange-500">
+                <h4 class="font-bold text-orange-600 mb-2">模态无关</h4>
+                <p class="text-gray-700 text-sm">支持文本、图像、音频、视频等多种数据模态
+                  <a href="#ref-3" class="citation">[3]</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Implementation -->
+      <section id="implementation" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-8">
+          <div class="section-header">
+            <h2 class="serif text-4xl font-bold text-gray-900">实现方式与技术细节</h2>
+            <p class="text-lg text-gray-600 mt-4">基于现有Web标准的技术栈选择与实现</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="component-card">
+              <h3 class="text-2xl font-bold mb-4 text-blue-600">
+                <i class="fas fa-exchange-alt mr-3"></i>关键通信协议
+              </h3>
+              <div class="space-y-4">
+                <div class="border-l-4 border-blue-400 pl-4">
+                  <h4 class="font-bold text-blue-600">HTTP/gRPC</h4>
+                  <p class="text-gray-700 text-sm">
+                    A2A协议在传输层主要支持HTTP(S)和gRPC两种协议，HTTP为默认选项，
+                    gRPC作为高性能替代方案<a href="#ref-114" class="citation">[114]</a>
+                  </p>
+                </div>
+                <div class="border-l-4 border-yellow-400 pl-4">
+                  <h4 class="font-bold text-yellow-600">JSON-RPC 2.0</h4>
+                  <p class="text-gray-700 text-sm">
+                    轻量级、语言无关的RPC协议，提供清晰的请求-响应结构
+                    <a href="#ref-114" class="citation">[114]</a>
+                  </p>
+                </div>
+                <div class="border-l-4 border-green-400 pl-4">
+                  <h4 class="font-bold text-green-600">SSE</h4>
+                  <p class="text-gray-700 text-sm">
+                    基于HTTP的服务器推送技术，支持长任务的实时进度反馈
+                    <a href="#ref-55" class="citation">[55]</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="component-card">
+              <h3 class="text-2xl font-bold mb-4 text-purple-600">
+                <i class="fas fa-cogs mr-3"></i>技术选择考量
+              </h3>
+              <div class="space-y-3">
+                <div class="bg-green-50 p-3 rounded">
+                  <h4 class="font-bold text-green-700">简单性与易用性</h4>
+                  <p class="text-green-600 text-sm">JSON-RPC规范简单，核心概念清晰，易于理解和实现</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded">
+                  <h4 class="font-bold text-blue-700">语言无关性</h4>
+                  <p class="text-blue-600 text-sm">JSON被几乎所有现代编程语言原生支持，促进异构系统互操作</p>
+                </div>
+                <div class="bg-purple-50 p-3 rounded">
+                  <h4 class="font-bold text-purple-700">现有生态集成</h4>
+                  <p class="text-purple-600 text-sm">充分利用HTTP成熟生态，包括状态码、头部、缓存机制等</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="protocol-diagram">
+            <h3 class="text-2xl font-bold mb-6 text-center">多模态支持的实现机制</h3>
+            <img src="https://kimi-web-img.moonshot.cn/img/pic1.zhimg.com/868a7a7866b79f9c6a091291f6a9643116ebb540.gif" alt="A2A协议多模态数据交换示意图" class="mx-auto rounded-lg shadow-lg" loading="lazy" referrerpolicy="no-referrer"/>
+          </div>
+
+          <!-- Communication Patterns -->
+          <div class="highlight-box">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-sitemap mr-3"></i>通信模式与交互流程
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-gray-100">
+                    <th class="text-left p-3 font-bold">通信模式</th>
+                    <th class="text-left p-3 font-bold">技术实现</th>
+                    <th class="text-left p-3 font-bold">适用场景</th>
+                    <th class="text-left p-3 font-bold">优缺点</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b">
+                    <td class="p-3 font-semibold">同步请求/响应</td>
+                    <td class="p-3">HTTP POST + JSON-RPC</td>
+                    <td class="p-3">简单查询、快速任务</td>
+                    <td class="p-3">简单、易于实现，但效率较低</td>
+                  </tr>
+                  <tr class="border-b bg-gray-50">
+                    <td class="p-3 font-semibold">流式传输</td>
+                    <td class="p-3">Server-Sent Events (SSE)</td>
+                    <td class="p-3">实时更新、增量结果</td>
+                    <td class="p-3">实时性好，用户体验佳</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 font-semibold">异步推送通知</td>
+                    <td class="p-3">Webhook回调</td>
+                    <td class="p-3">长期任务、异步处理</td>
+                    <td class="p-3">系统解耦，但实现相对复杂</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Code Examples -->
+          <div class="component-card mb-12">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-code mr-3"></i>代码实现示例
+            </h3>
+            
+            <h4 class="text-xl font-semibold mb-4 text-blue-600">Agent Card 示例</h4>
+            <div class="code-block">
+              <pre><code>{
+  "agent": {
+    "name": "数据分析助手",
+    "version": "1.0.0",
+    "description": "提供数据查询和分析服务",
+    "endpoint": "https://api.example.com/a2a",
+    "capabilities": {
+      "tasks": ["query_data", "analyze_trend"],
+      "modalities": ["text", "json"]
+    },
+    "authentication": {
+      "type": "oauth2",
+      "authorization_url": "https://api.example.com/oauth/authorize"
+    }
+  }
+}</code></pre>
+            </div>
+
+            <h4 class="text-xl font-semibold mb-4 text-green-600 mt-8">Task 创建请求示例</h4>
+            <div class="code-block">
+              <pre><code>POST /a2a/tasks HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+  "jsonrpc": "2.0",
+  "method": "tasks/create",
+  "params": {
+    "task": {
+      "type": "data_analysis",
+      "description": "分析Q1销售数据趋势",
+      "input": {
+        "data_source": "sales_db",
+        "time_range": "2025-Q1",
+        "metrics": ["revenue", "units_sold"]
+      }
+    }
+  },
+  "id": 1
+}</code></pre>
+            </div>
+
+            <h4 class="text-xl font-semibold mb-4 text-purple-600 mt-8">Message 交换示例</h4>
+            <div class="code-block">
+              <pre><code>{
+  "jsonrpc": "2.0",
+  "method": "messages/send",
+  "params": {
+    "message": {
+      "from": "agent://analytics-service",
+      "to": "agent://report-generator",
+      "content": {
+        "type": "text",
+        "text": "请生成Q1销售报告"
+      },
+      "attachments": [
+        {
+          "type": "file",
+          "url": "https://api.example.com/files/analysis-123.json",
+          "mime_type": "application/json"
+        }
+      ]
+    }
+  },
+  "id": 2
+}</code></pre>
+            </div>
+
+            <h4 class="text-xl font-semibold mb-4 text-orange-600 mt-8">Python SDK 使用示例</h4>
+            <div class="code-block">
+              <pre><code>from a2a_sdk import Agent, Task, Message
+
+# 创建Agent实例
+agent = Agent(
+    name="数据分析助手",
+    endpoint="https://api.example.com/a2a",
+    auth_token="your-token"
+)
+
+# 创建任务
+task = agent.create_task(
+    task_type="data_analysis",
+    description="分析销售数据",
+    input_data={"source": "sales_db", "period": "Q1"}
+)
+
+# 发送消息
+message = Message(
+    to="agent://report-generator",
+    content="请生成报告",
+    attachments=[{"url": "https://...", "type": "file"}]
+)
+agent.send_message(message)
+
+# 获取任务状态
+status = agent.get_task_status(task.id)
+print(f"任务状态: {status.state}")</code></pre>
+            </div>
+          </div>
+
+          <!-- Protocol Details -->
+          <div class="component-card mb-12">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-network-wired mr-3"></i>协议技术细节
+            </h3>
+            
+            <h4 class="text-xl font-semibold mb-4">HTTP端点规范</h4>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+              <p class="text-sm text-gray-700 mb-2"><strong>Agent Card发现端点：</strong></p>
+              <code class="text-sm bg-white px-2 py-1 rounded">GET /.well-known/agent.json</code>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+              <p class="text-sm text-gray-700 mb-2"><strong>任务管理端点：</strong></p>
+              <ul class="text-sm text-gray-700 space-y-1 ml-4">
+                <li>• <code>POST /a2a/tasks</code> - 创建新任务</li>
+                <li>• <code>GET /a2a/tasks/{task_id}</code> - 获取任务状态</li>
+                <li>• <code>PUT /a2a/tasks/{task_id}</code> - 更新任务</li>
+                <li>• <code>DELETE /a2a/tasks/{task_id}</code> - 取消任务</li>
+              </ul>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+              <p class="text-sm text-gray-700 mb-2"><strong>消息交换端点：</strong></p>
+              <ul class="text-sm text-gray-700 space-y-1 ml-4">
+                <li>• <code>POST /a2a/messages</code> - 发送消息</li>
+                <li>• <code>GET /a2a/messages/{message_id}</code> - 获取消息</li>
+                <li>• <code>GET /a2a/messages/stream</code> - SSE流式接收消息</li>
+              </ul>
+            </div>
+
+            <h4 class="text-xl font-semibold mb-4 mt-6">状态码规范</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-gray-100">
+                    <th class="text-left p-3 font-bold">状态码</th>
+                    <th class="text-left p-3 font-bold">含义</th>
+                    <th class="text-left p-3 font-bold">使用场景</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b">
+                    <td class="p-3 font-mono">200 OK</td>
+                    <td class="p-3">请求成功</td>
+                    <td class="p-3">同步请求成功响应</td>
+                  </tr>
+                  <tr class="border-b bg-gray-50">
+                    <td class="p-3 font-mono">202 Accepted</td>
+                    <td class="p-3">请求已接受</td>
+                    <td class="p-3">异步任务已创建</td>
+                  </tr>
+                  <tr class="border-b">
+                    <td class="p-3 font-mono">400 Bad Request</td>
+                    <td class="p-3">请求格式错误</td>
+                    <td class="p-3">JSON-RPC格式错误或参数无效</td>
+                  </tr>
+                  <tr class="border-b bg-gray-50">
+                    <td class="p-3 font-mono">401 Unauthorized</td>
+                    <td class="p-3">未授权</td>
+                    <td class="p-3">缺少或无效的认证令牌</td>
+                  </tr>
+                  <tr class="border-b">
+                    <td class="p-3 font-mono">404 Not Found</td>
+                    <td class="p-3">资源不存在</td>
+                    <td class="p-3">任务或消息ID不存在</td>
+                  </tr>
+                  <tr class="bg-gray-50">
+                    <td class="p-3 font-mono">500 Internal Server Error</td>
+                    <td class="p-3">服务器错误</td>
+                    <td class="p-3">代理执行任务时发生错误</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Technical Challenges -->
+          <div class="case-study">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-tools mr-3"></i>实际应用中的技术挑战与解决方案
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="bg-white p-6 rounded-lg">
+                <h4 class="font-bold text-red-600 mb-3">
+                  <i class="fas fa-shield-alt mr-2"></i>安全性挑战
+                </h4>
+                <p class="text-gray-700 text-sm mb-3">
+                  身份验证、授权和数据加密需求
+                </p>
+                <div class="bg-red-50 p-3 rounded text-xs">
+                  <strong>解决方案：</strong>OAuth 2.0、API Key、mTLS、HTTPS加密
+                </div>
+              </div>
+              <div class="bg-white p-6 rounded-lg">
+                <h4 class="font-bold text-orange-600 mb-3">
+                  <i class="fas fa-puzzle-piece mr-2"></i>异构协作挑战
+                </h4>
+                <p class="text-gray-700 text-sm mb-3">
+                  不同智能体间的语义互操作性
+                </p>
+                <div class="bg-orange-50 p-3 rounded text-xs">
+                  <strong>解决方案：</strong>标准化任务定义、JSON Schema、社区规范
+                </div>
+              </div>
+              <div class="bg-white p-6 rounded-lg">
+                <h4 class="font-bold text-blue-600 mb-3">
+                  <i class="fas fa-tachometer-alt mr-2"></i>性能优化
+                </h4>
+                <p class="text-gray-700 text-sm mb-3">
+                  高并发、低延迟场景的性能需求
+                </p>
+                <div class="bg-blue-50 p-3 rounded text-xs">
+                  <strong>解决方案：</strong>异步处理、负载均衡、缓存策略、gRPC优化
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Advantages -->
+      <section id="advantages" class="py-16 bg-white">
+        <div class="container mx-auto px-8">
+          <div class="section-header">
+            <h2 class="serif text-4xl font-bold text-gray-900">A2A协议的优缺点分析</h2>
+            <p class="text-lg text-gray-600 mt-4">推动AI代理生态繁荣的双刃剑</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <!-- Advantages -->
+            <div class="component-card border-l-4 border-green-500">
+              <h3 class="text-2xl font-bold mb-6 text-green-600">
+                <i class="fas fa-thumbs-up mr-3"></i>优点：推动AI代理生态的繁荣
+              </h3>
+              <div class="space-y-6">
+                <div class="flex items-start space-x-3">
+                  <div class="bg-green-100 rounded-full p-2">
+                    <i class="fas fa-link text-green-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-green-600">高度的互操作性与集成性</h4>
+                    <p class="text-gray-700 text-sm">
+                      成功解决&#34;孤岛效应&#34;，不同厂商、技术栈的智能体能够无缝协同工作
+                      <a href="#ref-72" class="citation">[72]</a>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="bg-blue-100 rounded-full p-2">
+                    <i class="fas fa-code text-blue-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-blue-600">基于开放标准，易于实现</h4>
+                    <p class="text-gray-700 text-sm">
+                      建立在成熟Web标准之上，降低学习和实现门槛
+                      <a href="#ref-57" class="citation">[57]</a>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="bg-purple-100 rounded-full p-2">
+                    <i class="fas fa-layer-group text-purple-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-purple-600">强大的多模态交互支持</h4>
+                    <p class="text-gray-700 text-sm">
+                      灵活支持文本、图像、文件、结构化数据等多种模态
+                      <a href="#ref-55" class="citation">[55]</a>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="bg-red-100 rounded-full p-2">
+                    <i class="fas fa-shield-alt text-red-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-red-600">默认安全的通信机制</h4>
+                    <p class="text-gray-700 text-sm">
+                      支持OAuth 2.0、API密钥等企业级安全机制
+                      <a href="#ref-57" class="citation">[57]</a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Disadvantages -->
+            <div class="component-card border-l-4 border-orange-500">
+              <h3 class="text-2xl font-bold mb-6 text-orange-600">
+                <i class="fas fa-exclamation-triangle mr-3"></i>缺点与面临的挑战
+              </h3>
+              <div class="space-y-6">
+                <div class="flex items-start space-x-3">
+                  <div class="bg-red-100 rounded-full p-2">
+                    <i class="fas fa-clock text-red-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-red-600">性能瓶颈</h4>
+                    <p class="text-gray-700 text-sm">
+                      基于HTTP的潜在延迟，在高频、低延迟场景可能不是最佳选择
+                      <a href="#ref-56" class="citation">[56]</a>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="bg-orange-100 rounded-full p-2">
+                    <i class="fas fa-puzzle-piece text-orange-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-orange-600">生态系统碎片化风险</h4>
+                    <p class="text-gray-700 text-sm">
+                      不同厂商可能产生各自的扩展或修改，导致不兼容的&#34;方言&#34;
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                  <div class="bg-gray-100 rounded-full p-2">
+                    <i class="fas fa-tasks text-gray-600"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-gray-600">复杂任务编排挑战</h4>
+                    <p class="text-gray-700 text-sm">
+                      缺乏标准化的方式来描述和编排复杂的多步骤工作流
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="protocol-diagram">
+            <h3 class="text-2xl font-bold mb-6 text-center">优缺点对比分析</h3>
+            <img src="https://kimi-web-img.moonshot.cn/img/www.ibm.com/afcb1a2042e907ae20304f6970f10f2a85171edd.png" alt="A2A协议优缺点的对比分析" class="mx-auto rounded-lg shadow-lg" loading="lazy" referrerpolicy="no-referrer"/>
+          </div>
+        </div>
+      </section>
+
+      <!-- Current Status -->
+      <section id="current-status" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-8">
+          <div class="section-header">
+            <h2 class="serif text-4xl font-bold text-gray-900">A2A协议的现状与行业采用情况</h2>
+            <p class="text-lg text-gray-600 mt-4">从企业倡议到行业标准的演进</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="component-card">
+              <h3 class="text-2xl font-bold mb-4 text-blue-600">
+                <i class="fas fa-chart-line mr-3"></i>当前进展
+              </h3>
+              <div class="space-y-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                  <h4 class="font-bold text-blue-800 mb-2">框架集成进展</h4>
+                  <p class="text-blue-700 text-sm">
+                    Google ADK、LangGraph、CrewAI等主流框架已提供A2A支持
+                    <a href="#ref-60" class="citation">[60]</a>
+                  </p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                  <h4 class="font-bold text-green-800 mb-2">协议共存策略</h4>
+                  <p class="text-green-700 text-sm">
+                    与MCP协议形成互补关系：MCP专注工具调用，A2A专注智能体协作
+                  </p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                  <h4 class="font-bold text-purple-800 mb-2">标准化进程</h4>
+                  <p class="text-purple-700 text-sm">
+                    在Linux基金会托管下，朝着统一、开放的方向发展
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="component-card">
+              <h3 class="text-2xl font-bold mb-4 text-green-600">
+                <i class="fas fa-industry mr-3"></i>行业采用情况
+              </h3>
+              <div class="space-y-4">
+                <div class="flex items-center space-x-3 p-3 bg-white rounded-lg border">
+                  <img src="https://kimi-web-img.moonshot.cn/img/pic.pngsucai.com/4b34c8e1e7342499206a2976a61e3fdad8a93898.webp" alt="微软公司logo" class="w-8 h-8" loading="lazy" referrerpolicy="no-referrer"/>
+                  <div>
+                    <h4 class="font-bold">微软</h4>
+                    <p class="text-gray-600 text-sm">Azure AI Foundry和Copilot Studio集成A2A</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3 p-3 bg-white rounded-lg border">
+                  <img src="https://kimi-web-img.moonshot.cn/img/toppng.com/a2d650f1fc96710679b2673ba515ce74cdf7d46e.png" alt="Salesforce公司标志" class="w-8 h-8" loading="lazy" referrerpolicy="no-referrer"/>
+                  <div>
+                    <h4 class="font-bold">Salesforce</h4>
+                    <p class="text-gray-600 text-sm">Agentforce生态系统支持A2A标准</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3 p-3 bg-white rounded-lg border">
+                  <img src="https://kimi-web-img.moonshot.cn/img/www.socoologo.com/45e5ac127dd1e3a3a3edba912495165f57d96398.jpg" alt="SAP公司标志" class="w-8 h-8" loading="lazy" referrerpolicy="no-referrer"/>
+                  <div>
+                    <h4 class="font-bold">SAP</h4>
+                    <p class="text-gray-600 text-sm">Joule助手集成A2A，打通企业业务流程</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="protocol-diagram">
+            <h3 class="text-2xl font-bold mb-6 text-center">行业生态系统</h3>
+            <img src="https://kimi-web-img.moonshot.cn/img/pic1.zhimg.com/fc6b11b319f80266cc0829b0a56da26a621cf2e3.jpg" alt="A2A协议行业生态系统" class="mx-auto rounded-lg shadow-lg" loading="lazy" referrerpolicy="no-referrer"/>
+          </div>
+
+          <div class="highlight-box">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-users mr-3"></i>开源社区与开发者生态
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-white p-6 rounded-lg">
+                <h4 class="font-bold text-blue-600 mb-3">社区贡献</h4>
+                <ul class="text-gray-700 text-sm space-y-2">
+                  <li>• 代码贡献和bug修复</li>
+                  <li>• 文档完善和教程编写</li>
+                  <li>• SDK和工具开发</li>
+                  <li>• 最佳实践分享</li>
+                </ul>
+              </div>
+              <div class="bg-white p-6 rounded-lg">
+                <h4 class="font-bold text-green-600 mb-3">生态系统项目</h4>
+                <ul class="text-gray-700 text-sm space-y-2">
+                  <li>• 代理注册中心</li>
+                  <li>• 可视化任务编排工具</li>
+                  <li>• 安全审计工具</li>
+                  <li>• 性能监控平台</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Applications -->
+      <section id="applications" class="py-16 bg-white">
+        <div class="container mx-auto px-8">
+          <div class="section-header">
+            <h2 class="serif text-4xl font-bold text-gray-900">A2A协议的使用案例与应用场景</h2>
+            <p class="text-lg text-gray-600 mt-4">从企业自动化到智能体互联网的未来展望</p>
+          </div>
+
+          <!-- Enterprise Applications -->
+          <div class="highlight-box mb-12">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-building mr-3"></i>企业级应用场景
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="bg-white p-6 rounded-lg border-l-4 border-blue-500">
+                <h4 class="font-bold text-blue-600 mb-3">跨平台企业自动化</h4>
+                <p class="text-gray-700 text-sm mb-3">
+                  打破ERP、CRM、HRM等系统间的数据孤岛，实现跨部门流程自动化
+                </p>
+                <div class="bg-blue-50 p-3 rounded text-xs">
+                  <strong>实例：</strong>销售合同签订后自动触发财务、人力资源相关流程
+                </div>
+              </div>
+              <div class="bg-white p-6 rounded-lg border-l-4 border-green-500">
+                <h4 class="font-bold text-green-600 mb-3">智能招聘全流程</h4>
+                <p class="text-gray-700 text-sm mb-3">
+                  简历筛选、面试安排、技能评估、背景调查等多代理协作
+                </p>
+                <div class="bg-green-50 p-3 rounded text-xs">
+                  <strong>效果：</strong>招聘周期从数周缩短到几天
+                </div>
+              </div>
+              <div class="bg-white p-6 rounded-lg border-l-4 border-purple-500">
+                <h4 class="font-bold text-purple-600 mb-3">智能客服与电商</h4>
+                <p class="text-gray-700 text-sm mb-3">
+                  客服、物流查询、退货处理等多代理协同服务
+                </p>
+                <div class="bg-purple-50 p-3 rounded text-xs">
+                  <strong>优势：</strong>提升响应速度和问题解决率
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Industry Solutions -->
+          <div class="case-study mb-12">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-industry mr-3"></i>垂直行业解决方案
+            </h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg">
+                  <h4 class="font-bold text-blue-600 mb-3">
+                    <i class="fas fa-chart-line mr-2"></i>金融支付领域
+                  </h4>
+                  <p class="text-gray-700 text-sm mb-3">
+                    构建分布式、可审计的风险控制系统，满足金融监管要求
+                  </p>
+                  <div class="bg-blue-50 p-3 rounded text-xs">
+                    <strong>流程：</strong>交易监控 → 风险评估 → 人工审核 → 完整审计日志
+                  </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg">
+                  <h4 class="font-bold text-green-600 mb-3">
+                    <i class="fas fa-heartbeat mr-2"></i>医疗健康领域
+                  </h4>
+                  <p class="text-gray-700 text-sm mb-3">
+                    促进医疗系统间信息共享，提升诊疗效率和患者体验
+                  </p>
+                  <div class="bg-green-50 p-3 rounded text-xs">
+                    <strong>协作：</strong>家庭医生 → 专科医生 → 影像分析 → 治疗方案
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg">
+                  <h4 class="font-bold text-purple-600 mb-3">
+                    <i class="fas fa-graduation-cap mr-2"></i>教育培训领域
+                  </h4>
+                  <p class="text-gray-700 text-sm mb-3">
+                    构建个性化、自适应的学习平台，实现因材施教
+                  </p>
+                  <div class="bg-purple-50 p-3 rounded text-xs">
+                    <strong>功能：</strong>学习规划、智能辅导、知识点讲解、作业批改
+                  </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg">
+                  <img src="https://kimi-web-img.moonshot.cn/img/www.kunlunit.com/3a8d1972e98ad8832192a97f4f7ca527bf69a6c2.jpg" alt="垂直行业AI解决方案场景" class="w-full rounded-lg" loading="lazy" referrerpolicy="no-referrer"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Future Applications -->
+          <div class="highlight-box">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-rocket mr-3"></i>未来应用展望
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="bg-white p-6 rounded-lg text-center">
+                <div class="bg-blue-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+                  <i class="fas fa-robot text-blue-600 text-2xl"></i>
+                </div>
+                <h4 class="font-bold text-blue-600 mb-3">具身智能与机器人控制</h4>
+                <p class="text-gray-700 text-sm">
+                  智能工厂中多机器人协作，人类自然语言指挥复杂任务
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg text-center">
+                <div class="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+                  <i class="fas fa-palette text-green-600 text-2xl"></i>
+                </div>
+                <h4 class="font-bold text-green-600 mb-3">数字内容创作协作</h4>
+                <p class="text-gray-700 text-sm">
+                  AI驱动的创意协作生态，文案、图像、视频多代理共同创作
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg text-center">
+                <div class="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+                  <i class="fas fa-globe text-purple-600 text-2xl"></i>
+                </div>
+                <h4 class="font-bold text-purple-600 mb-3">智能体互联网</h4>
+                <p class="text-gray-700 text-sm">
+                  亿级AI代理相互发现、调用、组合，创造新服务和新价值
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="protocol-diagram">
+            <h3 class="text-2xl font-bold mb-6 text-center">应用场景架构图</h3>
+            <img src="https://kimi-web-img.moonshot.cn/img/cccf.hrbeu.edu.cn/deb6c04901eddc0b17e0e351b1edce96a40a05af.jpg" alt="多智能体系统应用场景展示" class="mx-auto rounded-lg shadow-lg" loading="lazy" referrerpolicy="no-referrer"/>
+          </div>
+
+          <!-- Summary -->
+          <div class="case-study">
+            <h3 class="text-2xl font-bold mb-6">
+              <i class="fas fa-lightbulb mr-3"></i>总结与展望
+            </h3>
+            <div class="bg-white p-6 rounded-lg">
+              <p class="text-gray-700 leading-relaxed mb-4">
+                A2A协议作为&#34;代理互联网的HTTP&#34;，正在重塑AI智能体之间的协作方式。
+                从打破技术孤岛到构建智能体生态系统，A2A协议展现出了巨大的潜力和价值。
+                随着越来越多的行业巨头加入和开源社区的活跃贡献，A2A协议正朝着成为
+                AI时代核心基础设施的目标稳步前进。
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div class="bg-blue-50 p-4 rounded">
+                  <h4 class="font-bold text-blue-800 mb-2">当前成就</h4>
+                  <ul class="text-blue-700 text-sm space-y-1">
+                    <li>• 50+行业伙伴支持</li>
+                    <li>• 主流框架集成</li>
+                    <li>• 企业级应用落地</li>
+                  </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                  <h4 class="font-bold text-green-800 mb-2">未来机遇</h4>
+                  <ul class="text-green-700 text-sm space-y-1">
+                    <li>• 智能体互联网构建</li>
+                    <li>• 跨行业协作深化</li>
+                    <li>• 人机交互模式革新</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- References -->
+      <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-8">
+          <div class="max-w-4xl mx-auto">
+            <h2 class="serif text-3xl font-bold text-gray-900 mb-8 text-center">参考文献</h2>
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div id="ref-3">[3] <a href="https://www.ibm.com/cn-zh/think/topics/agent2agent-protocol" class="citation">IBM - Agent2Agent Protocol</a>
+                </div>
+                <div id="ref-9">[9] <a href="https://jimmysong.io/zh/book/agentic-design-patterns/15-inter-agent-communication/" class="citation">Agentic Design Patterns</a>
+                </div>
+                <div id="ref-17">[17] <a href="https://juejin.cn/post/7579544918077636643" class="citation">掘金 - A2A协议详解</a>
+                </div>
+                <div id="ref-33">[33] <a href="https://www.cnblogs.com/aibi1/p/19373614" class="citation">博客园 - A2A协议分析</a>
+                </div>
+                <div id="ref-55">[55] <a href="#" class="citation">A2A协议官方文档</a>
+                </div>
+                <div id="ref-56">[56] <a href="https://www.cnblogs.com/sing1ee/p/19002113/2025-full-guide-a2a-protocol" class="citation">A2A协议完整指南</a>
+                </div>
+                <div id="ref-57">[57] <a href="https://www.ibm.com/cn-zh/think/topics/agent2agent-protocol" class="citation">IBM A2A协议分析</a>
+                </div>
+                <div id="ref-59">[59] <a href="https://blog.csdn.net/cf2SudS8x8F0v/article/details/147862603" class="citation">CSDN - A2A协议应用</a>
+                </div>
+                <div id="ref-60">[60] <a href="https://jimmysong.io/zh/book/agentic-design-patterns/15-inter-agent-communication/" class="citation">智能体通信模式</a>
+                </div>
+                <div id="ref-72">[72] <a href="https://www.51cto.com/aigc/5058.html" class="citation">51CTO - A2A协议解析</a>
+                </div>
+                <div id="ref-73">[73] <a href="https://blog.logto.io/zh-CN/a2a-mcp" class="citation">Logto - A2A与MCP对比</a>
+                </div>
+                <div id="ref-100">[100] <a href="https://blog.ailemon.net/2025/06/28/ai-agent-comunication-a2a-intro/" class="citation">AI柠檬 - A2A协议介绍</a>
+                </div>
+                <div id="ref-103">[103] <a href="https://www.cnblogs.com/sing1ee/p/19002113/2025-full-guide-a2a-protocol" class="citation">A2A协议完整指南</a>
+                </div>
+                <div id="ref-104">[104] <a href="https://www.cww.net.cn/article?id=601290" class="citation">通信世界网 - A2A协议分析</a>
+                </div>
+                <div id="ref-108">[108] <a href="https://jimmysong.io/zh/book/agentic-design-patterns/15-inter-agent-communication/" class="citation">智能体设计模式</a>
+                </div>
+                <div id="ref-109">[109] <a href="https://www.ibm.com/cn-zh/think/topics/agent2agent-protocol" class="citation">IBM A2A协议主题</a>
+                </div>
+                <div id="ref-110">[110] <a href="https://developer.volcengine.com/articles/7517866346420699175" class="citation">火山引擎 - A2A协议</a>
+                </div>
+                <div id="ref-112">[112] <a href="https://web3caff.com/archives/123610" class="citation">Web3Caff - A2A安全分析</a>
+                </div>
+                <div id="ref-113">[113] <a href="https://www.cnblogs.com/aibi1/p/19373614" class="citation">博客园 - A2A架构分析</a>
+                </div>
+                <div id="ref-114">[114] <a href="https://nullthought.net/?p=5859" class="citation">NullThought - A2A技术细节</a>
+                </div>
+                <div id="ref-115">[115] <a href="https://blog.csdn.net/csdn122345/article/details/148701942" class="citation">CSDN - A2A性能优化</a>
+                </div>
+                <div id="ref-116">[116] <a href="https://blog.csdn.net/csdn122345/article/details/148702549" class="citation">CSDN - gRPC对比</a>
+                </div>
+                <div id="ref-124">[124] <a href="http://www.iccsz.com/4g/news.Asp?ID=00928eb6bba24397a6c5ae0d9a532251" class="citation">光纤在线 - Linux基金会托管</a>
+                </div>
+                <div id="ref-127">[127] <a href="https://cloud.tencent.com/developer/article/2550612" class="citation">腾讯云 - A2A发展趋势</a>
+                </div>
+                <div id="ref-131">[131] <a href="https://cloud.tencent.com/developer/article/2550611" class="citation">腾讯云 - A2A行业支持</a>
+                </div>
+                <div id="ref-132">[132] <a href="https://www.oschina.net/news/356965/linux-foundation-launches-the-agent2agent-protocol-project" class="citation">开源中国 - Linux基金会项目</a>
+                </div>
+                <div id="ref-134">[134] <a href="https://m.zhiding.cn/article/3167625.htm" class="citation">至顶网 - A2A行业应用</a>
+                </div>
+                <div id="ref-138">[138] <a href="https://www.cnblogs.com/tangshiye/p/19064044" class="citation">博客园 - 协议对比分析</a>
+                </div>
+                <div id="ref-140">[140] <a href="https://www.cww.net.cn/article?id=601290" class="citation">通信世界网 - A2A发展趋势</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+        // ==================== 工具函数 ====================
+        
+        /**
+         * 防抖函数 - 限制函数执行频率，优化性能
+         * @param {Function} func - 要执行的函数
+         * @param {number} wait - 等待时间（毫秒）
+         */
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // ==================== 移动端目录切换 ====================
+        
+        /**
+         * 移动端目录显示/隐藏切换
+         */
+        document.getElementById('tocToggle').addEventListener('click', function() {
+            document.querySelector('.toc-sidebar').classList.toggle('open');
+        });
+
+        /**
+         * 点击外部区域关闭移动端目录
+         */
+        document.addEventListener('click', function(event) {
+            const tocSidebar = document.querySelector('.toc-sidebar');
+            const tocToggle = document.getElementById('tocToggle');
+            // 仅在移动端且目录打开时关闭
+            if (window.innerWidth <= 1024 && tocSidebar.classList.contains('open')) {
+                if (!tocSidebar.contains(event.target) && !tocToggle.contains(event.target)) {
+                    tocSidebar.classList.remove('open');
+                }
+            }
+        });
+
+        // ==================== 平滑滚动功能 ====================
+        
+        /**
+         * 为所有锚点链接添加平滑滚动效果
+         */
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    // 移动端点击后关闭目录
+                    if (window.innerWidth <= 1024) {
+                        document.querySelector('.toc-sidebar').classList.remove('open');
+                    }
+                }
+            });
+        });
+
+        // ==================== 目录高亮功能 ====================
+        
+        /**
+         * 更新目录中当前章节的高亮状态
+         */
+        function updateActiveLink() {
+            const sections = document.querySelectorAll('section[id]');
+            const scrollPos = window.scrollY + 100;
+            
+            sections.forEach(section => {
+                const top = section.offsetTop;
+                const bottom = top + section.offsetHeight;
+                const id = section.getAttribute('id');
+                const link = document.querySelector(`a[href="#${id}"]`);
+                
+                if (scrollPos >= top && scrollPos <= bottom) {
+                    document.querySelectorAll('.toc-sidebar a').forEach(a => a.classList.remove('bg-blue-100', 'text-blue-700'));
+                    if (link) {
+                        link.classList.add('bg-blue-100', 'text-blue-700');
+                    }
+                }
+            });
+        }
+        
+        // 滚动时更新目录高亮（使用防抖优化性能）
+        window.addEventListener('scroll', debounce(updateActiveLink, 100));
+        updateActiveLink(); // 初始调用
+        
+        // ==================== 阅读进度条功能 ====================
+        
+        /**
+         * 更新阅读进度条
+         */
+        function updateReadingProgress() {
+            const progressBar = document.getElementById('readingProgress');
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const progress = (scrollTop / (documentHeight - windowHeight)) * 100;
+            progressBar.style.width = Math.min(progress, 100) + '%';
+        }
+        
+        // 滚动时更新进度条
+        window.addEventListener('scroll', debounce(updateReadingProgress, 10));
+
+        // ==================== 返回顶部功能 ====================
+        
+        /**
+         * 返回顶部按钮显示/隐藏控制
+         */
+        function toggleBackToTop() {
+            const backToTopBtn = document.getElementById('backToTop');
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        }
+        
+        /**
+         * 返回顶部按钮点击事件
+         */
+        document.getElementById('backToTop').addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // 滚动时控制返回顶部按钮显示
+        window.addEventListener('scroll', debounce(toggleBackToTop, 100));
+
+        // ==================== 搜索功能 ====================
+        
+        /**
+         * 搜索功能实现
+         */
+        const searchOverlay = document.getElementById('searchOverlay');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const searchBtn = document.getElementById('searchBtn');
+        
+        // 获取所有可搜索的内容
+        const searchableContent = Array.from(document.querySelectorAll('h2, h3, h4, p, li')).map(el => ({
+            text: el.textContent.trim(),
+            element: el,
+            id: el.id || el.closest('section')?.id || ''
+        })).filter(item => item.text.length > 10); // 过滤太短的内容
+        
+        /**
+         * 执行搜索
+         */
+        function performSearch(query) {
+            if (!query.trim()) {
+                searchResults.innerHTML = '';
+                return;
+            }
+            
+            const lowerQuery = query.toLowerCase();
+            const results = searchableContent
+                .filter(item => item.text.toLowerCase().includes(lowerQuery))
+                .slice(0, 10); // 限制结果数量
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item">未找到相关内容</div>';
+                return;
+            }
+            
+            searchResults.innerHTML = results.map(item => {
+                const section = item.element.closest('section');
+                const sectionTitle = section?.querySelector('h2')?.textContent || '未知章节';
+                const preview = item.text.substring(0, 100) + '...';
+                return `
+                    <div class="search-result-item" onclick="scrollToElement('${item.id || section?.id}')">
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">${sectionTitle}</div>
+                        <div style="font-size: 0.9rem; color: #64748b;">${preview}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * 滚动到指定元素
+         */
+        window.scrollToElement = function(id) {
+            const element = document.getElementById(id) || document.querySelector(`[id="${id}"]`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                searchOverlay.classList.remove('active');
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+            }
+        };
+        
+        // 搜索按钮点击事件
+        searchBtn.addEventListener('click', () => {
+            searchOverlay.classList.add('active');
+            searchInput.focus();
+        });
+        
+        // 搜索输入事件（实时搜索）
+        searchInput.addEventListener('input', (e) => {
+            performSearch(e.target.value);
+        });
+        
+        // ESC键关闭搜索
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchOverlay.classList.remove('active');
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+            }
+        });
+        
+        // 点击覆盖层关闭搜索
+        searchOverlay.addEventListener('click', (e) => {
+            if (e.target === searchOverlay) {
+                searchOverlay.classList.remove('active');
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+            }
+        });
+        
+        // Ctrl/Cmd + K 快捷键打开搜索
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchOverlay.classList.add('active');
+                searchInput.focus();
+            }
+        });
+
+        // ==================== 暗色模式功能 ====================
+        
+        /**
+         * 暗色模式切换
+         */
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // 检测系统主题偏好
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('a2a-theme');
+        
+        // 应用主题
+        function applyTheme(theme) {
+            if (theme === 'dark' || (!savedTheme && prefersDark)) {
+                body.classList.add('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                body.classList.remove('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+        
+        // 初始化主题
+        applyTheme(savedTheme);
+        
+        // 主题切换按钮点击事件
+        themeToggle.addEventListener('click', () => {
+            const isDark = body.classList.contains('dark-mode');
+            const newTheme = isDark ? 'light' : 'dark';
+            localStorage.setItem('a2a-theme', newTheme);
+            applyTheme(newTheme);
+        });
+        
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('a2a-theme')) {
+                applyTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+
+        // ==================== 分享功能 ====================
+        
+        /**
+         * 分享功能实现
+         */
+        const shareBtn = document.getElementById('shareBtn');
+        
+        shareBtn.addEventListener('click', async () => {
+            const url = window.location.href;
+            const title = document.title;
+            const text = 'A2A协议技术深度研究报告：代理互联网的HTTP';
+            
+            // 检查是否支持Web Share API
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: title,
+                        text: text,
+                        url: url
+                    });
+                } catch (err) {
+                    // 用户取消分享
+                    console.log('分享已取消');
+                }
+            } else {
+                // 降级方案：复制链接到剪贴板
+                try {
+                    await navigator.clipboard.writeText(url);
+                    alert('链接已复制到剪贴板！');
+                } catch (err) {
+                    // 备用方案：显示提示
+                    prompt('请复制以下链接：', url);
+                }
+            }
+        });
+
+        // ==================== PDF导出功能 ====================
+        
+        /**
+         * PDF导出功能
+         */
+        const pdfBtn = document.getElementById('pdfBtn');
+        
+        pdfBtn.addEventListener('click', () => {
+            const element = document.querySelector('.main-content');
+            const opt = {
+                margin: 1,
+                filename: 'A2A协议技术深度研究报告.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            
+            // 显示加载提示
+            pdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            pdfBtn.disabled = true;
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                pdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                pdfBtn.disabled = false;
+            }).catch(() => {
+                alert('PDF导出失败，请稍后重试');
+                pdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                pdfBtn.disabled = false;
+            });
+        });
+
+        // ==================== 图片懒加载 ====================
+        
+        /**
+         * 图片懒加载实现
+         */
+        if ('loading' in HTMLImageElement.prototype) {
+            // 浏览器支持原生懒加载
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                img.loading = 'lazy';
+                img.addEventListener('load', () => {
+                    img.classList.add('loaded');
+                });
+            });
+        } else {
+            // 降级方案：使用Intersection Observer
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src || img.src;
+                        img.classList.add('loaded');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('img').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // ==================== 初始化完成 ====================
+        
+        console.log('A2A协议页面初始化完成！');
+    </script>
+  
+
+</body></html>
