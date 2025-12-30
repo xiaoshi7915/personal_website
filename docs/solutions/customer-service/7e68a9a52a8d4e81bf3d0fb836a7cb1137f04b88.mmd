@@ -1,0 +1,32 @@
+graph TB
+    subgraph 云端
+        A1[API网关]
+        A2[业务服务]
+        A3[AI模型服务]
+        A4[知识库服务]
+        A5[数据存储]
+    end
+    
+    subgraph 边缘节点
+        B1[边缘网关]
+        B2[本地缓存]
+        B3[轻量模型]
+    end
+    
+    subgraph 客户端
+        C1[Web浏览器]
+        C2[移动App]
+        C3[微信小程序]
+    end
+    
+    C1 --> B1
+    C2 --> B1
+    C3 --> B1
+    B1 --> A1
+    B2 --> B1
+    B3 --> B1
+    A1 --> A2
+    A2 --> A3
+    A2 --> A4
+    A3 --> A5
+    A4 --> A5

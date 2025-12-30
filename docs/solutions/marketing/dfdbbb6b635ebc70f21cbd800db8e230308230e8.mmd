@@ -1,0 +1,6 @@
+graph TB
+    A[应用服务] --> B[指标收集]
+    B --> C[Prometheus]
+    C --> D[Grafana]
+    D --> E[告警系统]
+    E --> F[通知渠道]

@@ -1,0 +1,39 @@
+graph TB
+    subgraph 云端
+        A1[API网关]
+        A2[代码生成服务]
+        A3[代码审查服务]
+        A4[模型服务]
+        A5[知识库服务]
+        A6[数据存储]
+    end
+    
+    subgraph 边缘节点
+        B1[边缘网关]
+        B2[本地缓存]
+        B3[轻量模型]
+        B4[代码分析服务]
+    end
+    
+    subgraph 客户端IDE
+        C1[VS Code插件]
+        C2[IntelliJ插件]
+        C3[PyCharm插件]
+        C4[本地代码补全]
+    end
+    
+    C1 --> B1
+    C2 --> B1
+    C3 --> B1
+    C4 --> B2
+    B1 --> A1
+    B2 --> B1
+    B3 --> B1
+    B4 --> B1
+    A1 --> A2
+    A1 --> A3
+    A2 --> A4
+    A3 --> A4
+    A2 --> A5
+    A4 --> A6
+    A5 --> A6

@@ -1,0 +1,5 @@
+graph LR
+    A[应用服务] --> B[日志收集]
+    B --> C[Logstash]
+    C --> D[Elasticsearch]
+    D --> E[Kibana]

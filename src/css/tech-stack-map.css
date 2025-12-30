@@ -1,0 +1,132 @@
+/**
+ * 技术栈关联图谱组件样式
+ */
+
+.tech-stack-map {
+  margin: 3rem 0;
+  padding: 2rem;
+  background: var(--ifm-color-emphasis-50);
+  border-radius: 12px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.tech-stack-map__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--ifm-color-content);
+}
+
+.tech-stack-map__desc {
+  margin-bottom: 1.5rem;
+  color: var(--ifm-color-content-secondary);
+  line-height: 1.6;
+}
+
+.tech-stack-map .mermaid {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  box-shadow: var(--ifm-global-shadow-lw);
+}
+
+.tech-stack-map__legend {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.tech-stack-map__legend h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--ifm-color-content);
+}
+
+.tech-stack-map__legend ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.tech-stack-map__legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--ifm-color-content);
+}
+
+.legend-item {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid;
+  flex-shrink: 0;
+}
+
+.legend-item.foundation {
+  background: #e1f5ff;
+  border-color: #01579b;
+}
+
+.legend-item.theory {
+  background: #f3e5f5;
+  border-color: #4a148c;
+}
+
+.legend-item.application {
+  background: #e8f5e9;
+  border-color: #1b5e20;
+}
+
+.legend-item.platform {
+  background: #fff3e0;
+  border-color: #e65100;
+}
+
+.legend-item.protocol {
+  background: #fce4ec;
+  border-color: #880e4f;
+}
+
+.legend-item.optimization {
+  background: #fff9c4;
+  border-color: #f57f17;
+}
+
+/* 暗色模式适配 */
+[data-theme='dark'] .tech-stack-map {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+[data-theme='dark'] .tech-stack-map .mermaid {
+  background: var(--ifm-background-surface-color);
+}
+
+/* 移动端适配 */
+@media (max-width: 996px) {
+  .tech-stack-map {
+    padding: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .tech-stack-map__title {
+    font-size: 1.25rem;
+  }
+
+  .tech-stack-map .mermaid {
+    padding: 1rem;
+  }
+
+  .tech-stack-map__legend ul {
+    grid-template-columns: 1fr;
+  }
+}

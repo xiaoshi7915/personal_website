@@ -27,6 +27,7 @@ const config = {
 
   onBrokenLinks: 'warn',
   markdown: {
+    mermaid: true,
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },
@@ -52,6 +53,13 @@ const config = {
           editUrl:
             'https://github.com/chenxiaoshivivid/personal-website/tree/main/',
         },
+        // Sitemap配置 - SEO优化
+        sitemap: {
+          changefreq: 'weekly', // 更新频率：weekly（每周）、daily（每天）、monthly（每月）
+          priority: 0.5, // 优先级：0.0-1.0，首页建议1.0，文档页0.5-0.8
+          ignorePatterns: ['/tags/**', '/search/**'], // 忽略的路径模式
+          filename: 'sitemap.xml', // sitemap文件名
+        },
         blog: false,
         theme: {
           customCss: './src/css/custom.css',
@@ -59,6 +67,9 @@ const config = {
       }),
     ],
   ],
+
+  // 主题配置 - Mermaid支持
+  themes: ['@docusaurus/theme-mermaid'],
 
   // 插件配置 - 本地搜索
   plugins: [
@@ -71,6 +82,22 @@ const config = {
         explicitSearchResultPath: true,
       },
     ],
+    // Google Analytics插件 - 需要配置trackingID
+    // [
+    //   '@docusaurus/plugin-google-analytics',
+    //   {
+    //     trackingID: 'G-XXXXXXXXXX', // 请替换为您的Google Analytics跟踪ID
+    //     anonymizeIP: true,
+    //   },
+    // ],
+    // 百度统计插件（可选，如果需要使用百度统计）
+    // [
+    //   '@docusaurus/plugin-google-gtag',
+    //   {
+    //     trackingID: 'G-XXXXXXXXXX', // Google Analytics 4
+    //     anonymizeIP: true,
+    //   },
+    // ],
   ],
 
   themeConfig:
@@ -78,6 +105,28 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
+      // SEO优化 - Metadata配置
+      metadata: [
+        {name: 'keywords', content: 'AI学习,人工智能,大语言模型,MCP协议,RAG技术,提示词工程,微调技术,向量数据库,行业解决方案'},
+        {name: 'author', content: 'mr stone'},
+        // Open Graph标签
+        {property: 'og:type', content: 'website'},
+        {property: 'og:image', content: 'img/docusaurus-social-card.jpg'},
+        {property: 'og:locale', content: 'zh_CN'},
+        {property: 'og:site_name', content: 'mr stone的个人网站'},
+        // Twitter Cards
+        {name: 'twitter:card', content: 'summary_large_image'},
+        {name: 'twitter:image', content: 'img/docusaurus-social-card.jpg'},
+        {name: 'twitter:title', content: 'mr stone的个人网站'},
+        {name: 'twitter:description', content: '技术 分享 成长'},
+      ],
+      // 深色模式配置
+      colorMode: {
+        defaultMode: 'light',
+        disableSwitch: false, // 启用主题切换按钮
+        respectPrefersColorScheme: true, // 尊重系统主题偏好
+        // 注意：switchConfig已废弃，如需自定义图标，请使用swizzle功能
+      },
       navbar: {
         title: 'mr stone的个人网站',
         logo: {
@@ -90,6 +139,12 @@ const config = {
             sidebarId: 'docsSidebar',
             position: 'left',
             label: 'AI学习文档',
+          },
+          {
+            type: 'docSidebar',
+            sidebarId: 'solutionsSidebar',
+            position: 'left',
+            label: '行业解决方案',
           },
           {
             type: 'html',

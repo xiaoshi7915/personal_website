@@ -6,6 +6,10 @@ import BackToTop from '@site/src/components/BackToTop/BackToTop';
 import ShareModal from '@site/src/components/ShareModal/ShareModal';
 import ReadingProgress from '@site/src/components/ReadingProgress/ReadingProgress';
 import GlobalDocTools from '@site/src/components/GlobalDocTools/GlobalDocTools';
+import StructuredData from '@site/src/components/StructuredData/StructuredData';
+import Bookmarks from '@site/src/components/Bookmarks/Bookmarks';
+import RecentDocs from '@site/src/components/RecentDocs/RecentDocs';
+import RelatedDocs from '@site/src/components/RelatedDocs/RelatedDocs';
 
 /**
  * 文档布局组件
@@ -32,6 +36,9 @@ function Layout(props) {
   
   return (
     <>
+      {/* 结构化数据 - SEO优化 */}
+      <StructuredData />
+      
       {/* 阅读进度条 - 页面顶部 */}
       <ReadingProgress />
       
@@ -65,6 +72,21 @@ function Layout(props) {
       
       {/* Giscus评论组件 */}
       <GiscusComments />
+      
+      {/* 收藏功能 */}
+      <Bookmarks />
+      
+      {/* 相关文档推荐 - 在文档内容之后显示 */}
+      <div className="container margin-vert--lg">
+        <div className="row">
+          <div className="col col--8 col--offset-2">
+            <RelatedDocs />
+          </div>
+        </div>
+      </div>
+      
+      {/* 最近浏览（可选，可以放在侧边栏） */}
+      {/* <RecentDocs /> */}
     </>
   );
 }

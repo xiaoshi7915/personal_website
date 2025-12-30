@@ -4,7 +4,11 @@ title: 学习路径指南
 description: 为不同水平的开发者提供系统化的AI技术学习路径
 ---
 
+import TechStackMap from '@site/src/components/TechStackMap/TechStackMap';
+
 # AI技术学习路径指南
+
+<TechStackMap />
 
 本指南为不同背景和水平的开发者提供了系统化的学习路径，帮助您高效掌握AI相关技术。
 
@@ -203,6 +207,86 @@ description: 为不同水平的开发者提供系统化的AI技术学习路径
 
 ## 🗺️ 技术栈学习地图
 
+以下图表展示了AI技术栈之间的关联关系和学习路径：
+
+```mermaid
+graph TB
+    %% 基础层
+    Python[Python编程]
+    JavaScript[JavaScript编程]
+    Git[Git版本控制]
+    
+    %% 理论层
+    ML[机器学习基础]
+    DL[深度学习]
+    Transformer[Transformer架构]
+    LLM[大语言模型]
+    
+    %% 应用层
+    Prompt[提示词工程]
+    RAG[RAG技术]
+    VectorDB[向量数据库]
+    Multimodal[多模态技术]
+    
+    %% 平台层
+    Dify[Dify平台]
+    MaxKB[MaxKB知识库]
+    n8n[n8n工作流]
+    BISHENG[BISHENG平台]
+    
+    %% 协议层
+    MCP[MCP协议]
+    A2A[A2A协议]
+    LangChain[LangChain框架]
+    
+    %% 优化层
+    Finetune[微调技术]
+    Evaluation[大模型评测]
+    
+    %% 基础层连接
+    Python --> ML
+    JavaScript --> ML
+    Git --> Python
+    Git --> JavaScript
+    
+    %% 理论层连接
+    ML --> DL
+    DL --> Transformer
+    Transformer --> LLM
+    
+    %% 应用层连接
+    LLM --> Prompt
+    LLM --> RAG
+    RAG --> VectorDB
+    LLM --> Multimodal
+    Prompt --> RAG
+    
+    %% 平台层连接
+    Prompt --> Dify
+    RAG --> Dify
+    RAG --> MaxKB
+    VectorDB --> MaxKB
+    n8n --> Dify
+    RAG --> BISHENG
+    Prompt --> BISHENG
+    
+    %% 协议层连接
+    Prompt --> MCP
+    RAG --> MCP
+    MCP --> A2A
+    RAG --> LangChain
+    Prompt --> LangChain
+    MCP --> LangChain
+    
+    %% 优化层连接
+    Transformer --> Finetune
+    LLM --> Finetune
+    Finetune --> Evaluation
+    LLM --> Evaluation
+```
+
+<TechStackMap />
+
 ### 基础层
 ```
 编程基础 → Python/JavaScript → Git → 环境管理
@@ -289,6 +373,107 @@ MCP协议 → A2A协议 → LangChain
 1. 学习 `transformer/architecture` 理解原理
 2. 完成 `finetune/development` 进行模型优化
 3. 研究 `evaluation/methods` 评估模型性能
+
+## 🗺️ 技术栈关联图谱
+
+下方图表展示了AI技术栈之间的关联关系和学习路径：
+
+```mermaid
+graph TB
+    %% 基础层
+    Python[Python编程]
+    JavaScript[JavaScript编程]
+    Git[Git版本控制]
+    
+    %% 理论层
+    ML[机器学习基础]
+    DL[深度学习]
+    Transformer[Transformer架构]
+    LLM[大语言模型]
+    
+    %% 应用层
+    Prompt[提示词工程]
+    RAG[RAG技术]
+    VectorDB[向量数据库]
+    Multimodal[多模态技术]
+    
+    %% 平台层
+    Dify[Dify平台]
+    MaxKB[MaxKB知识库]
+    n8n[n8n工作流]
+    BISHENG[BISHENG平台]
+    
+    %% 协议层
+    MCP[MCP协议]
+    A2A[A2A协议]
+    LangChain[LangChain框架]
+    
+    %% 优化层
+    Finetune[微调技术]
+    Evaluation[大模型评测]
+    
+    %% 基础层连接
+    Python --> ML
+    JavaScript --> ML
+    Git --> Python
+    
+    %% 理论层连接
+    ML --> DL
+    DL --> Transformer
+    Transformer --> LLM
+    
+    %% 应用层连接
+    LLM --> Prompt
+    LLM --> RAG
+    VectorDB --> RAG
+    Prompt --> RAG
+    LLM --> Multimodal
+    Transformer --> Multimodal
+    
+    %% 平台层连接
+    RAG --> Dify
+    RAG --> MaxKB
+    Prompt --> Dify
+    Prompt --> BISHENG
+    RAG --> BISHENG
+    n8n --> MCP
+    
+    %% 协议层连接
+    LLM --> MCP
+    LLM --> A2A
+    RAG --> LangChain
+    MCP --> LangChain
+    
+    %% 优化层连接
+    Transformer --> Finetune
+    LLM --> Finetune
+    Finetune --> Evaluation
+    RAG --> Evaluation
+    
+    %% 样式
+    classDef foundation fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef theory fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef application fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef platform fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef protocol fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef optimization fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    
+    class Python,JavaScript,Git foundation
+    class ML,DL,Transformer,LLM theory
+    class Prompt,RAG,VectorDB,Multimodal application
+    class Dify,MaxKB,n8n,BISHENG platform
+    class MCP,A2A,LangChain protocol
+    class Finetune,Evaluation optimization
+```
+
+### 图例说明
+
+- **基础层**（蓝色）：编程基础和工具
+- **理论层**（紫色）：AI理论基础
+- **应用层**（绿色）：实际应用技术
+- **平台层**（橙色）：开发平台
+- **协议层**（粉色）：通信协议和框架
+- **优化层**（黄色）：模型优化和评测
 
 ## 📝 学习计划模板
 

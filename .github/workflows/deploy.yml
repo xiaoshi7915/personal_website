@@ -1,0 +1,76 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter (if configured)
+        run: |
+          # 如果有lint配置，可以在这里运行
+          # npm run lint
+          echo "Linting skipped - no lint script configured"
+
+      - name: Build website
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Check build output
+        run: |
+          if [ ! -d "build" ]; then
+            echo "Build failed - build directory not found"
+            exit 1
+          fi
+          echo "Build successful - build directory exists"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: build/
+          retention-days: 7
+
+  # 部署任务（根据实际部署方式配置）
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+  #   
+  #   steps:
+  #     - name: Download build artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: build-files
+  #         path: build/
+  #     
+  #     - name: Deploy to server
+  #       # 根据实际部署方式配置
+  #       # 例如：使用rsync、scp、或部署到GitHub Pages等
+  #       run: |
+  #         echo "Deploy step - configure based on your deployment method"
+  #         # rsync -avz build/ user@server:/path/to/website/
+  #         # 或使用其他部署工具
+

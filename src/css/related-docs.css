@@ -1,0 +1,109 @@
+/**
+ * 相关文档推荐组件样式
+ */
+
+.related-docs {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 8px;
+  border-left: 4px solid var(--ifm-color-primary);
+}
+
+.related-docs__section {
+  margin-bottom: 1.5rem;
+}
+
+.related-docs__section:last-child {
+  margin-bottom: 0;
+}
+
+.related-docs__section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--ifm-color-content);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.related-docs__icon {
+  font-size: 1.2rem;
+}
+
+.related-docs__section-desc {
+  font-size: 0.875rem;
+  color: var(--ifm-color-content-secondary);
+  margin-bottom: 0.75rem;
+  margin-top: 0;
+}
+
+.related-docs__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.related-docs__item {
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.related-docs__item:last-child {
+  margin-bottom: 0;
+}
+
+.related-docs__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  color: var(--ifm-color-content);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.related-docs__link:hover {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.related-docs__reason {
+  font-size: 0.85rem;
+  color: var(--ifm-color-content-secondary);
+  font-style: italic;
+  margin-left: 0.25rem;
+}
+
+/* 暗色模式适配 */
+[data-theme='dark'] .related-docs {
+  background: var(--ifm-color-emphasis-100);
+  border-left-color: var(--ifm-color-primary);
+}
+
+[data-theme='dark'] .related-docs__link:hover {
+  background: var(--ifm-color-emphasis-200);
+}
+
+/* 移动端适配 */
+@media (max-width: 996px) {
+  .related-docs {
+    margin: 1.5rem 0;
+    padding: 1rem;
+  }
+
+  .related-docs__title {
+    font-size: 1rem;
+  }
+
+  .related-docs__link {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+

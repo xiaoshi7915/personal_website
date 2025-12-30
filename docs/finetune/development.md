@@ -731,6 +731,203 @@ llm_deployment = LLMModel.deploy()
 print(f"服务已部署: {llm_deployment.url}")
 ```
 
+## 性能优化
+
+### 1. 训练速度优化
+
+#### 使用梯度累积
+```python
+from transformers import Trainer, TrainingArguments
+
+training_args = TrainingArguments(
+    output_dir="./results",
+    gradient_accumulation_steps=4,  # 累积4个batch的梯度
+    per_device_train_batch_size=2,  # 实际batch size = 2 * 4 = 8
+    fp16=True,  # 使用混合精度
+    dataloader_num_workers=4,  # 多进程加载数据
+)
+```
+
+#### 优化数据加载
+```python
+from torch.utils.data import DataLoader
+
+# 使用pin_memory加速GPU传输
+dataloader = DataLoader(
+    dataset,
+    batch_size=32,
+    num_workers=4,
+    pin_memory=True,  # 加速CPU到GPU的数据传输
+    prefetch_factor=2,  # 预取数据
+)
+```
+
+### 2. 内存优化
+
+#### 使用梯度检查点
+```python
+from transformers import AutoModel
+
+model = AutoModel.from_pretrained(
+    "model-name",
+    gradient_checkpointing=True  # 减少内存使用
+)
+```
+
+#### 使用8-bit优化器
+```python
+import bitsandbytes as bnb
+
+optimizer = bnb.optim.AdamW8bit(
+    model.parameters(),
+    lr=2e-5,
+    weight_decay=0.01
+)
+```
+
+### 3. 推理性能优化
+
+#### 模型量化
+```python
+from transformers import AutoModelForCausalLM
+import torch
+
+# 加载模型
+model = AutoModelForCausalLM.from_pretrained("model-path")
+
+# 动态量化
+quantized_model = torch.quantization.quantize_dynamic(
+    model, {torch.nn.Linear}, dtype=torch.qint8
+)
+```
+
+#### 使用TensorRT加速
+```python
+# 使用TensorRT优化模型（需要NVIDIA GPU）
+from transformers import AutoModelForCausalLM
+import tensorrt as trt
+
+# 转换模型为TensorRT格式
+# ... TensorRT转换代码 ...
+```
+
+## 安全考虑
+
+### 1. 数据安全
+
+#### 敏感数据过滤
+```python
+import re
+
+class DataSanitizer:
+    def __init__(self):
+        self.patterns = {
+            'email': r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
+            'phone': r'(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',
+            'ssn': r'\d{3}[-\s]?\d{2}[-\s]?\d{4}',
+        }
+    
+    def sanitize(self, text: str) -> str:
+        """清理敏感信息"""
+        sanitized = text
+        for pattern in self.patterns.values():
+            sanitized = re.sub(pattern, '[REDACTED]', sanitized)
+        return sanitized
+
+# 使用示例
+sanitizer = DataSanitizer()
+clean_data = sanitizer.sanitize(training_data)
+```
+
+### 2. 模型安全
+
+#### 防止模型泄露
+```python
+import os
+from cryptography.fernet import Fernet
+
+class ModelEncryption:
+    def __init__(self, key_path=".encryption_key"):
+        if os.path.exists(key_path):
+            with open(key_path, 'rb') as f:
+                self.key = f.read()
+        else:
+            self.key = Fernet.generate_key()
+            with open(key_path, 'wb') as f:
+                f.write(self.key)
+        self.cipher = Fernet(self.key)
+    
+    def encrypt_model(self, model_path: str, output_path: str):
+        """加密模型文件"""
+        with open(model_path, 'rb') as f:
+            model_data = f.read()
+        encrypted = self.cipher.encrypt(model_data)
+        with open(output_path, 'wb') as f:
+            f.write(encrypted)
+    
+    def decrypt_model(self, encrypted_path: str, output_path: str):
+        """解密模型文件"""
+        with open(encrypted_path, 'rb') as f:
+            encrypted_data = f.read()
+        decrypted = self.cipher.decrypt(encrypted_data)
+        with open(output_path, 'wb') as f:
+            f.write(decrypted)
+```
+
+### 3. 训练安全
+
+#### 输入验证
+```python
+def validate_training_data(data):
+    """验证训练数据"""
+    if not isinstance(data, list):
+        raise ValueError("训练数据必须是列表")
+    
+    if len(data) < 10:
+        raise ValueError("训练数据至少需要10条")
+    
+    for item in data:
+        if not isinstance(item, dict):
+            raise ValueError("每个数据项必须是字典")
+        if 'text' not in item:
+            raise ValueError("数据项必须包含'text'字段")
+    
+    return True
+```
+
+### 4. 部署安全
+
+#### API密钥管理
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# 从环境变量读取密钥
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    raise ValueError("API_KEY环境变量未设置")
+
+# 使用密钥
+# ...
+```
+
+#### 访问控制
+```python
+from functools import wraps
+
+def require_api_key(func):
+    """装饰器：要求API密钥"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        api_key = kwargs.get('api_key') or args[0] if args else None
+        if api_key != os.getenv("API_KEY"):
+            raise PermissionError("无效的API密钥")
+        return func(*args, **kwargs)
+    return wrapper
+```
+
 ## 结论
 
 微调技术是定制大型语言模型的强大工具，通过本指南中的高级技术，您可以：
@@ -740,5 +937,6 @@ print(f"服务已部署: {llm_deployment.url}")
 3. 应用RLHF等技术提高模型输出质量
 4. 使用多阶段训练实现渐进式模型改进
 5. 高效部署微调模型用于生产环境
+6. 确保训练和部署过程的安全性
 
 随着硬件和技术的进步，微调将变得更加高效和普及，成为AI应用开发不可或缺的一部分。 

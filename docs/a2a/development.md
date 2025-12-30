@@ -396,6 +396,134 @@ spec:
           value: "info"
 ```
 
+## 安全考虑
+
+### 1. 消息安全
+
+#### 消息加密
+```javascript
+const crypto = require('crypto');
+
+class MessageEncryption {
+    constructor(secretKey) {
+        this.algorithm = 'aes-256-gcm';
+        this.key = crypto.scryptSync(secretKey, 'salt', 32);
+    }
+    
+    encrypt(message) {
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv(this.algorithm, this.key, iv);
+        
+        let encrypted = cipher.update(JSON.stringify(message), 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        
+        const authTag = cipher.getAuthTag();
+        
+        return {
+            encrypted,
+            iv: iv.toString('hex'),
+            authTag: authTag.toString('hex')
+        };
+    }
+    
+    decrypt(encryptedData) {
+        const decipher = crypto.createDecipheriv(
+            this.algorithm,
+            this.key,
+            Buffer.from(encryptedData.iv, 'hex')
+        );
+        
+        decipher.setAuthTag(Buffer.from(encryptedData.authTag, 'hex'));
+        
+        let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        
+        return JSON.parse(decrypted);
+    }
+}
+```
+
+### 2. 访问控制
+
+#### 代理认证
+```javascript
+const jwt = require('jsonwebtoken');
+
+class AgentAuthentication {
+    constructor(secret) {
+        this.secret = secret;
+    }
+    
+    generateToken(agentId, capabilities) {
+        return jwt.sign(
+            { agentId, capabilities },
+            this.secret,
+            { expiresIn: '24h' }
+        );
+    }
+    
+    verifyToken(token) {
+        try {
+            return jwt.verify(token, this.secret);
+        } catch (error) {
+            throw new Error('无效的token');
+        }
+    }
+}
+```
+
+### 3. 输入验证
+
+#### 消息验证
+```javascript
+class MessageValidator {
+    validate(message) {
+        if (!message.type) {
+            throw new Error('消息必须包含type字段');
+        }
+        
+        if (!message.content) {
+            throw new Error('消息必须包含content字段');
+        }
+        
+        // 检查消息大小
+        const messageSize = JSON.stringify(message).length;
+        if (messageSize > 1024 * 1024) { // 1MB限制
+            throw new Error('消息大小超过限制');
+        }
+        
+        // 检查恶意内容
+        const dangerousPatterns = ['<script', 'javascript:', 'onerror='];
+        const messageStr = JSON.stringify(message);
+        for (const pattern of dangerousPatterns) {
+            if (messageStr.toLowerCase().includes(pattern)) {
+                throw new Error('检测到潜在的安全风险');
+            }
+        }
+        
+        return true;
+    }
+}
+```
+
+### 4. 安全通信
+
+#### TLS/SSL配置
+```javascript
+const https = require('https');
+const fs = require('fs');
+
+const options = {
+    key: fs.readFileSync('private-key.pem'),
+    cert: fs.readFileSync('certificate.pem'),
+    ca: fs.readFileSync('ca-certificate.pem')
+};
+
+const server = https.createServer(options, (req, res) => {
+    // 处理请求
+});
+```
+
 ## 结论
 
 在开发A2A代理系统时，关注以下核心原则：
@@ -405,5 +533,6 @@ spec:
 3. **健壮性**：实现全面的错误处理和失败恢复
 4. **可扩展性**：设计能水平扩展的系统架构
 5. **可监控性**：添加日志和指标以便监控和调试
+6. **安全性**：确保消息加密、访问控制和输入验证
 
-通过遵循这些指南，您可以构建出可靠、高效且可扩展的多代理协作系统。 
+通过遵循这些指南，您可以构建出可靠、高效、安全且可扩展的多代理协作系统。 

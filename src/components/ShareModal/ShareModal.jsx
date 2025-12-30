@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import BrowserOnly from '@docusaurus/BrowserOnly';
 import QRCode from 'qrcode';
 
 /**
  * 分享模态框组件
  * 支持分享到微信、微博、Twitter、LinkedIn，并生成二维码
  */
-export default function ShareModal({ isOpen, onClose }) {
+function ShareModalInner({ isOpen, onClose }) {
   const [shareUrl, setShareUrl] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [showWeChatQR, setShowWeChatQR] = useState(false);
@@ -37,6 +38,9 @@ export default function ShareModal({ isOpen, onClose }) {
 
   // 复制链接
   const copyShareUrl = async () => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
     try {
       await navigator.clipboard.writeText(shareUrl);
       alert('链接已复制到剪贴板！');
@@ -60,6 +64,9 @@ export default function ShareModal({ isOpen, onClose }) {
   // 分享到微博
   const shareToWeibo = (e) => {
     e.preventDefault();
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
     const url = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(document.title)}`;
     window.open(url, '_blank', 'width=600,height=400');
   };
@@ -73,6 +80,9 @@ export default function ShareModal({ isOpen, onClose }) {
   // 分享到Twitter
   const shareToTwitter = (e) => {
     e.preventDefault();
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
     const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(document.title)}`;
     window.open(url, '_blank', 'width=600,height=400');
   };
@@ -80,6 +90,9 @@ export default function ShareModal({ isOpen, onClose }) {
   // 分享到LinkedIn
   const shareToLinkedIn = (e) => {
     e.preventDefault();
+    if (typeof window === 'undefined') {
+      return;
+    }
     const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
     window.open(url, '_blank', 'width=600,height=400');
   };
@@ -380,4 +393,16 @@ export default function ShareModal({ isOpen, onClose }) {
   );
 }
 
+/**
+ * 分享模态框组件 - 使用BrowserOnly包装以避免SSR错误
+ */
+export default function ShareModal({ isOpen, onClose }) {
+  if (!isOpen) return null;
+  
+  return (
+    <BrowserOnly fallback={null}>
+      {() => <ShareModalInner isOpen={isOpen} onClose={onClose} />}
+    </BrowserOnly>
+  );
+}
 

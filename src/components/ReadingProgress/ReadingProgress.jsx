@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import BrowserOnly from '@docusaurus/BrowserOnly';
 
 /**
- * 阅读进度条组件
+ * 阅读进度条内部组件
  * 在页面顶部显示阅读进度
  * 使用节流优化性能，避免频繁更新
  */
-export default function ReadingProgress() {
+function ReadingProgressInner() {
   const [progress, setProgress] = useState(0);
   const rafId = useRef(null);
 
@@ -67,6 +68,17 @@ export default function ReadingProgress() {
         boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)',
       }}
     />
+  );
+}
+
+/**
+ * 阅读进度条组件 - 使用BrowserOnly确保只在客户端渲染
+ */
+export default function ReadingProgress() {
+  return (
+    <BrowserOnly fallback={null}>
+      {() => <ReadingProgressInner />}
+    </BrowserOnly>
   );
 }
 

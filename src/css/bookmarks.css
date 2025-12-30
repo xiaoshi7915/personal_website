@@ -1,0 +1,127 @@
+/**
+ * 收藏功能组件样式
+ */
+
+.bookmarks {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 100;
+}
+
+.bookmarks__button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--ifm-color-emphasis-200);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--ifm-color-content);
+  transition: all 0.2s ease;
+  box-shadow: var(--ifm-global-shadow-lw);
+}
+
+.bookmarks__button:hover {
+  background: var(--ifm-color-emphasis-300);
+  transform: translateY(-1px);
+  box-shadow: var(--ifm-global-shadow-md);
+}
+
+.bookmarks__button--active {
+  background: var(--ifm-color-warning);
+  color: white;
+  border-color: var(--ifm-color-warning);
+}
+
+.bookmarks__button--active:hover {
+  background: var(--ifm-color-warning-dark);
+}
+
+.bookmarks__text {
+  font-weight: 500;
+}
+
+/* 收藏列表样式 */
+.bookmarks-list {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 8px;
+}
+
+.bookmarks-list__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--ifm-color-content);
+}
+
+.bookmarks-list__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.bookmarks-list__item {
+  margin-bottom: 0.75rem;
+}
+
+.bookmarks-list__link {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  color: var(--ifm-color-content);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.bookmarks-list__link:hover {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.bookmarks-list__empty {
+  color: var(--ifm-color-content-secondary);
+  text-align: center;
+  padding: 2rem;
+}
+
+/* 暗色模式适配 */
+[data-theme='dark'] .bookmarks__button {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-content);
+}
+
+[data-theme='dark'] .bookmarks-list {
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* 移动端适配 */
+@media (max-width: 996px) {
+  .bookmarks {
+    top: 70px;
+    right: 10px;
+  }
+
+  .bookmarks__button {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .bookmarks__text {
+    display: none;
+  }
+
+  .bookmarks__button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+

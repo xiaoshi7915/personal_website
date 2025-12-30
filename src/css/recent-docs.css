@@ -1,0 +1,76 @@
+/**
+ * 最近浏览文档组件样式
+ */
+
+.recent-docs {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 8px;
+}
+
+.recent-docs__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--ifm-color-content);
+}
+
+.recent-docs__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-docs__item {
+  margin-bottom: 0.75rem;
+}
+
+.recent-docs__item:last-child {
+  margin-bottom: 0;
+}
+
+.recent-docs__link {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  color: var(--ifm-color-content);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.recent-docs__link:hover {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.recent-docs__link::before {
+  content: '🕒';
+  margin-right: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* 暗色模式适配 */
+[data-theme='dark'] .recent-docs {
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* 移动端适配 */
+@media (max-width: 996px) {
+  .recent-docs {
+    margin: 1.5rem 0;
+    padding: 1rem;
+  }
+
+  .recent-docs__title {
+    font-size: 1rem;
+  }
+
+  .recent-docs__link {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
